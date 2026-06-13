@@ -154,8 +154,9 @@ async def media_stream(ws: WebSocket):
         await xai.force_message(config.XAI_GREETING, interruptible=False)
         log.info("Triggered greeting")
 
-    # State for the recordSymptom flow: empathy force_message -> wait for its
-    # response.done -> next-question force_message. `pending` is None when idle.
+    # State for the recordSymptom flow: model speaks empathy + calls recordSymptom
+    # in one turn; we kick off get_next_question in parallel, then force_message
+    # the question when that turn's response.done arrives. None when idle.
     record_flow = {"pending": None}
 
     # Agent transcript arrives as deltas; buffer them into one line per turn and
@@ -183,51 +184,41 @@ async def media_stream(ws: WebSocket):
                     name = data["name"]
                     args = json.loads(data.get("arguments") or "{}")
                     if name == "recordSymptom":
-                        description = args.get("description", "")
-                        empathy = args.get("empathy", "")
-                        triage.recordSymptom(description, empathy)
-                        # Fetch the next question CONCURRENTLY. get_next_question
-                        # may block/sleep, so run it in a thread — otherwise it
-                        # freezes the audio relay. It resolves while the empathy
-                        # line plays (the whole point of the empathy filler).
-                        q_task = asyncio.create_task(
-                            asyncio.to_thread(triage.get_next_question))
-                        # Speak the empathy line verbatim and in full (no barge-in).
-                        await xai.force_message(empathy, interruptible=False)
-                        record_flow["pending"] = {
-                            "phase": "await_created",
-                            "call_id": data["call_id"],
-                            "empathy_id": None,
-                            "q_task": q_task,
-                        }
-                        log.info("recordSymptom: desc=%r empathy=%r", description, empathy)
+                        triage.recordSymptom(args.get("description", ""))
+                        # The model is SPEAKING its empathy line in this same
+                        # response. Kick off the next-question lookup in parallel
+                        # (it may block/sleep, so run it in a thread) so it's
+                        # ready the moment the empathy turn finishes.
+                        if record_flow["pending"] is None:
+                            record_flow["pending"] = {
+                                "call_ids": [data["call_id"]],
+                                "q_task": asyncio.create_task(
+                                    asyncio.to_thread(triage.get_next_question)),
+                            }
+                        else:
+                            # Multiple symptoms in one turn -> record each, ask once.
+                            record_flow["pending"]["call_ids"].append(data["call_id"])
+                        log.info("recordSymptom: %r", args.get("description", ""))
                     else:
                         result = triage.handle(name, args)
                         log.info("Tool %s -> %s", name, result)
                         await xai.send_function_result(data["call_id"], result)
-                elif kind == "response_created":
-                    p = record_flow["pending"]
-                    # The first response.created after we send the empathy line is
-                    # that force_message — capture its id so we gate on the right
-                    # response.done (not the model's earlier tool-call turn).
-                    if p and p["phase"] == "await_created":
-                        p["empathy_id"] = data
-                        p["phase"] = "await_done"
                 elif kind == "response_done":
+                    # The empathy turn (which contained recordSymptom) just ended.
+                    # Resolve the tool call(s) and speak the next question verbatim.
+                    # No response.create -> the model stays silent until the caller
+                    # answers, then empathizes + records again.
                     p = record_flow["pending"]
-                    if p and p["phase"] == "await_done" and data == p["empathy_id"]:
-                        # Empathy finished. Resolve the tool call (handing the model
-                        # the question text for context) and speak it verbatim. No
-                        # response.create -> model stays silent until the caller
-                        # answers, then it calls recordSymptom again.
+                    if p:
+                        record_flow["pending"] = None
                         result = await p["q_task"]
                         next_q = (result or {}).get("next_question", "")
-                        await xai.send_function_output(
-                            p["call_id"],
-                            {"status": "recorded", "next_question": next_q})
-                        await xai.force_message(next_q, interruptible=False)
+                        for cid in p["call_ids"]:
+                            await xai.send_function_output(
+                                cid, {"status": "recorded", "next_question": next_q})
+                        if next_q:
+                            await xai.force_message(next_q, interruptible=False)
                         log.info("Next question: %r", next_q)
-                        record_flow["pending"] = None
                 elif kind == "ready":
                     log.info("xAI session ready")
                     await maybe_greet()

@@ -32,16 +32,15 @@ TRIAGE_TOOLS = [
         "name": "recordSymptom",
         "description": (
             "Record a symptom mentioned by the patient. Call this the moment any "
-            "symptom is mentioned — before anything else. Be very detailed with your "
-            "description. Do NOT speak when you call this — the system does the talking."
+            "symptom is mentioned, in the SAME turn as your one-sentence spoken "
+            "empathy. Be very detailed with your description."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "description": {"type": "string", "description": "Detailed description of the symptom"},
-                "empathy": {"type": "string", "description": "One short, warm sentence acknowledging how the patient feels. The SYSTEM speaks this to the patient automatically — do NOT say it yourself."},
             },
-            "required": ["description", "empathy"],
+            "required": ["description"],
         },
     }
 ]
@@ -117,7 +116,9 @@ def get_next_question():
 
     bullets = "\n".join(f"- {s}" for s in symptoms)
     payload = {
-        "model": config.GROK_FAST_MODEL,
+        "model": config.GROK_TRIAGE_MODEL,
+        # Disable reasoning ("none") — grok-4.3 answers directly, lower latency.
+        "reasoning": {"effort": "none"},
         "instructions": _DIFFERENTIAL_SYSTEM,
         "input": (
             f"Patient-reported symptoms so far:\n{bullets}\n\n"
@@ -156,8 +157,7 @@ def get_next_question():
 # ---------------------------------------------------------------------------
 # 2. Implementations — one function per tool name above
 # ---------------------------------------------------------------------------
-def recordSymptom(description, empathy):
-    print("OH NO")
+def recordSymptom(description):
     print(f"Recording symptom: {description}")
     global_descriptions.append(description)
     # return {"status": "success", "message": "Ask next: When did this start?"}

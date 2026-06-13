@@ -29,11 +29,6 @@ class XAIRealtimeClient:
         self.ready = False  # True once session.updated arrives
         self._needs_followup = False  # tool output submitted; respond on done
         self.persona = persona or agents.TRIAGE  # which agent this call runs
-        # Audio gate: ONLY force_message audio is relayed to the caller; the
-        # model's own spoken responses are dropped. force_message() arms
-        # _expect_forced; the next response.created consumes it into _allow_audio.
-        self._expect_forced = False
-        self._allow_audio = False
 
     async def connect(self):
         url = f"{config.XAI_REALTIME_URL}?model={config.XAI_REALTIME_MODEL}"
@@ -132,9 +127,6 @@ class XAIRealtimeClient:
         }
         if voice:
             item["voice"] = voice
-        # Arm the gate: the response this force_message produces is allowed to
-        # play. Everything else (model-generated audio) stays suppressed.
-        self._expect_forced = True
         await self._send({"type": "conversation.item.create", "item": item})
 
     async def greet(self):
@@ -183,12 +175,11 @@ class XAIRealtimeClient:
                 self.ready = True
                 yield "ready", None
             elif etype == "response.output_audio.delta":
-                # Relay audio ONLY for forced (system) responses. Model-generated
-                # audio is dropped so the caller never hears the model speak.
-                if self._allow_audio:
-                    delta = evt.get("delta")
-                    if delta:
-                        yield "audio", delta
+                # Relay all agent audio to the caller — both the model's spoken
+                # empathy and force_message lines (e.g. the next question).
+                delta = evt.get("delta")
+                if delta:
+                    yield "audio", delta
             elif etype == "input_audio_buffer.speech_started":
                 # Caller started talking -> barge-in (interrupt the bot).
                 yield "speech_started", None
@@ -202,16 +193,6 @@ class XAIRealtimeClient:
                 # evt carries: name, call_id, arguments (JSON string).
                 yield "function_call", evt
             elif etype == "response.created":
-                # A force_message arms _expect_forced and this response inherits
-                # it. Any response we did NOT initiate via force_message (the
-                # model's own turns) is not allowed to reach the caller.
-                self._allow_audio = True#self._expect_forced
-                self._expect_forced = False
-                if not self._allow_audio:
-                    log.info("Suppressing model response (not a force_message)")
-                    continue
-                # Surface the new response's id so callers can gate on the
-                # matching response.done (used by the recordSymptom flow).
                 yield "response_created", evt.get("response", {}).get("id")
             elif etype == "response.done":
                 # The turn finished. If we submitted any tool outputs during it,
@@ -220,8 +201,8 @@ class XAIRealtimeClient:
                 if self._needs_followup:
                     self._needs_followup = False
                     await self._send({"type": "response.create"})
-                self._allow_audio = False  # close the gate until the next response
-                # Surface the finished response's id for force_message gating.
+                # Surface the finished response's id (the recordSymptom flow
+                # gates on this to send the next question after empathy plays).
                 yield "response_done", evt.get("response", {}).get("id")
             elif etype == "error":
                 log.error("xAI error event: %s", evt.get("error") or evt)
