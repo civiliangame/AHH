@@ -1,0 +1,305 @@
+{
+  "phone": "+14155943155",
+  "sessions": [
+    {
+      "call_id": "b394902d59b5",
+      "agent": "triage",
+      "started_at": "2026-06-13T23:23:18.847020+00:00",
+      "turns": [
+        {
+          "at": "2026-06-13T23:23:34.562633+00:00",
+          "descriptions": [
+            "Patient has been feeling pretty angry with the world so far and doesn't know why."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Generalized Anxiety Disorder",
+            "Intermittent Explosive Disorder"
+          ],
+          "next_question": "Have you noticed any changes in your sleep, appetite, or energy level lately?",
+          "future_checkin": [
+            "How has your mood been over the past few days—any shifts in anger or other feelings?",
+            "Have you noticed any changes in sleep, appetite, or energy since we last spoke?"
+          ]
+        },
+        {
+          "at": "2026-06-13T23:23:49.963923+00:00",
+          "descriptions": [
+            "Patient reports not having much of an appetite and can't get that much sleep."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Generalized Anxiety Disorder",
+            "Intermittent Explosive Disorder"
+          ],
+          "next_question": "Have you been feeling more irritable or having outbursts that feel out of proportion to the situation?",
+          "future_checkin": [
+            "How has your mood and irritability been over the past few days?",
+            "Any changes in sleep or appetite since we last spoke?"
+          ]
+        },
+        {
+          "at": "2026-06-13T23:24:08.907033+00:00",
+          "descriptions": [
+            "Patient reports being on a hair trigger with irritability, feeling like they have outbursts that feel out of proportion to the situation."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Generalized Anxiety Disorder",
+            "Intermittent Explosive Disorder"
+          ],
+          "next_question": "",
+          "future_checkin": [
+            "Over the next few days, how has your irritability or anger been compared to when we last spoke?",
+            "Have you noticed any shifts in your sleep or appetite since our last conversation?"
+          ]
+        }
+      ],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        },
+        {
+          "role": "caller",
+          "text": " Hi, I've been feeling pretty, uh, angry with the world so far. I don't know why."
+        },
+        {
+          "role": "agent",
+          "text": "I'm really sorry you've been feeling that way.Have you noticed any changes in your sleep, appetite, or energy level lately?"
+        },
+        {
+          "role": "caller",
+          "text": " Well, yeah, I, I, I don't have much of an appetite and I can't get that much sleep."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds really tough—I'm glad you shared it with me.Have you been feeling more irritable or having outbursts that feel out of proportion to the situation?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, yeah, now that you mention it, yes. Uh, it seems like I am on a hair trigger."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry to hear it's been that intense for you.I think I have everything I need to get this started. I'll call you in a few days to follow up and see how you're doing."
+        },
+        {
+          "role": "caller",
+          "text": " Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome—take care of yourself, and I'll be in touch soon. If anything comes up in the meantime or you need to talk sooner, just let us know."
+        }
+      ]
+    },
+    {
+      "call_id": "212b9b29b5c2",
+      "agent": "triage",
+      "started_at": "2026-06-13T23:35:03.204152+00:00",
+      "turns": [
+        {
+          "at": "2026-06-13T23:35:20.761318+00:00",
+          "descriptions": [
+            "Patient reports feeling pretty upset and angry at the world right now."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Generalized Anxiety Disorder",
+            "Intermittent Explosive Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "unclear",
+              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss or gain, or change in appetite",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia nearly every day",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+              "status": "unclear",
+              "evidence": "No information provided yet."
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "unclear",
+              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "A: Excessive anxiety and worry occurring more days than not",
+              "status": "unclear",
+              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+            },
+            {
+              "condition": "Intermittent Explosive Disorder",
+              "criterion": "A: Recurrent behavioral outbursts representing a failure to control aggressive impulses",
+              "status": "unclear",
+              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+            }
+          ],
+          "next_question": "How long have these feelings of being upset and angry been going on for you?",
+          "future_checkin": []
+        }
+      ],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        },
+        {
+          "role": "caller",
+          "text": " Hi, uh, I'm feeling pretty upset and angry at the world right now."
+        },
+        {
+          "role": "agent",
+          "text": "I'm really sorry you've been feeling that way.How long have these feelings of being upset and angry been going on for you?"
+        }
+      ]
+    }
+  ],
+  "pending_checkins": [
+    "How has your mood been over the past few days—any shifts in anger or other feelings?",
+    "Have you noticed any changes in sleep, appetite, or energy since we last spoke?",
+    "How has your mood and irritability been over the past few days?",
+    "Any changes in sleep or appetite since we last spoke?",
+    "Over the next few days, how has your irritability or anger been compared to when we last spoke?",
+    "Have you noticed any shifts in your sleep or appetite since our last conversation?"
+  ],
+  "profile": {
+    "updated_at": "2026-06-13T23:35:20.761318+00:00",
+    "candidates": [
+      "Major Depressive Disorder",
+      "Persistent Depressive Disorder",
+      "Generalized Anxiety Disorder",
+      "Intermittent Explosive Disorder"
+    ],
+    "dsm5_criteria": [
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A1: Depressed mood most of the day, nearly every day",
+        "status": "unclear",
+        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A3: Significant weight loss or gain, or change in appetite",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A4: Insomnia or hypersomnia nearly every day",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A5: Psychomotor agitation or retardation",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A6: Fatigue or loss of energy",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A7: Feelings of worthlessness or excessive guilt",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A8: Diminished ability to think or concentrate",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+        "status": "unclear",
+        "evidence": "No information provided yet."
+      },
+      {
+        "condition": "Persistent Depressive Disorder",
+        "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years",
+        "status": "unclear",
+        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "A: Excessive anxiety and worry occurring more days than not",
+        "status": "unclear",
+        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+      },
+      {
+        "condition": "Intermittent Explosive Disorder",
+        "criterion": "A: Recurrent behavioral outbursts representing a failure to control aggressive impulses",
+        "status": "unclear",
+        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+      }
+    ]
+  }
+}

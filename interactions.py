@@ -4,6 +4,15 @@ Each file accumulates everything we know about a patient across calls:
 
   {
     "phone": "+15551234567",
+    "profile": {                       # rolling profile, updated every turn
+      "updated_at": "...Z",
+      "candidates": ["MDD", ...],
+      "dsm5_criteria": [
+        {"condition": "Major Depressive Disorder",
+         "criterion": "A1: Depressed mood most of the day",
+         "status": "met"|"not_met"|"unclear", "evidence": "..."}
+      ]
+    },
     "sessions": [                      # one per call (triage or check-in)
       {
         "call_id": "abc123",
@@ -11,13 +20,13 @@ Each file accumulates everything we know about a patient across calls:
         "started_at": "2026-06-13T...Z",
         "turns": [                     # structured triage steps (running memory)
           {"at": ..., "descriptions": [...], "empathy": "...",
-           "candidates": ["MDD", ...], "next_question": "...",
-           "future_checkin": ["..."]}
+           "candidates": ["MDD", ...], "dsm5_criteria": [...],
+           "next_question": "...", "future_checkin": [{"days": 7, "message": "..."}]}
         ],
         "transcript": [{"role": "caller"|"agent", "text": "..."}]
       }
     ],
-    "pending_checkins": ["..."]         # questions run_checkin.py asks later
+    "pending_checkins": [{"days": 7, "message": "..."}]   # run_checkin.py asks later
   }
 
 `candidates` per turn IS the running memory of the differential over the call.
@@ -77,22 +86,36 @@ def start_session(record: dict, call_id: str, agent: str) -> dict:
 
 
 def add_turn(record: dict, session: dict, descriptions, empathy,
-             candidates, next_question, future_checkin) -> None:
-    """Record one triage step (symptom(s) -> differential -> next question)."""
+             candidates, next_question, future_checkin, dsm5_criteria=None) -> None:
+    """Record one triage step and update the patient's rolling profile.
+
+    `dsm5_criteria` is a list of {condition, criterion, status, evidence}.
+    `future_checkin` is a list of {days, message}.
+    """
     session["turns"].append({
         "at": _now(),
         "descriptions": list(descriptions or []),
         "empathy": empathy or "",
         "candidates": list(candidates or []),
+        "dsm5_criteria": list(dsm5_criteria or []),
         "next_question": next_question or "",
         "future_checkin": list(future_checkin or []),
     })
-    # Roll new future check-in questions into the patient-level pending list
-    # (deduped) so run_checkin.py can ask them on a later call.
+    # Rolling patient profile: each turn re-assesses against ALL symptoms, so the
+    # latest differential + DSM-5 criteria IS the current profile.
+    profile = record.setdefault("profile", {})
+    profile["updated_at"] = _now()
+    profile["candidates"] = list(candidates or [])
+    profile["dsm5_criteria"] = list(dsm5_criteria or [])
+
+    # Roll new future check-ins ({days, message}) into the patient-level pending
+    # list, deduped by message, so run_checkin.py can ask them on a later call.
     pending = record.setdefault("pending_checkins", [])
-    for q in future_checkin or []:
-        if q and q not in pending:
-            pending.append(q)
+    seen = {c["message"] for c in pending if isinstance(c, dict) and c.get("message")}
+    for c in future_checkin or []:
+        if isinstance(c, dict) and c.get("message") and c["message"] not in seen:
+            pending.append({"days": c.get("days"), "message": c["message"]})
+            seen.add(c["message"])
 
 
 def add_transcript(session: dict, role: str, text: str) -> None:

@@ -37,8 +37,11 @@ async def place_call(to_number: str, agent: str) -> None:
     pending = interactions.pending_checkins(to_number)
     print(f"{len(pending)} saved follow-up question(s) for {to_number}"
           + (":" if pending else "."))
-    for q in pending:
-        print(f"  - {q}")
+    for c in pending:
+        if isinstance(c, dict):
+            print(f"  - (day {c.get('days')}) {c.get('message')}")
+        else:
+            print(f"  - {c}")
     body = {
         "connection_id": config.TELNYX_CONNECTION_ID,
         "to": to_number,

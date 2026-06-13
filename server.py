@@ -153,7 +153,10 @@ async def media_stream(ws: WebSocket):
     # questions into its prompt so it actually asks them, then clear them so we
     # don't re-ask on the next check-in.
     if persona.name == "checkin" and record.get("pending_checkins"):
-        qs = "\n".join(f"- {q}" for q in record["pending_checkins"])
+        # pending_checkins are {days, message} dicts (older records may be strings).
+        qs = "\n".join(
+            f"- {c['message'] if isinstance(c, dict) else c}"
+            for c in record["pending_checkins"])
         persona = dataclasses.replace(
             persona,
             instructions=persona.instructions
@@ -266,11 +269,12 @@ async def media_stream(ws: WebSocket):
                         result = await p["q_task"] or {}
                         next_q = result.get("next_question", "")
                         candidates = result.get("candidates", [])
+                        dsm5_criteria = result.get("dsm5_criteria", [])
                         future_checkin = result.get("future_checkin", [])
                         # Running memory: feed this turn's differential into the next.
                         last_candidates[:] = candidates
-                        # Persist the turn (symptoms -> diagnoses -> next question
-                        # + future check-in questions) to the patient's record.
+                        # Persist the turn + update the patient profile (candidates,
+                        # DSM-5 criteria met/not-met, next question, future check-ins).
                         interactions.add_turn(
                             record, session,
                             descriptions=p["new_descriptions"],
@@ -278,6 +282,7 @@ async def media_stream(ws: WebSocket):
                             candidates=candidates,
                             next_question=next_q,
                             future_checkin=future_checkin,
+                            dsm5_criteria=dsm5_criteria,
                         )
                         interactions.save(record)
                         # Close the call when the model is done, when no question

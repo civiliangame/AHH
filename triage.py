@@ -75,18 +75,46 @@ _NEXT_STEP_SCHEMA = {
                 "type": "boolean",
                 "description": "true if there is enough information for an initial impression, OR no further question would meaningfully narrow the differential.",
             },
+            "dsm5_criteria": {
+                "type": "array",
+                "description": (
+                    "The specific DSM-5 criteria relevant to the candidate "
+                    "conditions and whether the patient's reports meet them. "
+                    "Build this up as the patient answers — re-assess every turn "
+                    "against ALL symptoms reported so far."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "condition": {"type": "string", "description": "DSM-5 condition, e.g. 'Major Depressive Disorder'."},
+                        "criterion": {"type": "string", "description": "The specific criterion, e.g. 'A1: Depressed mood most of the day, nearly every day'."},
+                        "status": {"type": "string", "enum": ["met", "not_met", "unclear"], "description": "Whether the patient's reports meet this criterion."},
+                        "evidence": {"type": "string", "description": "What the patient said that supports this status (or why it's unclear)."},
+                    },
+                    "required": ["condition", "criterion", "status", "evidence"],
+                    "additionalProperties": False,
+                },
+            },
             "future_checkin": {
                 "type": "array",
-                "items": {"type": "string"},
                 "description": (
-                    "Optional questions worth asking in a FOLLOW-UP call a few days "
-                    "later to assess how the patient changes over time (sleep, mood "
-                    "trajectory, etc.) — for longitudinal accuracy, not this call. "
-                    "May be an empty array if none are warranted."
+                    "Zero or more follow-up questions worth asking in a LATER call "
+                    "to track how the patient changes over time (sleep, mood "
+                    "trajectory, treatment response) — for longitudinal accuracy, "
+                    "not this call. Empty array if none are warranted."
                 ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "days": {"type": "integer", "description": "How many days from now to ask this (e.g. 3, 7, 14)."},
+                        "message": {"type": "string", "description": "The exact follow-up question to ask on the check-in call."},
+                    },
+                    "required": ["days", "message"],
+                    "additionalProperties": False,
+                },
             },
         },
-        "required": ["candidates", "next_question", "done", "future_checkin"],
+        "required": ["candidates", "next_question", "done", "dsm5_criteria", "future_checkin"],
         "additionalProperties": False,
     },
 }
@@ -94,17 +122,20 @@ _NEXT_STEP_SCHEMA = {
 _DIFFERENTIAL_SYSTEM = (
     "You are a clinical triage reasoning engine for a mental-health intake line. "
     "Given the patient's reported symptoms so far, use the DSM-5 reference "
-    "collection (file_search) to identify the most likely candidate conditions, "
-    "then propose ONE short, spoken-friendly question that best narrows the "
-    "differential. Also propose `future_checkin`: zero or more questions worth "
-    "asking in a follow-up call a few days later to capture how the patient "
-    "changes over time (these are for longitudinal accuracy, not this call). "
-    "If earlier candidate conditions are provided, refine that running "
-    "differential rather than starting over. Do NOT repeat any question that has "
-    "already been asked (the list is provided) — pick a genuinely new angle. Set "
-    "`done` to true (and leave `next_question` empty) when you have enough for an "
-    "initial impression or no further question would meaningfully help. You are "
-    "NOT diagnosing — you are guiding intake. Respond with JSON only."
+    "collection (file_search) to identify the most likely candidate conditions "
+    "and to build a profile: for the relevant DSM-5 criteria, mark each as met / "
+    "not_met / unclear with the patient's own words as evidence (`dsm5_criteria`). "
+    "Re-assess the criteria against ALL symptoms every turn — the profile grows as "
+    "the patient answers. Propose ONE short, spoken-friendly question that best "
+    "narrows the differential or resolves an `unclear` criterion. Also propose "
+    "`future_checkin`: zero or more {days, message} follow-ups to ask on a LATER "
+    "call to track change over time (set days to when it should be asked, e.g. 3, "
+    "7, 14). If earlier candidate conditions are provided, refine that running "
+    "differential rather than starting over. Do NOT repeat any question already "
+    "asked (the list is provided) — pick a genuinely new angle. Set `done` to true "
+    "(and leave `next_question` empty) when you have enough for an initial "
+    "impression or no further question would meaningfully help. You are NOT "
+    "diagnosing — you are guiding intake. Respond with JSON only."
 )
 
 # Safe fallback so the voice flow never stalls if the API call fails.
@@ -112,6 +143,7 @@ _FALLBACK = {
     "candidates": [],
     "next_question": "Can you tell me a bit more about how you've been feeling lately?",
     "done": False,
+    "dsm5_criteria": [],
     "future_checkin": [],
 }
 
@@ -191,6 +223,7 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None):
         result = json.loads(_extract_output_text(resp.json()))
         result.setdefault("candidates", [])
         result.setdefault("future_checkin", [])
+        result.setdefault("dsm5_criteria", [])
         result.setdefault("done", False)
         # Only backfill a question when not done — an empty question + done=true
         # is the "close the call" signal and must be preserved.
