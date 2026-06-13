@@ -247,7 +247,7 @@ async def media_stream(ws: WebSocket):
                                 "q_task": asyncio.create_task(asyncio.to_thread(
                                     triage.get_next_question,
                                     list(descriptions), list(last_candidates),
-                                    list(asked))),
+                                    list(asked), phone)),
                             }
                         else:
                             # Multiple symptoms in one turn -> record each, ask once.

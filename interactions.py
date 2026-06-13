@@ -33,6 +33,7 @@ Each file accumulates everything we know about a patient across calls:
 """
 import json
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +50,34 @@ def _safe(phone: str) -> str:
 
 def path_for(phone: str) -> Path:
     return DIR / f"{_safe(phone)}.json"
+
+
+def profile_path_for(phone: str) -> Path:
+    """Separate file for the background DSM-5 criteria profile, so criteria_worker.py
+    (its own process) never races the server's writes to the main record."""
+    return DIR / f"{_safe(phone)}.dsm5.json"
+
+
+def save_dsm5_profile(phone: str, conditions: list) -> None:
+    """Write the EXACT DSM-5 criteria profile (yes/no/need_psychiatrist/need_checkin).
+    Atomic (temp + os.replace) so a concurrent reader never sees a half-written file."""
+    DIR.mkdir(exist_ok=True)
+    data = {"phone": phone or "unknown", "updated_at": _now(),
+            "conditions": list(conditions or [])}
+    p = profile_path_for(phone)
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def load_dsm5_profile(phone: str) -> dict:
+    p = profile_path_for(phone)
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            log.exception("Corrupt DSM-5 profile %s", p)
+    return {"phone": phone or "unknown", "conditions": []}
 
 
 def _now() -> str:

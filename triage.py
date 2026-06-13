@@ -13,6 +13,10 @@ and calls these functions, which return structured results it then speaks.
 """
 import json
 import logging
+import os
+import subprocess
+import sys
+import tempfile
 
 import httpx
 
@@ -164,7 +168,26 @@ def _extract_output_text(data: dict) -> str:
     raise ValueError("no message text in Responses API output")
 
 
-def get_next_question(symptoms, prior_candidates=None, asked_questions=None):
+def _spawn_criteria_worker(phone, symptoms, candidates):
+    """Fire-and-forget background PROCESS that builds the EXACT DSM-5 criteria
+    profile (yes/no/need_psychiatrist/need_checkin) and writes it to a separate
+    file. Decoupled from the latency-sensitive next_question path — we never wait
+    on it. Inputs are passed via a temp file the worker reads then deletes.
+    """
+    try:
+        fd, path = tempfile.mkstemp(prefix="criteria_", suffix=".json")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump({"phone": phone, "symptoms": symptoms,
+                       "candidates": candidates}, f)
+        worker = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "criteria_worker.py")
+        subprocess.Popen([sys.executable, worker, path])  # detached; don't wait
+        log.info("Spawned criteria_worker for %s (%d symptom(s))", phone, len(symptoms))
+    except Exception:
+        log.exception("could not spawn criteria_worker")
+
+
+def get_next_question(symptoms, prior_candidates=None, asked_questions=None, phone=None):
     """Differential step: feed the recorded symptoms (+ the running list of prior
     candidates) and the DSM-5 collection to a fast Grok model. Returns
     {"candidates": [...], "next_question": "...", "future_checkin": [...]}.
@@ -233,6 +256,10 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None):
         latest_candidates = result["candidates"]
         log.info("Differential: candidates=%s next_q=%r",
                  result["candidates"], result["next_question"])
+        # Kick off the deep EXACT-criteria profiling in a separate background
+        # process. It runs independently and persists to <phone>.dsm5.json — we
+        # do NOT wait on it, so it adds zero latency to the next question.
+        _spawn_criteria_worker(phone, symptoms, result["candidates"])
         return result
     except Exception:
         log.exception("get_next_question failed; using fallback question")
