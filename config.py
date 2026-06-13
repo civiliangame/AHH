@@ -31,6 +31,17 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "5000"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+# --- Telnyx (Call Control / Voice API) ---
+# API key (starts with "KEY...") used to answer calls and start streaming.
+TELNYX_API_KEY = os.getenv("TELNYX_API_KEY", "")
+TELNYX_API_BASE = os.getenv("TELNYX_API_BASE", "https://api.telnyx.com/v2")
+# Public host Telnyx should open the media WebSocket to. Usually your ngrok
+# domain (no scheme), e.g. "abc123.ngrok-free.app". If blank, we derive it
+# from the inbound webhook's Host header.
+PUBLIC_HOSTNAME = os.getenv("PUBLIC_HOSTNAME", "")
+# Path the Telnyx media stream connects to.
+STREAM_PATH = os.getenv("STREAM_PATH", "/media-stream")
+
 # Telnyx Media Streaming uses G.711 μ-law (PCMU) @ 8 kHz, mono. xAI supports
 # "audio/pcmu" natively, so audio passes through with zero transcoding.
 XAI_AUDIO_FORMAT = "audio/pcmu"
