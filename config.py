@@ -24,8 +24,12 @@ XAI_INSTRUCTIONS = os.getenv(
     "over the phone. Keep replies short, natural, and conversational since they "
     "are spoken aloud.",
 )
-# Spoken first when the call connects (bot greets). Empty = wait for caller.
-XAI_GREETING = os.getenv("XAI_GREETING", "Say hello and introduce yourself briefly.")
+# The line Grok speaks first when the call connects (spoken by the realtime
+# model in its own voice). Empty = wait for the caller to talk first.
+XAI_GREETING = os.getenv(
+    "XAI_GREETING",
+    "Hi, I'm Pulse, your AI assistant. How can I help you today?",
+)
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "5000"))

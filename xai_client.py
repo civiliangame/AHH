@@ -18,6 +18,7 @@ import logging
 import websockets
 
 import config
+import triage
 
 log = logging.getLogger("xai")
 
@@ -57,22 +58,46 @@ class XAIRealtimeClient:
                     "output": {"format": {"type": config.XAI_AUDIO_FORMAT}},
                 },
                 "turn_detection": {"type": "server_vad"},
+                "tools": triage.TRIAGE_TOOLS,
             },
         })
 
-    async def _greet(self):
-        """Make the bot speak first (inbound call greeting)."""
-        if not config.XAI_GREETING:
+    async def send_function_result(self, call_id: str, result: dict):
+        """Return a tool result to the model, then ask it to continue.
+
+        This is the exact two-message sequence the Voice Agent API expects:
+        a function_call_output item, followed by response.create.
+        """
+        if self._ws is None:
             return
         await self._send({
             "type": "conversation.item.create",
             "item": {
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": config.XAI_GREETING}],
+                "type": "function_call_output",
+                "call_id": call_id,
+                "output": json.dumps(result),
             },
         })
         await self._send({"type": "response.create"})
+
+    async def greet(self):
+        """Have Grok speak the opening line in its own voice.
+
+        Triggered as a one-off response instruction (not a fake user turn) so
+        the model says the line once and stops, instead of echoing it and then
+        adding its own continuation.
+        """
+        if not config.XAI_GREETING or self._ws is None:
+            return
+        await self._send({
+            "type": "response.create",
+            "response": {
+                "instructions": (
+                    f'Open the call by greeting the caller with this line, then '
+                    f'stop and wait for them to respond: "{config.XAI_GREETING}"'
+                ),
+            },
+        })
 
     async def append_audio(self, ulaw_b64: str):
         """Push a chunk of caller audio (base64 μ-law) to xAI. No-op until ready."""
@@ -95,8 +120,9 @@ class XAIRealtimeClient:
             if etype == "conversation.created":
                 await self._configure_session()
             elif etype == "session.updated":
+                # Ready to stream audio. The opening line is spoken by the
+                # server via xAI TTS (exact wording), not generated here.
                 self.ready = True
-                await self._greet()
                 yield "ready", None
             elif etype == "response.output_audio.delta":
                 delta = evt.get("delta")
@@ -111,6 +137,9 @@ class XAIRealtimeClient:
             elif etype == "response.output_audio_transcript.delta":
                 if evt.get("delta"):
                     yield "bot_transcript", evt["delta"]
+            elif etype == "response.function_call_arguments.done":
+                # evt carries: name, call_id, arguments (JSON string).
+                yield "function_call", evt
             elif etype == "error":
                 log.error("xAI error event: %s", evt.get("error") or evt)
                 yield "error", evt
