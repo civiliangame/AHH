@@ -209,6 +209,7 @@ class XAIRealtimeClient:
                 self._expect_forced = False
                 if not self._allow_audio:
                     log.info("Suppressing model response (not a force_message)")
+                    continue
                 # Surface the new response's id so callers can gate on the
                 # matching response.done (used by the recordSymptom flow).
                 yield "response_created", evt.get("response", {}).get("id")

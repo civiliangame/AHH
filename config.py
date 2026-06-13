@@ -25,6 +25,15 @@ REASONING = ""
 TURN_DETECTION_threshold = ""
 VAD = ""
 
+# --- Grok text model for the triage differential step (get_next_question) ---
+XAI_API_BASE = os.getenv("XAI_API_BASE", "https://api.x.ai/v1")
+# Fastest Grok chat model for differential reasoning. VERIFY the exact id in
+# your xAI console and override via env if it differs.
+GROK_FAST_MODEL = os.getenv("GROK_FAST_MODEL", "grok-4-fast")
+# Collection (vector store) of DSM-5 reference material used to ground candidates.
+DSM5_COLLECTION_ID = os.getenv(
+    "DSM5_COLLECTION_ID", "collection_44862946-181e-4ce3-b710-bb6f3df35f07")
+
 
 # Voice: eve, ara, rex, sal, leo, or a custom voice ID.
 XAI_VOICE = os.getenv("XAI_VOICE", "ara")

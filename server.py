@@ -19,13 +19,16 @@ import asyncio
 import json
 import logging
 import os
+import uuid
+from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
 import agents
 import config
+import events
 import triage
 from xai_client import XAIRealtimeClient
 
@@ -98,6 +101,27 @@ async def handle_health():
 
 
 # ----------------------------------------------------------------------------
+# Live transcript: dashboard page + Server-Sent Events feed
+# ----------------------------------------------------------------------------
+@app.get("/")
+async def dashboard():
+    """The live transcript page. (POST / is the Telnyx webhook fallback.)"""
+    return HTMLResponse(Path("dashboard.html").read_text(encoding="utf-8"))
+
+
+@app.get("/events")
+async def sse():
+    """Stream transcript turns to the browser as they happen."""
+    async def gen():
+        async for ev in events.hub.subscribe():
+            yield f"data: {json.dumps(ev)}\n\n"
+    return StreamingResponse(gen(), media_type="text/event-stream", headers={
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",  # don't let a proxy buffer the stream
+    })
+
+
+# ----------------------------------------------------------------------------
 # WS: Telnyx media stream  <->  xAI Voice Agent
 # ----------------------------------------------------------------------------
 @app.websocket(config.STREAM_PATH)
@@ -106,7 +130,9 @@ async def media_stream(ws: WebSocket):
     # Pick the agent persona from the stream URL (?agent=checkin for outbound).
     # No param -> triage (inbound default).
     persona = agents.get(ws.query_params.get("agent"))
-    log.info("Telnyx media stream connected (agent=%s)", persona.name)
+    call_id = uuid.uuid4().hex[:12]  # session key for the transcript + dashboard
+    log.info("Telnyx media stream connected (agent=%s, call=%s)", persona.name, call_id)
+    await events.emit(call_id, "system", f"Call started · agent: {persona.name}")
 
     xai = XAIRealtimeClient(persona=persona)
     try:
@@ -131,6 +157,15 @@ async def media_stream(ws: WebSocket):
     # State for the recordSymptom flow: empathy force_message -> wait for its
     # response.done -> next-question force_message. `pending` is None when idle.
     record_flow = {"pending": None}
+
+    # Agent transcript arrives as deltas; buffer them into one line per turn and
+    # flush (persist + finalize) when the caller speaks or the call ends.
+    agent_buf: list[str] = []
+
+    async def flush_agent():
+        if agent_buf:
+            await events.emit(call_id, "agent", "".join(agent_buf))
+            agent_buf.clear()
 
     async def pump_xai_to_telnyx():
         """Drive the xAI session and relay its output to the caller."""
@@ -198,8 +233,14 @@ async def media_stream(ws: WebSocket):
                     await maybe_greet()
                 elif kind == "user_transcript":
                     log.info("Caller: %s", data)
+                    await flush_agent()  # close any open agent turn first
+                    await events.emit(call_id, "caller", data)
                 elif kind == "bot_transcript":
                     log.debug("Bot: %s", data)
+                    agent_buf.append(data)
+                    # Stream the delta live (typewriter); the full line is
+                    # persisted on flush, so partials are display-only.
+                    await events.emit(call_id, "agent", data, partial=True)
         except Exception:
             log.exception("xAI->Telnyx pump failed")
 
@@ -232,6 +273,8 @@ async def media_stream(ws: WebSocket):
     except WebSocketDisconnect:
         log.info("Telnyx disconnected")
     finally:
+        await flush_agent()  # persist the last agent turn
+        await events.emit(call_id, "system", "Call ended")
         pump_task.cancel()
         await xai.close()
         log.info("Call cleaned up")
