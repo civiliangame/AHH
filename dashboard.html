@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live Transcript</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 15px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #0d1117; color: #e6edf3;
+  }
+  header {
+    position: sticky; top: 0; padding: 14px 20px; background: #161b22;
+    border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px;
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  #status { font-size: 12px; color: #8b949e; margin-left: auto; }
+  #status.live::before { content: "● "; color: #3fb950; }
+  #status.down::before { content: "● "; color: #f85149; }
+  #feed { max-width: 760px; margin: 0 auto; padding: 20px; }
+  .turn { display: flex; margin: 10px 0; }
+  .turn.caller { justify-content: flex-end; }
+  .bubble {
+    max-width: 78%; padding: 9px 13px; border-radius: 14px; white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .caller .bubble { background: #1f6feb; color: #fff; border-bottom-right-radius: 4px; }
+  .agent  .bubble { background: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 4px; }
+  .role { font-size: 11px; color: #8b949e; margin: 0 4px 2px; }
+  .caller .role { text-align: right; }
+  .system { text-align: center; color: #8b949e; font-size: 12px; margin: 18px 0 6px; }
+  .system span { background: #161b22; padding: 3px 10px; border-radius: 10px; border: 1px solid #30363d; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Live Transcript</h1>
+    <span id="status" class="down">connecting…</span>
+  </header>
+  <div id="feed"></div>
+
+<script>
+  const feed = document.getElementById("feed");
+  const status = document.getElementById("status");
+  let lastCall = null;
+  let openAgent = null;   // the agent bubble currently being typed into
+
+  function atBottom() {
+    return window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+  }
+  function scroll() { if (atBottom()) window.scrollTo(0, document.body.scrollHeight); }
+
+  function bubble(role, text) {
+    const turn = document.createElement("div");
+    turn.className = "turn " + role;
+    turn.innerHTML = `<div><div class="role">${role}</div>` +
+                     `<div class="bubble"></div></div>`;
+    turn.querySelector(".bubble").textContent = text;
+    feed.appendChild(turn);
+    return turn.querySelector(".bubble");
+  }
+
+  function system(text) {
+    const d = document.createElement("div");
+    d.className = "system";
+    d.innerHTML = `<span></span>`;
+    d.querySelector("span").textContent = text;
+    feed.appendChild(d);
+  }
+
+  function handle(ev) {
+    if (ev.call_id && ev.call_id !== lastCall) { lastCall = ev.call_id; openAgent = null; }
+
+    if (ev.role === "system") { openAgent = null; system(ev.text); }
+    else if (ev.role === "caller") { openAgent = null; bubble("caller", ev.text); }
+    else if (ev.role === "agent") {
+      if (ev.partial) {
+        if (!openAgent) openAgent = bubble("agent", "");
+        openAgent.textContent += ev.text;           // typewriter
+      } else {
+        // final line: replace the live bubble's text (dedup), then close it
+        if (openAgent) openAgent.textContent = ev.text;
+        else bubble("agent", ev.text);              // replayed on reconnect
+        openAgent = null;
+      }
+    }
+    scroll();
+  }
+
+  function connect() {
+    const es = new EventSource("/events");
+    es.onopen = () => { status.className = "live"; status.textContent = "live"; };
+    es.onerror = () => { status.className = "down"; status.textContent = "reconnecting…"; };
+    es.onmessage = (e) => { try { handle(JSON.parse(e.data)); } catch (_) {} };
+  }
+  connect();
+</script>
+</body>
+</html>
