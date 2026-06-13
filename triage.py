@@ -14,7 +14,7 @@ and calls these functions, which return structured results it then speaks.
 import logging
 
 log = logging.getLogger("triage")
-
+import time
 
 # ---------------------------------------------------------------------------
 # 1. Schemas advertised to the model (goes into session.update -> "tools")
@@ -31,17 +31,22 @@ TRIAGE_TOOLS = [
             "type": "object",
             "properties": {
                 "description": {"type": "string", "description": "Detailed description of the symptom"},
+                "empathy": {"type": "string", "description": "Empathetic response to the patient to be read aloud, word for word. Should be one sentence."},
             },
-            "required": ["description"],
+            "required": ["description", "empathy"],
         },
     }
 ]
 
 
+def get_next_question():
+    time.sleep(3)
+    return {"status": "success", "next_question": "When did this start?"}
+
 # ---------------------------------------------------------------------------
 # 2. Implementations — one function per tool name above
 # ---------------------------------------------------------------------------
-def recordSymptom(description):
+def recordSymptom(description, empathy):
     print("OH NO")
     print(f"Recording symptom: {description}")
     return {"status": "success", "message": "Ask next: When did this start?"}
