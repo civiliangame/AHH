@@ -160,7 +160,7 @@ def recordSymptom(description, empathy):
     print("OH NO")
     print(f"Recording symptom: {description}")
     global_descriptions.append(description)
-    return {"status": "success", "message": "Ask next: When did this start?"}
+    # return {"status": "success", "message": "Ask next: When did this start?"}
 
 
 # PHQ-9 / GAD-7 severity bands (sum of item scores).
