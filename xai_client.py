@@ -205,7 +205,7 @@ class XAIRealtimeClient:
                 # A force_message arms _expect_forced and this response inherits
                 # it. Any response we did NOT initiate via force_message (the
                 # model's own turns) is not allowed to reach the caller.
-                self._allow_audio = self._expect_forced
+                self._allow_audio = True#self._expect_forced
                 self._expect_forced = False
                 if not self._allow_audio:
                     log.info("Suppressing model response (not a force_message)")
