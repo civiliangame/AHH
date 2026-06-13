@@ -37,7 +37,7 @@ async def handle_telnyx(telnyx_ws):
         return
 
     async def pump_xai_to_telnyx():
-        """xAI audio responses -> caller."""
+        """Drive the xAI session and relay its output to the caller."""
         try:
             async for kind, data in xai.iter_events():
                 if kind == "audio" and stream_id:
@@ -52,6 +52,12 @@ async def handle_telnyx(telnyx_ws):
                         "event": "clear",
                         "stream_id": stream_id,
                     }))
+                elif kind == "ready":
+                    log.info("xAI session ready")
+                elif kind == "user_transcript":
+                    log.info("Caller: %s", data)
+                elif kind == "bot_transcript":
+                    log.debug("Bot: %s", data)
         except websockets.ConnectionClosed:
             pass
         except Exception:
