@@ -11,19 +11,24 @@ def _require(name: str) -> str:
         raise RuntimeError(f"Missing required env var: {name} (see .env.example)")
     return val
 
+def get_system_prompt():
+    with open("system_prompt.txt", "r") as f:
+        return f.read()
+
+
 
 XAI_API_KEY = _require("XAI_API_KEY")
 XAI_REALTIME_URL = os.getenv("XAI_REALTIME_URL", "wss://api.x.ai/v1/realtime")
 # grok-voice-latest -> newest; or pin e.g. grok-voice-think-fast-1.0
-XAI_REALTIME_MODEL = os.getenv("XAI_REALTIME_MODEL", "grok-voice-latest")
+XAI_REALTIME_MODEL = os.getenv("XAI_REALTIME_MODEL", "grok-voice-think-fast-1.1")
+REASONING = ""
+TURN_DETECTION_threshold = ""
+VAD = ""
+
+
 # Voice: eve, ara, rex, sal, leo, or a custom voice ID.
 XAI_VOICE = os.getenv("XAI_VOICE", "ara")
-XAI_INSTRUCTIONS = os.getenv(
-    "XAI_INSTRUCTIONS",
-    "You are Grok, a helpful voice assistant speaking to a caller in real time "
-    "over the phone. Keep replies short, natural, and conversational since they "
-    "are spoken aloud.",
-)
+XAI_INSTRUCTIONS = get_system_prompt()
 # The line Grok speaks first when the call connects (spoken by the realtime
 # model in its own voice). Empty = wait for the caller to talk first.
 XAI_GREETING = "Hi, I'm Pulse, your AI assistant. How can I help you today?"
