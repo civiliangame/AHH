@@ -16,11 +16,13 @@ Run:  python server.py      # auto-reloads on file save
 Point your Telnyx Call Control app's webhook at https://<ngrok>/webhook
 """
 import asyncio
+import dataclasses
 import json
 import logging
 import os
 import uuid
 from pathlib import Path
+from urllib.parse import quote
 
 import httpx
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -29,6 +31,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingRes
 import agents
 import config
 import events
+import interactions
 import triage
 from xai_client import XAIRealtimeClient
 
@@ -84,9 +87,15 @@ async def handle_webhook(request: Request):
     log.info("Webhook: %s", event_type)
 
     if event_type == "call.initiated" and payload.get("direction") == "incoming":
-        # Answer AND start bidirectional streaming in one command.
+        # Answer AND start bidirectional streaming in one command. Pass the
+        # caller's number through the stream URL so the media handler can key
+        # the patient's interaction record by phone number.
+        stream_url = stream_url_for(request)
+        caller = payload.get("from", "")
+        if caller:
+            stream_url += f"?phone={quote(caller)}"
         await telnyx_command(ccid, "answer", {
-            "stream_url": stream_url_for(request),
+            "stream_url": stream_url,
             "stream_track": "inbound_track",
             "stream_bidirectional_mode": "rtp",
             "stream_bidirectional_codec": "PCMU",
@@ -130,9 +139,30 @@ async def media_stream(ws: WebSocket):
     # Pick the agent persona from the stream URL (?agent=checkin for outbound).
     # No param -> triage (inbound default).
     persona = agents.get(ws.query_params.get("agent"))
+    phone = ws.query_params.get("phone")  # patient's number, keys their record
     call_id = uuid.uuid4().hex[:12]  # session key for the transcript + dashboard
-    log.info("Telnyx media stream connected (agent=%s, call=%s)", persona.name, call_id)
+    log.info("Telnyx media stream connected (agent=%s, call=%s, phone=%s)",
+             persona.name, call_id, phone)
     await events.emit(call_id, "system", f"Call started · agent: {persona.name}")
+
+    # Load/append the patient's interaction record and open a session for this call.
+    record = interactions.load(phone)
+    session = interactions.start_session(record, call_id, persona.name)
+
+    # For the outbound check-in agent, fold the patient's saved follow-up
+    # questions into its prompt so it actually asks them, then clear them so we
+    # don't re-ask on the next check-in.
+    if persona.name == "checkin" and record.get("pending_checkins"):
+        qs = "\n".join(f"- {q}" for q in record["pending_checkins"])
+        persona = dataclasses.replace(
+            persona,
+            instructions=persona.instructions
+            + f"\n\nAsk the patient these follow-up questions, one at a time:\n{qs}",
+        )
+        log.info("Check-in: injected %d follow-up question(s)",
+                 len(record["pending_checkins"]))
+        interactions.clear_pending(record)
+    interactions.save(record)
 
     xai = XAIRealtimeClient(persona=persona)
     try:
@@ -159,13 +189,22 @@ async def media_stream(ws: WebSocket):
     # the question when that turn's response.done arrives. None when idle.
     record_flow = {"pending": None}
 
+    # Per-call symptom state (NOT module-global — keyed to this caller).
+    descriptions: list[str] = []      # every symptom recordSymptom has logged
+    last_candidates: list[str] = []   # running differential, fed back each turn
+    asked: list[str] = []             # questions already asked (avoid repeats)
+    complete = {"v": False}           # True once triage closed (no more questions)
+
     # Agent transcript arrives as deltas; buffer them into one line per turn and
     # flush (persist + finalize) when the caller speaks or the call ends.
     agent_buf: list[str] = []
 
     async def flush_agent():
         if agent_buf:
-            await events.emit(call_id, "agent", "".join(agent_buf))
+            line = "".join(agent_buf)
+            await events.emit(call_id, "agent", line)
+            interactions.add_transcript(session, "agent", line)
+            interactions.save(record)
             agent_buf.clear()
 
     async def pump_xai_to_telnyx():
@@ -184,21 +223,34 @@ async def media_stream(ws: WebSocket):
                     name = data["name"]
                     args = json.loads(data.get("arguments") or "{}")
                     if name == "recordSymptom":
-                        triage.recordSymptom(args.get("description", ""))
+                        desc = args.get("description", "")
+                        empathy = args.get("empathy", "")
+                        descriptions.append(desc)
                         # The model is SPEAKING its empathy line in this same
                         # response. Kick off the next-question lookup in parallel
-                        # (it may block/sleep, so run it in a thread) so it's
-                        # ready the moment the empathy turn finishes.
-                        if record_flow["pending"] is None:
+                        # (it may block, so run it in a thread) so it's ready the
+                        # moment the empathy turn finishes. Pass the per-call
+                        # symptom list + running differential for refinement.
+                        if complete["v"]:
+                            # Triage already closed — keep recording, but don't
+                            # ask anything further.
+                            await xai.send_function_output(
+                                data["call_id"], {"status": "recorded"})
+                        elif record_flow["pending"] is None:
                             record_flow["pending"] = {
                                 "call_ids": [data["call_id"]],
-                                "q_task": asyncio.create_task(
-                                    asyncio.to_thread(triage.get_next_question)),
+                                "new_descriptions": [desc],
+                                "empathy": empathy,
+                                "q_task": asyncio.create_task(asyncio.to_thread(
+                                    triage.get_next_question,
+                                    list(descriptions), list(last_candidates),
+                                    list(asked))),
                             }
                         else:
                             # Multiple symptoms in one turn -> record each, ask once.
                             record_flow["pending"]["call_ids"].append(data["call_id"])
-                        log.info("recordSymptom: %r", args.get("description", ""))
+                            record_flow["pending"]["new_descriptions"].append(desc)
+                        log.info("recordSymptom: %r", desc)
                     else:
                         result = triage.handle(name, args)
                         log.info("Tool %s -> %s", name, result)
@@ -211,14 +263,41 @@ async def media_stream(ws: WebSocket):
                     p = record_flow["pending"]
                     if p:
                         record_flow["pending"] = None
-                        result = await p["q_task"]
-                        next_q = (result or {}).get("next_question", "")
+                        result = await p["q_task"] or {}
+                        next_q = result.get("next_question", "")
+                        candidates = result.get("candidates", [])
+                        future_checkin = result.get("future_checkin", [])
+                        # Running memory: feed this turn's differential into the next.
+                        last_candidates[:] = candidates
+                        # Persist the turn (symptoms -> diagnoses -> next question
+                        # + future check-in questions) to the patient's record.
+                        interactions.add_turn(
+                            record, session,
+                            descriptions=p["new_descriptions"],
+                            empathy=p.get("empathy", ""),
+                            candidates=candidates,
+                            next_question=next_q,
+                            future_checkin=future_checkin,
+                        )
+                        interactions.save(record)
+                        # Close the call when the model is done, when no question
+                        # came back, or after the max question count is reached.
+                        done = (result.get("done")
+                                or not next_q
+                                or len(asked) >= triage.MAX_QUESTIONS)
                         for cid in p["call_ids"]:
                             await xai.send_function_output(
                                 cid, {"status": "recorded", "next_question": next_q})
-                        if next_q:
+                        if done:
+                            complete["v"] = True
+                            await xai.force_message(triage.CLOSING_LINE, interruptible=False)
+                            log.info("Triage complete (asked=%d, done=%s) -> closing line",
+                                     len(asked), result.get("done"))
+                        else:
+                            asked.append(next_q)
                             await xai.force_message(next_q, interruptible=False)
-                        log.info("Next question: %r", next_q)
+                            log.info("Question %d: %r | candidates=%s | future_checkin=%s",
+                                     len(asked), next_q, candidates, future_checkin)
                 elif kind == "ready":
                     log.info("xAI session ready")
                     await maybe_greet()
@@ -226,6 +305,8 @@ async def media_stream(ws: WebSocket):
                     log.info("Caller: %s", data)
                     await flush_agent()  # close any open agent turn first
                     await events.emit(call_id, "caller", data)
+                    interactions.add_transcript(session, "caller", data)
+                    interactions.save(record)
                 elif kind == "bot_transcript":
                     log.debug("Bot: %s", data)
                     agent_buf.append(data)
@@ -266,6 +347,7 @@ async def media_stream(ws: WebSocket):
     finally:
         await flush_agent()  # persist the last agent turn
         await events.emit(call_id, "system", "Call ended")
+        interactions.save(record)  # final flush of this session's record
         pump_task.cancel()
         await xai.close()
         log.info("Call cleaned up")

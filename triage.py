@@ -23,6 +23,15 @@ log = logging.getLogger("triage")
 global_descriptions = []
 latest_candidates = []  # candidate conditions from the most recent differential
 
+# Stop asking after this many questions, even if the differential isn't settled.
+MAX_QUESTIONS = 5
+
+# Spoken verbatim (force_message) when triage is complete.
+CLOSING_LINE = (
+    "I think I have everything I need to get this started. "
+    "I'll call you in a few days to follow up and see how you're doing."
+)
+
 # ---------------------------------------------------------------------------
 # 1. Schemas advertised to the model (goes into session.update -> "tools")
 # ---------------------------------------------------------------------------
@@ -60,10 +69,24 @@ _NEXT_STEP_SCHEMA = {
             },
             "next_question": {
                 "type": "string",
-                "description": "ONE short, spoken-friendly question that best narrows the differential.",
+                "description": "ONE short, spoken-friendly question that best narrows the differential. Must NOT repeat any already-asked question. Empty string if done.",
+            },
+            "done": {
+                "type": "boolean",
+                "description": "true if there is enough information for an initial impression, OR no further question would meaningfully narrow the differential.",
+            },
+            "future_checkin": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Optional questions worth asking in a FOLLOW-UP call a few days "
+                    "later to assess how the patient changes over time (sleep, mood "
+                    "trajectory, etc.) — for longitudinal accuracy, not this call. "
+                    "May be an empty array if none are warranted."
+                ),
             },
         },
-        "required": ["candidates", "next_question"],
+        "required": ["candidates", "next_question", "done", "future_checkin"],
         "additionalProperties": False,
     },
 }
@@ -73,14 +96,23 @@ _DIFFERENTIAL_SYSTEM = (
     "Given the patient's reported symptoms so far, use the DSM-5 reference "
     "collection (file_search) to identify the most likely candidate conditions, "
     "then propose ONE short, spoken-friendly question that best narrows the "
-    "differential. You are NOT diagnosing — you are guiding intake. "
-    "Respond with JSON only."
+    "differential. Also propose `future_checkin`: zero or more questions worth "
+    "asking in a follow-up call a few days later to capture how the patient "
+    "changes over time (these are for longitudinal accuracy, not this call). "
+    "If earlier candidate conditions are provided, refine that running "
+    "differential rather than starting over. Do NOT repeat any question that has "
+    "already been asked (the list is provided) — pick a genuinely new angle. Set "
+    "`done` to true (and leave `next_question` empty) when you have enough for an "
+    "initial impression or no further question would meaningfully help. You are "
+    "NOT diagnosing — you are guiding intake. Respond with JSON only."
 )
 
 # Safe fallback so the voice flow never stalls if the API call fails.
 _FALLBACK = {
     "candidates": [],
     "next_question": "Can you tell me a bit more about how you've been feeling lately?",
+    "done": False,
+    "future_checkin": [],
 }
 
 
@@ -100,9 +132,14 @@ def _extract_output_text(data: dict) -> str:
     raise ValueError("no message text in Responses API output")
 
 
-def get_next_question():
-    """Differential step: feed all recorded symptoms + the DSM-5 collection to a
-    fast Grok model and return {"candidates": [...], "next_question": "..."}.
+def get_next_question(symptoms, prior_candidates=None, asked_questions=None):
+    """Differential step: feed the recorded symptoms (+ the running list of prior
+    candidates) and the DSM-5 collection to a fast Grok model. Returns
+    {"candidates": [...], "next_question": "...", "future_checkin": [...]}.
+
+    `symptoms` is the per-call list of everything recordSymptom has logged.
+    `prior_candidates` is the differential from earlier turns, so the model
+    refines its running memory instead of starting over.
 
     Uses the Responses API (/v1/responses) because file_search over a collection
     is NOT supported on chat/completions. Sync on purpose — server.py runs it via
@@ -110,19 +147,29 @@ def get_next_question():
     blocking the audio relay. Always returns a dict with next_question; falls
     back on any error.
     """
-    symptoms = list(global_descriptions)
+    symptoms = list(symptoms or [])
     if not symptoms:
         return dict(_FALLBACK)
 
     bullets = "\n".join(f"- {s}" for s in symptoms)
+    prior = ""
+    if prior_candidates:
+        prior = "\n\nCandidate conditions considered in earlier turns: " + \
+            ", ".join(prior_candidates)
+    asked = ""
+    if asked_questions:
+        asked = "\n\nQuestions already asked (do NOT repeat these): " + \
+            "; ".join(asked_questions)
     payload = {
         "model": config.GROK_TRIAGE_MODEL,
         # Disable reasoning ("none") — grok-4.3 answers directly, lower latency.
         "reasoning": {"effort": "none"},
         "instructions": _DIFFERENTIAL_SYSTEM,
         "input": (
-            f"Patient-reported symptoms so far:\n{bullets}\n\n"
-            "List the candidate conditions and ONE narrowing question."
+            f"Patient-reported symptoms so far:\n{bullets}{prior}{asked}\n\n"
+            "List the candidate conditions, ONE new narrowing question (or set "
+            "done=true with an empty question if no more are needed), and any "
+            "future check-in questions."
         ),
         # Server-side tool: xAI searches the DSM-5 collection and grounds the
         # answer. file_search lives on the Responses API, not chat/completions.
@@ -143,7 +190,11 @@ def get_next_question():
         resp.raise_for_status()
         result = json.loads(_extract_output_text(resp.json()))
         result.setdefault("candidates", [])
-        if not result.get("next_question"):
+        result.setdefault("future_checkin", [])
+        result.setdefault("done", False)
+        # Only backfill a question when not done — an empty question + done=true
+        # is the "close the call" signal and must be preserved.
+        if not result.get("done") and not result.get("next_question"):
             result["next_question"] = _FALLBACK["next_question"]
         global latest_candidates
         latest_candidates = result["candidates"]

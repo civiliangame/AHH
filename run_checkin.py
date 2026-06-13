@@ -12,10 +12,12 @@ Usage:
 """
 import argparse
 import asyncio
+from urllib.parse import quote
 
 import httpx
 
 import config
+import interactions
 
 
 async def place_call(to_number: str, agent: str) -> None:
@@ -28,7 +30,15 @@ async def place_call(to_number: str, agent: str) -> None:
     if missing:
         raise SystemExit("Set these in .env first: " + ", ".join(missing))
 
-    stream_url = f"wss://{config.PUBLIC_HOSTNAME}{config.STREAM_PATH}?agent={agent}"
+    # Pass the patient's number so the server keys their interaction record and
+    # injects their saved future check-in questions into the agent's prompt.
+    stream_url = (f"wss://{config.PUBLIC_HOSTNAME}{config.STREAM_PATH}"
+                  f"?agent={agent}&phone={quote(to_number)}")
+    pending = interactions.pending_checkins(to_number)
+    print(f"{len(pending)} saved follow-up question(s) for {to_number}"
+          + (":" if pending else "."))
+    for q in pending:
+        print(f"  - {q}")
     body = {
         "connection_id": config.TELNYX_CONNECTION_ID,
         "to": to_number,
