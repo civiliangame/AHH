@@ -27,13 +27,14 @@ TRIAGE_TOOLS = [
         "name": "recordSymptom",
         "description": (
             "Record a symptom mentioned by the patient. Call this the moment any "
-            "symptom is mentioned — before anything else. Be very detailed with your description"
+            "symptom is mentioned — before anything else. Be very detailed with your "
+            "description. Do NOT speak when you call this — the system does the talking."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "description": {"type": "string", "description": "Detailed description of the symptom"},
-                "empathy": {"type": "string", "description": "Empathetic response to the patient to be read aloud, word for word. Should be one sentence."},
+                "empathy": {"type": "string", "description": "One short, warm sentence acknowledging how the patient feels. The SYSTEM speaks this to the patient automatically — do NOT say it yourself."},
             },
             "required": ["description", "empathy"],
         },

@@ -18,11 +18,13 @@ Point your Telnyx Call Control app's webhook at https://<ngrok>/webhook
 import asyncio
 import json
 import logging
+import os
 
 import httpx
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, Response
 
+import agents
 import config
 import triage
 from xai_client import XAIRealtimeClient
@@ -101,9 +103,12 @@ async def handle_health():
 @app.websocket(config.STREAM_PATH)
 async def media_stream(ws: WebSocket):
     await ws.accept()
-    log.info("Telnyx media stream connected")
+    # Pick the agent persona from the stream URL (?agent=checkin for outbound).
+    # No param -> triage (inbound default).
+    persona = agents.get(ws.query_params.get("agent"))
+    log.info("Telnyx media stream connected (agent=%s)", persona.name)
 
-    xai = XAIRealtimeClient()
+    xai = XAIRealtimeClient(persona=persona)
     try:
         await xai.connect()
     except Exception:
@@ -120,8 +125,12 @@ async def media_stream(ws: WebSocket):
         if greet["done"] or not greet["telnyx_started"] or not xai.ready:
             return
         greet["done"] = True
-        await xai.greet()
+        await xai.force_message(config.XAI_GREETING, interruptible=False)
         log.info("Triggered greeting")
+
+    # State for the recordSymptom flow: empathy force_message -> wait for its
+    # response.done -> next-question force_message. `pending` is None when idle.
+    record_flow = {"pending": None}
 
     async def pump_xai_to_telnyx():
         """Drive the xAI session and relay its output to the caller."""
@@ -135,12 +144,55 @@ async def media_stream(ws: WebSocket):
                     # Barge-in: caller interrupted -> flush queued bot audio.
                     await ws.send_text(json.dumps({"event": "clear"}))
                 elif kind == "function_call":
-                    # Model invoked a tool. Run it and return the result so the
-                    # model can continue. arguments arrives as a JSON string.
+                    # Model invoked a tool. arguments arrives as a JSON string.
+                    name = data["name"]
                     args = json.loads(data.get("arguments") or "{}")
-                    result = triage.handle(data["name"], args)
-                    log.info("Tool %s -> %s", data["name"], result)
-                    await xai.send_function_result(data["call_id"], result)
+                    if name == "recordSymptom":
+                        description = args.get("description", "")
+                        empathy = args.get("empathy", "")
+                        triage.recordSymptom(description, empathy)
+                        # Fetch the next question CONCURRENTLY. get_next_question
+                        # may block/sleep, so run it in a thread — otherwise it
+                        # freezes the audio relay. It resolves while the empathy
+                        # line plays (the whole point of the empathy filler).
+                        q_task = asyncio.create_task(
+                            asyncio.to_thread(triage.get_next_question))
+                        # Speak the empathy line verbatim and in full (no barge-in).
+                        await xai.force_message(empathy, interruptible=False)
+                        record_flow["pending"] = {
+                            "phase": "await_created",
+                            "call_id": data["call_id"],
+                            "empathy_id": None,
+                            "q_task": q_task,
+                        }
+                        log.info("recordSymptom: desc=%r empathy=%r", description, empathy)
+                    else:
+                        result = triage.handle(name, args)
+                        log.info("Tool %s -> %s", name, result)
+                        await xai.send_function_result(data["call_id"], result)
+                elif kind == "response_created":
+                    p = record_flow["pending"]
+                    # The first response.created after we send the empathy line is
+                    # that force_message — capture its id so we gate on the right
+                    # response.done (not the model's earlier tool-call turn).
+                    if p and p["phase"] == "await_created":
+                        p["empathy_id"] = data
+                        p["phase"] = "await_done"
+                elif kind == "response_done":
+                    p = record_flow["pending"]
+                    if p and p["phase"] == "await_done" and data == p["empathy_id"]:
+                        # Empathy finished. Resolve the tool call (handing the model
+                        # the question text for context) and speak it verbatim. No
+                        # response.create -> model stays silent until the caller
+                        # answers, then it calls recordSymptom again.
+                        result = await p["q_task"]
+                        next_q = (result or {}).get("next_question", "")
+                        await xai.send_function_output(
+                            p["call_id"],
+                            {"status": "recorded", "next_question": next_q})
+                        await xai.force_message(next_q, interruptible=False)
+                        log.info("Next question: %r", next_q)
+                        record_flow["pending"] = None
                 elif kind == "ready":
                     log.info("xAI session ready")
                     await maybe_greet()
@@ -190,11 +242,18 @@ if __name__ == "__main__":
 
     if not config.TELNYX_API_KEY:
         log.warning("TELNYX_API_KEY is empty — calls won't be answered. Set it in .env")
-    # reload=True watches .py files and restarts on save (dev mode).
+    # Reload is OPT-IN (RELOAD=1). It is OFF by default because a file change
+    # mid-call tears down the worker and kills the active call — and this repo
+    # lives under OneDrive, whose background sync writes fire spurious reloads.
+    # Turn it on only while iterating on prompts/code WITHOUT a call in progress.
+    reload_enabled = os.getenv("RELOAD", "0").lower() in ("1", "true", "yes")
+    if not reload_enabled:
+        log.info("Reload disabled (set RELOAD=1 to enable hot-reload for dev).")
     uvicorn.run(
         "server:app",
         host=config.HOST,
         port=config.PORT,
-        reload=True,
+        reload=reload_enabled,
+        reload_includes=["*.py", "*.txt"] if reload_enabled else None,
         log_level=config.LOG_LEVEL.lower(),
     )

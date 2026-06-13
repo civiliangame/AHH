@@ -17,17 +17,23 @@ import logging
 
 import websockets
 
+import agents
 import config
-import triage
 
 log = logging.getLogger("xai")
 
 
 class XAIRealtimeClient:
-    def __init__(self):
+    def __init__(self, persona=None):
         self._ws = None
         self.ready = False  # True once session.updated arrives
         self._needs_followup = False  # tool output submitted; respond on done
+        self.persona = persona or agents.TRIAGE  # which agent this call runs
+        # Audio gate: ONLY force_message audio is relayed to the caller; the
+        # model's own spoken responses are dropped. force_message() arms
+        # _expect_forced; the next response.created consumes it into _allow_audio.
+        self._expect_forced = False
+        self._allow_audio = False
 
     async def connect(self):
         url = f"{config.XAI_REALTIME_URL}?model={config.XAI_REALTIME_MODEL}"
@@ -52,8 +58,8 @@ class XAIRealtimeClient:
         await self._send({
             "type": "session.update",
             "session": {
-                "instructions": config.XAI_INSTRUCTIONS,
-                "voice": config.XAI_VOICE,
+                "instructions": self.persona.instructions,
+                "voice": self.persona.voice,
                 "audio": {
                     "input": {"format": {"type": config.XAI_AUDIO_FORMAT}},
                     "output": {"format": {"type": config.XAI_AUDIO_FORMAT}},
@@ -66,7 +72,7 @@ class XAIRealtimeClient:
                     "silence_duration_ms": 800,
                     "prefix_padding_ms": 300,
                 },
-                "tools": triage.TRIAGE_TOOLS,
+                "tools": self.persona.tools,
             },
         })
 
@@ -90,6 +96,47 @@ class XAIRealtimeClient:
         })
         self._needs_followup = True
 
+    async def send_function_output(self, call_id: str, result: dict):
+        """Submit a tool result WITHOUT asking the model to respond.
+
+        Unlike send_function_result, this does NOT set _needs_followup, so the
+        model stays silent on response.done. Use it when you drive the next turn
+        yourself via force_message (the recordSymptom flow) instead of letting
+        the model speak.
+        """
+        if self._ws is None:
+            return
+        await self._send({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "function_call_output",
+                "call_id": call_id,
+                "output": json.dumps(result),
+            },
+        })
+
+    async def force_message(self, text: str, interruptible: bool = False, voice=None):
+        """Speak a hard-coded line verbatim via TTS, with no model involvement.
+
+        The force_message IS the turn — do NOT follow it with response.create.
+        It emits its own response.created -> output_audio.delta -> response.done
+        lifecycle, so the existing audio relay forwards it to the caller as-is.
+        """
+        if self._ws is None or not text:
+            return
+        item = {
+            "type": "force_message",
+            "role": "assistant",
+            "interruptible": interruptible,
+            "content": [{"type": "output_text", "text": text}],
+        }
+        if voice:
+            item["voice"] = voice
+        # Arm the gate: the response this force_message produces is allowed to
+        # play. Everything else (model-generated audio) stays suppressed.
+        self._expect_forced = True
+        await self._send({"type": "conversation.item.create", "item": item})
+
     async def greet(self):
         """Have Grok speak the opening line in its own voice.
 
@@ -97,14 +144,15 @@ class XAIRealtimeClient:
         the model says the line once and stops, instead of echoing it and then
         adding its own continuation.
         """
-        if not config.XAI_GREETING or self._ws is None:
+        greeting = self.persona.greeting
+        if not greeting or self._ws is None:
             return
         await self._send({
             "type": "response.create",
             "response": {
                 "instructions": (
                     f'Open the call by greeting the caller with this line, then '
-                    f'stop and wait for them to respond: "{config.XAI_GREETING}"'
+                    f'stop and wait for them to respond: "{greeting}"'
                 ),
             },
         })
@@ -135,9 +183,12 @@ class XAIRealtimeClient:
                 self.ready = True
                 yield "ready", None
             elif etype == "response.output_audio.delta":
-                delta = evt.get("delta")
-                if delta:
-                    yield "audio", delta
+                # Relay audio ONLY for forced (system) responses. Model-generated
+                # audio is dropped so the caller never hears the model speak.
+                if self._allow_audio:
+                    delta = evt.get("delta")
+                    if delta:
+                        yield "audio", delta
             elif etype == "input_audio_buffer.speech_started":
                 # Caller started talking -> barge-in (interrupt the bot).
                 yield "speech_started", None
@@ -150,6 +201,17 @@ class XAIRealtimeClient:
             elif etype == "response.function_call_arguments.done":
                 # evt carries: name, call_id, arguments (JSON string).
                 yield "function_call", evt
+            elif etype == "response.created":
+                # A force_message arms _expect_forced and this response inherits
+                # it. Any response we did NOT initiate via force_message (the
+                # model's own turns) is not allowed to reach the caller.
+                self._allow_audio = self._expect_forced
+                self._expect_forced = False
+                if not self._allow_audio:
+                    log.info("Suppressing model response (not a force_message)")
+                # Surface the new response's id so callers can gate on the
+                # matching response.done (used by the recordSymptom flow).
+                yield "response_created", evt.get("response", {}).get("id")
             elif etype == "response.done":
                 # The turn finished. If we submitted any tool outputs during it,
                 # ask for exactly one follow-up response (regardless of how many
@@ -157,6 +219,9 @@ class XAIRealtimeClient:
                 if self._needs_followup:
                     self._needs_followup = False
                     await self._send({"type": "response.create"})
+                self._allow_audio = False  # close the gate until the next response
+                # Surface the finished response's id for force_message gating.
+                yield "response_done", evt.get("response", {}).get("id")
             elif etype == "error":
                 log.error("xAI error event: %s", evt.get("error") or evt)
                 yield "error", evt

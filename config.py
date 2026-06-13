@@ -37,14 +37,30 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "5000"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+# --- Outbound check-in persona (separate agent; see agents.py) ---
+CHECKIN_VOICE = os.getenv("CHECKIN_VOICE", "rex")
+CHECKIN_GREETING = os.getenv(
+    "CHECKIN_GREETING",
+    "Hi, this is Eva from AtLegionX calling to check in. "
+    "Is now a good time to talk for a couple of minutes?",
+)
+
 # --- Telnyx (Call Control / Voice API) ---
 # API key (starts with "KEY...") used to answer calls and start streaming.
 TELNYX_API_KEY = os.getenv("TELNYX_API_KEY", "")
 TELNYX_API_BASE = os.getenv("TELNYX_API_BASE", "https://api.telnyx.com/v2")
+# For OUTBOUND calls (run_checkin.py): the Call Control App's connection id and
+# a Telnyx number on it to call FROM. Find both in the Telnyx portal.
+TELNYX_CONNECTION_ID = os.getenv("TELNYX_CONNECTION_ID", "")
+TELNYX_FROM_NUMBER = os.getenv("TELNYX_FROM_NUMBER", "")
 # Public host Telnyx should open the media WebSocket to. Usually your ngrok
 # domain (no scheme), e.g. "abc123.ngrok-free.app". If blank, we derive it
 # from the inbound webhook's Host header.
-PUBLIC_HOSTNAME = os.getenv("PUBLIC_HOSTNAME", "")
+PUBLIC_HOSTNAME = os.getenv("PUBLIC_HOSTNAME", "").strip()
+# Accept a full URL or a bare host; we only want host[:port] for the wss:// URL.
+if "://" in PUBLIC_HOSTNAME:
+    PUBLIC_HOSTNAME = PUBLIC_HOSTNAME.split("://", 1)[1]
+PUBLIC_HOSTNAME = PUBLIC_HOSTNAME.strip("/")
 # Path the Telnyx media stream connects to.
 STREAM_PATH = os.getenv("STREAM_PATH", "/media-stream")
 
