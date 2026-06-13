@@ -16,6 +16,8 @@ import logging
 log = logging.getLogger("triage")
 import time
 
+global_descriptions = []
+
 # ---------------------------------------------------------------------------
 # 1. Schemas advertised to the model (goes into session.update -> "tools")
 # ---------------------------------------------------------------------------
@@ -40,6 +42,7 @@ TRIAGE_TOOLS = [
 
 
 def get_next_question():
+    descriptions = global_descriptions
     time.sleep(3)
     return {"status": "success", "next_question": "When did this start?"}
 
@@ -49,6 +52,7 @@ def get_next_question():
 def recordSymptom(description, empathy):
     print("OH NO")
     print(f"Recording symptom: {description}")
+    global_descriptions.append(description)
     return {"status": "success", "message": "Ask next: When did this start?"}
 
 
