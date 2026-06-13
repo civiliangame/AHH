@@ -22,81 +22,29 @@ log = logging.getLogger("triage")
 TRIAGE_TOOLS = [
     {
         "type": "function",
-        "name": "assess_suicide_risk",
+        "name": "recordSymptom",
         "description": (
-            "Score suicide risk from C-SSRS answers. Call this the moment any "
-            "suicidal ideation, intent, or plan is mentioned — before anything else."
+            "Record a symptom mentioned by the patient. Call this the moment any "
+            "symptom is mentioned — before anything else. Be very detailed with your description"
         ),
         "parameters": {
             "type": "object",
             "properties": {
-                "ideation": {"type": "boolean", "description": "Any wish to be dead or suicidal thoughts"},
-                "plan":     {"type": "boolean", "description": "Has a specific method or plan"},
-                "intent":   {"type": "boolean", "description": "Intends to act on it"},
-                "means":    {"type": "boolean", "description": "Has access to means"},
-                "verbatim": {"type": "string",  "description": "What the caller actually said"},
+                "description": {"type": "string", "description": "Detailed description of the symptom"},
             },
-            "required": ["ideation"],
+            "required": ["description"],
         },
-    },
-    {
-        "type": "function",
-        "name": "score_assessment",
-        "description": (
-            "Compute the validated score and severity tier for a completed "
-            "screening instrument. Always use this — never total the items yourself."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "instrument": {"type": "string", "enum": ["PHQ-9", "GAD-7"]},
-                "responses":  {
-                    "type": "array",
-                    "items": {"type": "integer"},
-                    "description": "Item scores in order (each 0-3)",
-                },
-            },
-            "required": ["instrument", "responses"],
-        },
-    },
-    {
-        "type": "function",
-        "name": "save_triage_summary",
-        "description": (
-            "Persist the final structured triage result and recommended level "
-            "of care. Call once at the end of intake."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "domains":   {"type": "array", "items": {"type": "string"},
-                              "description": "Symptom domains that screened positive"},
-                "level_of_care": {"type": "string",
-                                  "enum": ["crisis", "urgent", "routine", "self_help"]},
-                "notes":     {"type": "string"},
-            },
-            "required": ["level_of_care"],
-        },
-    },
+    }
 ]
 
 
 # ---------------------------------------------------------------------------
 # 2. Implementations — one function per tool name above
 # ---------------------------------------------------------------------------
-def assess_suicide_risk(ideation=False, plan=False, intent=False,
-                        means=False, verbatim=""):
+def recordSymptom(description):
     print("OH NO")
-    if intent or (plan and means):
-        risk = "high"
-    elif plan or intent:
-        risk = "moderate"
-    elif ideation:
-        risk = "low"
-    else:
-        risk = "none"
-    log.warning("Suicide risk assessed: %s | %r", risk, verbatim)
-    return {"risk": risk, "escalate": risk in ("moderate", "high")}
+    print(f"Recording symptom: {description}")
+    return {"status": "success", "message": "Ask next: When did this start?"}
 
 
 # PHQ-9 / GAD-7 severity bands (sum of item scores).
@@ -123,9 +71,7 @@ def save_triage_summary(level_of_care, domains=None, notes=""):
 
 
 HANDLERS = {
-    "assess_suicide_risk": assess_suicide_risk,
-    "score_assessment": score_assessment,
-    "save_triage_summary": save_triage_summary,
+    "recordSymptom": recordSymptom
 }
 
 

@@ -31,7 +31,7 @@ XAI_VOICE = os.getenv("XAI_VOICE", "ara")
 XAI_INSTRUCTIONS = get_system_prompt()
 # The line Grok speaks first when the call connects (spoken by the realtime
 # model in its own voice). Empty = wait for the caller to talk first.
-XAI_GREETING = "Hi, I'm Pulse, your AI assistant. How can I help you today?"
+XAI_GREETING = "Hi, I'm Eva from AtLegionX. How are you feeling today?"
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "5000"))

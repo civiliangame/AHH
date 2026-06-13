@@ -27,6 +27,7 @@ class XAIRealtimeClient:
     def __init__(self):
         self._ws = None
         self.ready = False  # True once session.updated arrives
+        self._needs_followup = False  # tool output submitted; respond on done
 
     async def connect(self):
         url = f"{config.XAI_REALTIME_URL}?model={config.XAI_REALTIME_MODEL}"
@@ -57,16 +58,25 @@ class XAIRealtimeClient:
                     "input": {"format": {"type": config.XAI_AUDIO_FORMAT}},
                     "output": {"format": {"type": config.XAI_AUDIO_FORMAT}},
                 },
-                "turn_detection": {"type": "server_vad"},
+                "turn_detection": {
+                    "type": "server_vad",
+                    # Wait this long after the caller stops before ending their
+                    # turn. Higher = fewer mid-sentence splits (they can pause to
+                    # think), at the cost of a bit more response latency.
+                    "silence_duration_ms": 800,
+                    "prefix_padding_ms": 300,
+                },
                 "tools": triage.TRIAGE_TOOLS,
             },
         })
 
     async def send_function_result(self, call_id: str, result: dict):
-        """Return a tool result to the model, then ask it to continue.
+        """Submit one tool result. Does NOT ask for a response yet.
 
-        This is the exact two-message sequence the Voice Agent API expects:
-        a function_call_output item, followed by response.create.
+        A single model turn can contain multiple function calls. We submit each
+        output as it arrives, then trigger exactly one `response.create` when the
+        turn finishes (`response.done`). Triggering a response per tool call
+        makes the model speak once per call — the double-reply bug.
         """
         if self._ws is None:
             return
@@ -78,7 +88,7 @@ class XAIRealtimeClient:
                 "output": json.dumps(result),
             },
         })
-        await self._send({"type": "response.create"})
+        self._needs_followup = True
 
     async def greet(self):
         """Have Grok speak the opening line in its own voice.
@@ -120,8 +130,8 @@ class XAIRealtimeClient:
             if etype == "conversation.created":
                 await self._configure_session()
             elif etype == "session.updated":
-                # Ready to stream audio. The opening line is spoken by the
-                # server via xAI TTS (exact wording), not generated here.
+                # Ready to stream audio. The greeting is triggered by the
+                # server (via greet()) once Telnyx's stream is also up.
                 self.ready = True
                 yield "ready", None
             elif etype == "response.output_audio.delta":
@@ -140,6 +150,13 @@ class XAIRealtimeClient:
             elif etype == "response.function_call_arguments.done":
                 # evt carries: name, call_id, arguments (JSON string).
                 yield "function_call", evt
+            elif etype == "response.done":
+                # The turn finished. If we submitted any tool outputs during it,
+                # ask for exactly one follow-up response (regardless of how many
+                # tools were called) so the model speaks once, not per-tool.
+                if self._needs_followup:
+                    self._needs_followup = False
+                    await self._send({"type": "response.create"})
             elif etype == "error":
                 log.error("xAI error event: %s", evt.get("error") or evt)
                 yield "error", evt
