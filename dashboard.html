@@ -3,22 +3,129 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Live Transcript</title>
+<title>Triage + Check-in Dashboard</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
   body {
-    margin: 0; font: 15px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+    font: 14px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
     background: #0d1117; color: #e6edf3;
+    display: grid;
+    grid-template-columns: 280px 240px 1fr;
+    grid-template-rows: 48px 1fr;
+    grid-template-areas:
+      "head head head"
+      "meta calls feed";
   }
   header {
-    position: sticky; top: 0; padding: 14px 20px; background: #161b22;
-    border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px;
+    grid-area: head;
+    padding: 0 18px; background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex; align-items: center; gap: 12px;
   }
-  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  header h1 { font-size: 14px; margin: 0; font-weight: 600; }
   #status { font-size: 12px; color: #8b949e; margin-left: auto; }
   #status.live::before { content: "● "; color: #3fb950; }
   #status.down::before { content: "● "; color: #f85149; }
+
+  aside.panel {
+    background: #0d1117; border-right: 1px solid #30363d;
+    overflow-y: auto; padding: 14px 14px 24px;
+  }
+  aside.panel h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #8b949e; margin: 14px 0 6px;
+  }
+  aside.panel h2:first-child { margin-top: 0; }
+
+  #meta { grid-area: meta; }
+  #calls { grid-area: calls; border-right: 1px solid #30363d; }
+
+  .pill-list { display: flex; flex-direction: column; gap: 4px; }
+  .pill {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 6px; padding: 6px 9px; font-size: 12.5px;
+    word-wrap: break-word;
+  }
+  .pill.empty { color: #6e7681; font-style: italic; border-style: dashed; }
+  .pill.cand {
+    background: #1c2129; border-color: #3a4150;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pill.cand .name { flex: 1; min-width: 0; }
+  .pill .ts { display: block; font-size: 10.5px; color: #6e7681; margin-top: 2px; }
+
+  .rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px;
+    border-radius: 10px; background: #0d1117; border: 1px solid #30363d;
+    font-size: 11px; font-weight: 700; color: #8b949e;
+  }
+  .rank.r1 { color: #f0f6fc; background: #1f6feb; border-color: #1f6feb; }
+  .rank.r2 { color: #e6edf3; background: #30363d; border-color: #484f58; }
+  .rank.r3 { color: #c9d1d9; }
+
+  .delta {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 1px 6px; border-radius: 9px;
+    border: 1px solid transparent;
+  }
+  .delta.up   { background: #0d2818; color: #3fb950; border-color: #1f4d2e; }
+  .delta.down { background: #2d1418; color: #f85149; border-color: #5a2129; }
+  .delta.new  { background: #2d2410; color: #d29922; border-color: #5a4419; }
+  .delta.same { color: #6e7681; }
+
+  @keyframes pillFlash {
+    0%   { background: #25324a; border-color: #58a6ff; }
+    100% { background: #1c2129; border-color: #3a4150; }
+  }
+  .pill.cand.flash { animation: pillFlash 1.6s ease-out; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 14px 0 6px;
+  }
+  .section-head:first-child { margin-top: 0; }
+  .section-head h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #8b949e; margin: 0;
+  }
+  .round-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    color: #58a6ff; background: #0d2236; border: 1px solid #1f4d7a;
+    padding: 1px 7px; border-radius: 9px;
+  }
+
+  .computing {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #d29922; font-style: italic;
+    padding: 6px 2px;
+  }
+  .computing::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    background: #d29922; animation: pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+  .rank-line {
+    display: flex; align-items: center; gap: 8px; padding: 3px 0;
+    font-size: 13px;
+  }
+  .rank-line .name { flex: 1; min-width: 0; }
+  .next-q-line { margin-top: 6px; padding-top: 6px; border-top: 1px solid #30363d; font-size: 12.5px; }
+
+  .call-row {
+    padding: 8px 10px; border-radius: 6px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 4px;
+  }
+  .call-row:hover { background: #161b22; }
+  .call-row.active { background: #1f2733; border-color: #3a4150; }
+  .call-row .agent { font-size: 12.5px; font-weight: 600; }
+  .call-row .meta { font-size: 11px; color: #8b949e; margin-top: 2px; }
+  .call-row.live .agent::before { content: "● "; color: #3fb950; }
+
+  #feed-wrap { grid-area: feed; overflow-y: auto; }
   #feed { max-width: 760px; margin: 0 auto; padding: 20px; }
   .turn { display: flex; margin: 10px 0; }
   .turn.caller { justify-content: flex-end; }
@@ -32,36 +139,104 @@
   .caller .role { text-align: right; }
   .system { text-align: center; color: #8b949e; font-size: 12px; margin: 18px 0 6px; }
   .system span { background: #161b22; padding: 3px 10px; border-radius: 10px; border: 1px solid #30363d; }
+  .meta-event {
+    margin: 10px auto; max-width: 600px;
+    background: #161b22; border: 1px solid #3a4150; border-left: 3px solid #d29922;
+    border-radius: 6px; padding: 8px 12px; font-size: 12.5px;
+  }
+  .meta-event.scores { border-left-color: #58a6ff; }
+  .meta-event.scores .label { color: #58a6ff; }
+  .meta-event .label {
+    color: #d29922; font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px;
+  }
+  .meta-event .body { color: #e6edf3; }
+  .meta-event .body em { color: #8b949e; font-style: normal; }
+  .score-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .score-badge {
+    display: inline-flex; flex-direction: column; gap: 2px;
+    padding: 6px 10px; border-radius: 6px; border: 1px solid #30363d;
+    background: #0d1117; min-width: 140px;
+  }
+  .score-badge .k {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #8b949e;
+  }
+  .score-badge .v { font-size: 14px; font-weight: 600; color: #e6edf3; }
+  .score-badge .raw { font-size: 10.5px; color: #6e7681; }
+  .score-badge.sev-0 { border-color: #2ea043; }
+  .score-badge.sev-1 { border-color: #d29922; }
+  .score-badge.sev-2 { border-color: #db6d28; }
+  .score-badge.sev-3 { border-color: #f85149; }
+  .score-badge.metric { border-color: #3a4150; }
+  .score-badge .indet {
+    display: inline-block; margin-left: 4px;
+    padding: 0 5px; border: 1px solid #d29922; border-radius: 10px;
+    font-size: 9.5px; font-weight: 600; color: #d29922;
+    vertical-align: 1px;
+  }
+  .score-badge .spark { display: block; margin-top: 4px; }
+  .score-badge .spark .baseline { stroke: #30363d; stroke-width: 0.5; stroke-dasharray: 2 2; }
 </style>
 </head>
 <body>
   <header>
-    <h1>Live Transcript</h1>
+    <h1>Triage + Check-in Dashboard</h1>
     <span id="status" class="down">connecting…</span>
   </header>
-  <div id="feed"></div>
+
+  <aside id="meta" class="panel">
+    <div class="section-head"><h2>Symptoms</h2><span id="symptoms-count"></span></div>
+    <div id="symptoms" class="pill-list"></div>
+    <div class="section-head"><h2>Candidate Conditions</h2><span id="round-badge"></span></div>
+    <div id="candidates" class="pill-list"></div>
+    <div class="section-head"><h2>Latest Question</h2></div>
+    <div id="next-q" class="pill-list"></div>
+  </aside>
+
+  <aside id="calls" class="panel">
+    <h2>Calls</h2>
+    <div id="calls-list"></div>
+  </aside>
+
+  <section id="feed-wrap">
+    <div id="feed"></div>
+  </section>
 
 <script>
   const feed = document.getElementById("feed");
-  const status = document.getElementById("status");
-  let lastCall = null;
-  let openAgent = null;   // the agent bubble currently being typed into
+  const statusEl = document.getElementById("status");
+  const symptomsEl = document.getElementById("symptoms");
+  const candidatesEl = document.getElementById("candidates");
+  const nextQEl = document.getElementById("next-q");
+  const callsListEl = document.getElementById("calls-list");
 
+  // ----- state -----
+  const LIVE = "__live__";
+  let viewing = LIVE;          // call_id currently being viewed (or LIVE for SSE feed)
+  let liveCall = null;         // call_id of the currently-streaming call
+  let openAgent = null;        // agent bubble currently being typed into
+  const liveCallsSeen = new Set();   // call_ids ever seen on this SSE connection
+
+  // ----- helpers -----
   function atBottom() {
-    return window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+    const wrap = document.getElementById("feed-wrap");
+    return wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 120;
   }
-  function scroll() { if (atBottom()) window.scrollTo(0, document.body.scrollHeight); }
+  function scroll() {
+    const wrap = document.getElementById("feed-wrap");
+    if (atBottom()) wrap.scrollTop = wrap.scrollHeight;
+  }
+  function clearFeed() { feed.innerHTML = ""; openAgent = null; lastFeedCandidates = null; }
 
   function bubble(role, text) {
     const turn = document.createElement("div");
     turn.className = "turn " + role;
-    turn.innerHTML = `<div><div class="role">${role}</div>` +
-                     `<div class="bubble"></div></div>`;
+    turn.innerHTML = `<div><div class="role">${role}</div><div class="bubble"></div></div>`;
     turn.querySelector(".bubble").textContent = text;
     feed.appendChild(turn);
     return turn.querySelector(".bubble");
   }
-
   function system(text) {
     const d = document.createElement("div");
     d.className = "system";
@@ -69,33 +244,326 @@
     d.querySelector("span").textContent = text;
     feed.appendChild(d);
   }
+  // Tiny per-chunk severity sparkline. y-axis = band index (0..maxBand),
+  // x-axis = chunk index. Returns "" for 0-1 chunks (no meaningful arc).
+  function sparkline(perChunk, task, color, maxBand) {
+    if (!perChunk || perChunk.length < 2) return "";
+    const w = 90, h = 20, n = perChunk.length;
+    const pts = perChunk.map((c, i) => {
+      const x = (i / (n - 1)) * w;
+      const norm = Math.max(0, Math.min(maxBand, c[task])) / maxBand;
+      const y = h - norm * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+      <line class="baseline" x1="0" x2="${w}" y1="${h}" y2="${h}"></line>
+      <polyline points="${pts}" stroke="${color}" stroke-width="1.6"
+                fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>`;
+  }
 
-  function handle(ev) {
-    if (ev.call_id && ev.call_id !== lastCall) { lastCall = ev.call_id; openAgent = null; }
+  function scoreBadge(name, level, label, raw, margin, isIndet, perChunk, task, color, maxBand) {
+    const rawStr = (raw === undefined || raw === null) ? "" : ` · raw ${Number(raw).toFixed(2)}`;
+    const marginStr = (margin === undefined || margin === null) ? "" : `margin ${Number(margin).toFixed(2)}`;
+    const indet = isIndet
+      ? `<span class="indet" title="raw is within ${Number(margin).toFixed(2)} of a band threshold">indeterminate</span>`
+      : "";
+    return `<div class="score-badge sev-${level}">
+      <span class="k">${name}${indet}</span>
+      <span class="v">${level} · ${label}</span>
+      <span class="raw">${marginStr}${rawStr}</span>
+      ${sparkline(perChunk, task, color, maxBand)}
+    </div>`;
+  }
+
+  function voiceBadge(wpm, words, speechSec) {
+    if (wpm === undefined && words === undefined && speechSec === undefined) return "";
+    const wpmStr = (wpm === undefined || wpm === null) ? "—" : `${Number(wpm).toFixed(0)} wpm`;
+    const detail = (words !== undefined && speechSec !== undefined)
+      ? `${words} words · ${Number(speechSec).toFixed(1)}s speech`
+      : "";
+    return `<div class="score-badge metric">
+      <span class="k">Speaking rate</span>
+      <span class="v">${wpmStr}</span>
+      <span class="raw">${detail}</span>
+    </div>`;
+  }
+
+  // Tracks the previous-round candidates as we walk the feed chronologically
+  // (live OR replay). Reset whenever the feed is cleared.
+  let lastFeedCandidates = null;
+
+  function metaEventCard(data) {
+    const d = document.createElement("div");
+    d.className = "meta-event";
+    let label = data.kind || "metadata";
+    let body = "";
+    if (data.kind === "symptom") {
+      body = data.description || "";
+    } else if (data.kind === "differential_started") {
+      label = "differential · computing";
+      const n = (data.symptoms_so_far || []).length;
+      body = `<div class="computing">re-ranking against ${n} symptom${n === 1 ? "" : "s"}…</div>`;
+    } else if (data.kind === "differential") {
+      const prev = lastFeedCandidates;
+      const cands = data.candidates || [];
+      const roundStr = (typeof data.round === "number" && data.round > 0)
+        ? `Round ${data.round}` : "";
+      label = `differential${roundStr ? " · " + roundStr : ""}${prev ? "" : " · initial ranking"}`;
+      const rows = cands.length
+        ? cands.map((c, i) => {
+            const rd = rankDelta(c, i, prev);
+            const delta = rd ? `<span class="delta ${rd.kind}">${rd.text}</span>` : "";
+            return `<div class="rank-line">
+              <span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+              <span class="name">${escapeHtml(c)}</span>${delta}
+            </div>`;
+          }).join("")
+        : `<div class="rank-line"><em>no candidates returned</em></div>`;
+      const nq = data.next_question
+        ? `<div class="next-q-line"><em>next question:</em> ${escapeHtml(data.next_question)}</div>`
+        : "";
+      body = rows + nq;
+      lastFeedCandidates = cands;
+    } else if (data.kind === "scores") {
+      d.classList.add("scores");
+      const indMargin = data.indeterminate_margin ?? 0.05;
+      const indDep = (data.depression_margin !== undefined) && data.depression_margin < indMargin;
+      const indAnx = (data.anxiety_margin !== undefined) && data.anxiety_margin < indMargin;
+      label = "depression / anxiety scores"
+        + (data.n_chunks ? ` · ${data.n_chunks} chunk${data.n_chunks === 1 ? "" : "s"}` : "")
+        + (data.indeterminate ? " · borderline" : "");
+      body = `<div class="score-row">
+        ${scoreBadge("Depression", data.depression, data.depression_label,
+                     data.depression_raw, data.depression_margin, indDep,
+                     data.per_chunk, "depression", "#58a6ff", 2)}
+        ${scoreBadge("Anxiety",    data.anxiety,    data.anxiety_label,
+                     data.anxiety_raw, data.anxiety_margin, indAnx,
+                     data.per_chunk, "anxiety", "#d29922", 3)}
+        ${voiceBadge(data.speaking_rate_wpm, data.caller_word_count, data.speech_seconds)}
+      </div>`;
+    } else {
+      body = JSON.stringify(data);
+    }
+    d.innerHTML = `<div class="label">${label}</div><div class="body">${body}</div>`;
+    feed.appendChild(d);
+  }
+
+  // ----- metadata panel -----
+  const symptoms = [];                // strings
+  let candidates = [];                // strings (latest ranking)
+  let prevCandidates = null;          // ranking BEFORE the latest update (for delta)
+  const candidatesHistory = [];       // [[c1, c2], ...] one entry per differential round
+  let roundCount = 0;
+  let computing = false;
+  let flashOnNextRender = false;     // fire pill-flash once, on the render right after a differential
+  let lastQuestion = "";
+  const symptomsCountEl = document.getElementById("symptoms-count");
+  const roundBadgeEl = document.getElementById("round-badge");
+
+  // What changed for `name` (at position idx) compared to the prior round.
+  // Returns null on the very first round (nothing to compare against yet).
+  function rankDelta(name, idx, prev) {
+    if (!prev || !prev.length) return null;
+    const prevIdx = prev.indexOf(name);
+    if (prevIdx === -1) return { kind: "new", text: "NEW" };
+    const move = prevIdx - idx;   // positive = moved up the ranking
+    if (move > 0) return { kind: "up",   text: `↑ ${move}` };
+    if (move < 0) return { kind: "down", text: `↓ ${-move}` };
+    return { kind: "same", text: "—" };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  function renderPanel() {
+    // Symptoms
+    symptomsCountEl.innerHTML = symptoms.length
+      ? `<span class="round-badge">${symptoms.length}</span>` : "";
+    symptomsEl.innerHTML = symptoms.length
+      ? symptoms.map(_ => `<div class="pill"></div>`).join("")
+      : `<div class="pill empty">none yet</div>`;
+    [...symptomsEl.querySelectorAll(".pill")].forEach((el, i) => { el.textContent = symptoms[i]; });
+
+    // Candidates — ranked + delta + (optionally) computing spinner
+    roundBadgeEl.innerHTML = roundCount
+      ? `<span class="round-badge">Round ${roundCount}</span>` : "";
+
+    if (computing) {
+      const existing = candidates.length
+        ? candidates.map((c, i) => {
+            const d = rankDelta(c, i, prevCandidates);
+            const delta = d ? `<span class="delta ${d.kind}">${d.text}</span>` : "";
+            return `<div class="pill cand">
+              <span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+              <span class="name"></span>${delta}
+            </div>`;
+          }).join("")
+        : "";
+      candidatesEl.innerHTML = existing + `<div class="computing">re-ranking with new symptom…</div>`;
+    } else if (candidates.length) {
+      const useFlash = flashOnNextRender;
+      flashOnNextRender = false;
+      candidatesEl.innerHTML = candidates.map((c, i) => {
+        const d = rankDelta(c, i, prevCandidates);
+        const delta = d ? `<span class="delta ${d.kind}">${d.text}</span>` : "";
+        const flash = useFlash && d && d.kind !== "same" ? " flash" : "";
+        return `<div class="pill cand${flash}">
+          <span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+          <span class="name"></span>${delta}
+        </div>`;
+      }).join("");
+    } else {
+      candidatesEl.innerHTML = `<div class="pill empty">awaiting differential</div>`;
+    }
+    [...candidatesEl.querySelectorAll(".pill .name")].forEach((el, i) => { el.textContent = candidates[i]; });
+
+    // Latest question
+    nextQEl.innerHTML = lastQuestion
+      ? `<div class="pill"></div>`
+      : `<div class="pill empty">—</div>`;
+    if (lastQuestion) nextQEl.querySelector(".pill").textContent = lastQuestion;
+  }
+
+  function applyMetadata(data) {
+    if (!data) return;
+    if (data.kind === "symptom" && data.description) {
+      symptoms.push(data.description);
+    } else if (data.kind === "differential_started") {
+      computing = true;
+    } else if (data.kind === "differential") {
+      computing = false;
+      if (Array.isArray(data.candidates)) {
+        prevCandidates = candidates.slice();
+        candidates = data.candidates;
+        candidatesHistory.push(candidates.slice());
+        roundCount = (typeof data.round === "number" && data.round > 0)
+          ? data.round : candidatesHistory.length;
+        flashOnNextRender = true;     // visual cue that a re-ranking just happened
+      }
+      if (data.next_question) lastQuestion = data.next_question;
+    }
+    renderPanel();
+  }
+
+  // ----- calls list -----
+  let calls = [];   // [{call_id, agent, started_at, turns}]
+
+  function renderCalls() {
+    const rows = [];
+    // Live row first (always present so user can return to it)
+    const liveActive = viewing === LIVE ? " active" : "";
+    rows.push(
+      `<div class="call-row live${liveActive}" data-id="${LIVE}">
+        <div class="agent">Live feed</div>
+        <div class="meta">${liveCall ? "streaming: " + liveCall.slice(0, 8) : "waiting for next call"}</div>
+      </div>`
+    );
+    for (const c of calls) {
+      const active = viewing === c.call_id ? " active" : "";
+      const when = new Date(c.started_at * 1000).toLocaleString();
+      rows.push(
+        `<div class="call-row${active}" data-id="${c.call_id}">
+          <div class="agent">${c.agent} · ${c.call_id.slice(0, 8)}</div>
+          <div class="meta">${when} · ${c.turns} turns</div>
+        </div>`
+      );
+    }
+    callsListEl.innerHTML = rows.join("");
+    callsListEl.querySelectorAll(".call-row").forEach(el => {
+      el.addEventListener("click", () => selectCall(el.dataset.id));
+    });
+  }
+
+  async function refreshCalls() {
+    try {
+      const r = await fetch("/api/calls");
+      const j = await r.json();
+      calls = j.calls || [];
+      renderCalls();
+    } catch (_) {}
+  }
+
+  async function selectCall(id) {
+    viewing = id;
+    renderCalls();
+    clearFeed();
+    if (id === LIVE) return;   // SSE handler will keep painting
+    try {
+      const r = await fetch(`/api/calls/${id}`);
+      const j = await r.json();
+      for (const ev of j.events || []) replay(ev);
+    } catch (_) {
+      system("Failed to load transcript.");
+    }
+  }
+
+  // Replays a persisted event into the feed. Same shape as a live event minus partials.
+  function replay(ev) {
+    if (ev.role === "system") system(ev.text);
+    else if (ev.role === "caller") bubble("caller", ev.text);
+    else if (ev.role === "agent") bubble("agent", ev.text);
+    else if (ev.role === "metadata") metaEventCard(ev.data || {});
+  }
+
+  // ----- live SSE -----
+  function handleLive(ev) {
+    // Always apply metadata to the panel (it's the authoritative latest state).
+    if (ev.role === "metadata") applyMetadata(ev.data);
+
+    // Track which call is live; refresh the calls list when a new one appears.
+    if (ev.call_id && !liveCallsSeen.has(ev.call_id)) {
+      liveCallsSeen.add(ev.call_id);
+      liveCall = ev.call_id;
+      refreshCalls();
+    }
+    if (ev.call_id) liveCall = ev.call_id;
+
+    // Only paint to the feed if we're viewing the live stream.
+    if (viewing !== LIVE) return;
+
+    if (ev.call_id && ev.call_id !== liveCall) { openAgent = null; }
 
     if (ev.role === "system") { openAgent = null; system(ev.text); }
     else if (ev.role === "caller") { openAgent = null; bubble("caller", ev.text); }
     else if (ev.role === "agent") {
       if (ev.partial) {
         if (!openAgent) openAgent = bubble("agent", "");
-        openAgent.textContent += ev.text;           // typewriter
+        openAgent.textContent += ev.text;
       } else {
-        // final line: replace the live bubble's text (dedup), then close it
         if (openAgent) openAgent.textContent = ev.text;
-        else bubble("agent", ev.text);              // replayed on reconnect
+        else bubble("agent", ev.text);
         openAgent = null;
       }
+    } else if (ev.role === "metadata") {
+      metaEventCard(ev.data || {});
     }
     scroll();
   }
 
   function connect() {
     const es = new EventSource("/events");
-    es.onopen = () => { status.className = "live"; status.textContent = "live"; };
-    es.onerror = () => { status.className = "down"; status.textContent = "reconnecting…"; };
-    es.onmessage = (e) => { try { handle(JSON.parse(e.data)); } catch (_) {} };
+    es.onopen = () => { statusEl.className = "live"; statusEl.textContent = "live"; };
+    es.onerror = () => { statusEl.className = "down"; statusEl.textContent = "reconnecting…"; };
+    es.onmessage = (e) => { try { handleLive(JSON.parse(e.data)); } catch (_) {} };
   }
-  connect();
+
+  // ----- bootstrap -----
+  (async () => {
+    try {
+      const r = await fetch("/api/state");
+      const j = await r.json();
+      for (const s of j.symptoms || []) symptoms.push(s);
+      candidates = j.candidates || [];
+      renderPanel();
+    } catch (_) { renderPanel(); }
+    await refreshCalls();
+    renderCalls();
+    connect();
+  })();
 </script>
 </body>
 </html>

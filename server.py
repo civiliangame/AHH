@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -27,9 +28,11 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
 import agents
+import analysis
 import config
 import events
 import triage
+from recorder import CallRecorder
 from xai_client import XAIRealtimeClient
 
 logging.basicConfig(
@@ -38,7 +41,16 @@ logging.basicConfig(
 )
 log = logging.getLogger("bridge")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Load the ~702 MB DAM checkpoint once at boot so per-call scoring is fast.
+    # Runs in a worker thread so torch's blocking load doesn't stall startup.
+    await asyncio.to_thread(analysis.init_pipeline)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 # ----------------------------------------------------------------------------
@@ -109,6 +121,74 @@ async def dashboard():
     return HTMLResponse(Path("dashboard.html").read_text(encoding="utf-8"))
 
 
+@app.get("/api/state")
+async def api_state():
+    """Current in-memory triage state — accumulated symptoms + latest candidates.
+    Lets the dashboard render the metadata panel on first load."""
+    return JSONResponse({
+        "symptoms": list(triage.global_descriptions),
+        "candidates": list(triage.latest_candidates),
+    })
+
+
+@app.get("/api/calls")
+async def api_calls():
+    """List all persisted call transcripts, newest first.
+    Each entry has call_id, agent, started_at (mtime), turn count."""
+    out = []
+    for p in events.TRANSCRIPT_DIR.glob("*.jsonl"):
+        agent = "unknown"
+        turns = 0
+        try:
+            with p.open(encoding="utf-8") as f:
+                for line in f:
+                    ev = json.loads(line)
+                    role = ev.get("role")
+                    if role == "system" and "agent:" in ev.get("text", ""):
+                        agent = ev["text"].split("agent:", 1)[1].strip()
+                    if role in ("caller", "agent"):
+                        turns += 1
+        except Exception:
+            pass
+        out.append({
+            "call_id": p.stem,
+            "agent": agent,
+            "started_at": p.stat().st_mtime,
+            "turns": turns,
+        })
+    out.sort(key=lambda r: r["started_at"], reverse=True)
+    return JSONResponse({"calls": out})
+
+
+@app.get("/api/calls/{call_id}")
+async def api_call_transcript(call_id: str):
+    """Return one call's full transcript (turns + metadata) for replay."""
+    p = events.TRANSCRIPT_DIR / f"{call_id}.jsonl"
+    if not p.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    events_list = []
+    with p.open(encoding="utf-8") as f:
+        for line in f:
+            try:
+                events_list.append(json.loads(line))
+            except Exception:
+                continue
+    return JSONResponse({"call_id": call_id, "events": events_list})
+
+
+@app.get("/api/scores/{call_id}")
+async def get_scores(call_id: str):
+    """Return persisted DAM scores for a call, or 404 if not yet computed."""
+    # Reject anything that isn't our uuid4().hex[:12] shape, so a crafted id
+    # can't traverse out of scores/.
+    if not call_id.isalnum() or len(call_id) > 32:
+        return JSONResponse({"error": "invalid call_id"}, status_code=400)
+    path = analysis.SCORES_DIR / f"{call_id}.json"
+    if not path.exists():
+        return JSONResponse({"error": "not found", "call_id": call_id}, status_code=404)
+    return JSONResponse(json.loads(path.read_text()))
+
+
 @app.get("/events")
 async def sse():
     """Stream transcript turns to the browser as they happen."""
@@ -131,6 +211,7 @@ async def media_stream(ws: WebSocket):
     # No param -> triage (inbound default).
     persona = agents.get(ws.query_params.get("agent"))
     call_id = uuid.uuid4().hex[:12]  # session key for the transcript + dashboard
+    recorder = CallRecorder(call_id)  # buffers caller μ-law for post-call DAM scoring
     log.info("Telnyx media stream connected (agent=%s, call=%s)", persona.name, call_id)
     await events.emit(call_id, "system", f"Call started · agent: {persona.name}")
 
@@ -186,12 +267,25 @@ async def media_stream(ws: WebSocket):
                         description = args.get("description", "")
                         empathy = args.get("empathy", "")
                         triage.recordSymptom(description, empathy)
+                        await events.emit_metadata(call_id, {
+                            "kind": "symptom",
+                            "description": description,
+                            "empathy": empathy,
+                        })
                         # Fetch the next question CONCURRENTLY. get_next_question
                         # may block/sleep, so run it in a thread — otherwise it
                         # freezes the audio relay. It resolves while the empathy
                         # line plays (the whole point of the empathy filler).
                         q_task = asyncio.create_task(
                             asyncio.to_thread(triage.get_next_question))
+                        # Signal the UI that a new differential round is in
+                        # flight so the dashboard can show a "computing…"
+                        # state during the empathy-line latency window.
+                        await events.emit_metadata(call_id, {
+                            "kind": "differential_started",
+                            "round": len(triage.global_descriptions),
+                            "symptoms_so_far": list(triage.global_descriptions),
+                        })
                         # Speak the empathy line verbatim and in full (no barge-in).
                         await xai.force_message(empathy, interruptible=False)
                         record_flow["pending"] = {
@@ -222,6 +316,12 @@ async def media_stream(ws: WebSocket):
                         # answers, then it calls recordSymptom again.
                         result = await p["q_task"]
                         next_q = (result or {}).get("next_question", "")
+                        await events.emit_metadata(call_id, {
+                            "kind": "differential",
+                            "round": len(triage.global_descriptions),
+                            "candidates": (result or {}).get("candidates", []),
+                            "next_question": next_q,
+                        })
                         await xai.send_function_output(
                             p["call_id"],
                             {"status": "recorded", "next_question": next_q})
@@ -264,7 +364,9 @@ async def media_stream(ws: WebSocket):
                 media = m.get("media", {})
                 # On bidirectional streams Telnyx sends only inbound by default.
                 if media.get("track", "inbound") == "inbound" and media.get("payload"):
-                    await xai.append_audio(media["payload"])
+                    payload = media["payload"]
+                    recorder.feed(payload)
+                    await xai.append_audio(payload)
             elif event == "stop":
                 log.info("Telnyx stream stopped")
                 break
@@ -275,6 +377,15 @@ async def media_stream(ws: WebSocket):
     finally:
         await flush_agent()  # persist the last agent turn
         await events.emit(call_id, "system", "Call ended")
+        # Save the caller's audio and fire-and-forget the DAM scoring task.
+        # Runs after the WS closes; results land in scores/{call_id}.json and on
+        # the SSE stream as a 'scores' metadata event.
+        wav_path = recorder.save()
+        if wav_path is not None:
+            asyncio.create_task(
+                analysis.analyze_call(call_id, wav_path, recorder.duration_seconds))
+            log.info("Queued DAM analysis for %s (%.1fs of audio)",
+                     call_id, recorder.duration_seconds)
         pump_task.cancel()
         await xai.close()
         log.info("Call cleaned up")
