@@ -6,3 +6,9 @@ venv/
 *.log
 .gstack/
 transcripts/
+recordings/
+scores/
+
+# DAM model weights — fetched/downloaded separately, too large for git
+dam/*.ckpt
+dam/__pycache__/

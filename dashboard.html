@@ -3,22 +3,167 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Live Transcript</title>
+<title>Patient Triage Dashboard</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
   body {
-    margin: 0; font: 15px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+    font: 14px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
     background: #0d1117; color: #e6edf3;
+    display: grid;
+    grid-template-columns: 270px 340px 1fr;
+    grid-template-rows: 48px 1fr;
+    grid-template-areas:
+      "head head head"
+      "patients detail feed";
   }
   header {
-    position: sticky; top: 0; padding: 14px 20px; background: #161b22;
-    border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px;
+    grid-area: head;
+    padding: 0 18px; background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex; align-items: center; gap: 12px;
   }
-  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  header h1 { font-size: 14px; margin: 0; font-weight: 600; }
   #status { font-size: 12px; color: #8b949e; margin-left: auto; }
   #status.live::before { content: "● "; color: #3fb950; }
   #status.down::before { content: "● "; color: #f85149; }
+
+  aside.panel {
+    background: #0d1117; border-right: 1px solid #30363d;
+    overflow-y: auto; padding: 14px 14px 24px;
+  }
+  aside.panel h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #8b949e; margin: 14px 0 6px;
+  }
+  aside.panel h2:first-child { margin-top: 0; }
+
+  #patients { grid-area: patients; }
+  #detail { grid-area: detail; border-right: 1px solid #30363d; }
+
+  /* ---- patient nav rows ---- */
+  .patient-row {
+    padding: 9px 10px; border-radius: 7px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 5px; background: #11161d;
+  }
+  .patient-row:hover { background: #161b22; }
+  .patient-row.active { background: #1f2733; border-color: #3a4150; }
+  .patient-row .phone { font-size: 13px; font-weight: 600; }
+  .patient-row .sub { font-size: 11px; color: #8b949e; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .patient-row .badges { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .patient-row.live { background: #0d2818; border-color: #1f6feb; }
+  .patient-row.live .phone::before { content: "● "; color: #3fb950; }
+
+  .mini-badge {
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 9px;
+    border: 1px solid #30363d; color: #c9d1d9; background: #0d1117;
+  }
+  .mini-badge.sev-0 { border-color: #2ea043; color: #3fb950; }
+  .mini-badge.sev-1 { border-color: #d29922; color: #d29922; }
+  .mini-badge.sev-2 { border-color: #db6d28; color: #e3853b; }
+  .mini-badge.sev-3 { border-color: #f85149; color: #f85149; }
+
+  /* ---- detail column ---- */
+  .pill-list { display: flex; flex-direction: column; gap: 4px; }
+  .pill {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 6px; padding: 6px 9px; font-size: 12.5px;
+    word-wrap: break-word;
+  }
+  .pill.empty { color: #6e7681; font-style: italic; border-style: dashed; }
+  .pill.cand {
+    background: #1c2129; border-color: #3a4150;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pill.cand .name { flex: 1; min-width: 0; }
+
+  .rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px;
+    border-radius: 10px; background: #0d1117; border: 1px solid #30363d;
+    font-size: 11px; font-weight: 700; color: #8b949e;
+  }
+  .rank.r1 { color: #f0f6fc; background: #1f6feb; border-color: #1f6feb; }
+  .rank.r2 { color: #e6edf3; background: #30363d; border-color: #484f58; }
+  .rank.r3 { color: #c9d1d9; }
+
+  .delta {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 1px 6px; border-radius: 9px; border: 1px solid transparent;
+  }
+  .delta.up   { background: #0d2818; color: #3fb950; border-color: #1f4d2e; }
+  .delta.down { background: #2d1418; color: #f85149; border-color: #5a2129; }
+  .delta.new  { background: #2d2410; color: #d29922; border-color: #5a4419; }
+  .delta.same { color: #6e7681; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 16px 0 6px;
+  }
+  .section-head:first-child { margin-top: 0; }
+  .section-head h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #8b949e; margin: 0;
+  }
+  .round-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    color: #58a6ff; background: #0d2236; border: 1px solid #1f4d7a;
+    padding: 1px 7px; border-radius: 9px;
+  }
+
+  .computing {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #d29922; font-style: italic; padding: 6px 2px;
+  }
+  .computing::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    background: #d29922; animation: pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+  .patient-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .patient-head .num { font-size: 17px; font-weight: 700; }
+  .patient-head .tag { font-size: 11px; color: #8b949e; }
+  .detail-empty { color: #6e7681; font-style: italic; padding: 30px 6px; text-align: center; }
+
+  /* DSM-5 criteria */
+  .crit { border: 1px solid #30363d; border-radius: 6px; padding: 7px 9px;
+    margin-bottom: 5px; background: #11161d; font-size: 12px; }
+  .crit .cond { font-weight: 600; }
+  .crit .criterion { color: #c9d1d9; }
+  .crit .ev { color: #8b949e; font-size: 11px; margin-top: 2px; }
+  .crit-status {
+    float: right; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 1px 6px; border-radius: 9px; text-transform: uppercase;
+  }
+  .crit-status.met { color: #3fb950; border: 1px solid #1f4d2e; background: #0d2818; }
+  .crit-status.not_met { color: #8b949e; border: 1px solid #30363d; }
+  .crit-status.unclear { color: #d29922; border: 1px solid #5a4419; background: #2d2410; }
+
+  /* pending check-ins */
+  .checkin { display: flex; gap: 8px; align-items: baseline; font-size: 12px;
+    padding: 5px 0; border-bottom: 1px solid #21262d; }
+  .checkin .when { color: #58a6ff; font-weight: 600; white-space: nowrap; }
+
+  /* sessions */
+  .sess-row { padding: 8px 10px; border-radius: 6px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 4px; background: #11161d; }
+  .sess-row:hover { background: #161b22; }
+  .sess-row.active { background: #1f2733; border-color: #3a4150; }
+  .sess-row .agent { font-size: 12.5px; font-weight: 600; }
+  .sess-row .meta { font-size: 11px; color: #8b949e; margin-top: 2px;
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .sess-row.live .agent::before { content: "● "; color: #3fb950; }
+
+  /* score trend */
+  .trend { margin: 4px 0 2px; }
+  .trend .legend { display: flex; gap: 12px; font-size: 10.5px; color: #8b949e; margin-top: 3px; }
+  .trend .legend i { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 4px; }
+
+  /* ---- feed ---- */
+  #feed-wrap { grid-area: feed; overflow-y: auto; }
   #feed { max-width: 760px; margin: 0 auto; padding: 20px; }
   .turn { display: flex; margin: 10px 0; }
   .turn.caller { justify-content: flex-end; }
@@ -32,36 +177,119 @@
   .caller .role { text-align: right; }
   .system { text-align: center; color: #8b949e; font-size: 12px; margin: 18px 0 6px; }
   .system span { background: #161b22; padding: 3px 10px; border-radius: 10px; border: 1px solid #30363d; }
+  .feed-hint { color: #6e7681; font-style: italic; text-align: center; padding: 40px 6px; }
+  .meta-event {
+    margin: 10px auto; max-width: 600px;
+    background: #161b22; border: 1px solid #3a4150; border-left: 3px solid #d29922;
+    border-radius: 6px; padding: 8px 12px; font-size: 12.5px;
+  }
+  .meta-event.scores { border-left-color: #58a6ff; }
+  .meta-event.scores .label { color: #58a6ff; }
+  .meta-event .label {
+    color: #d29922; font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px;
+  }
+  .meta-event .body { color: #e6edf3; }
+  .meta-event .body em { color: #8b949e; font-style: normal; }
+  .rank-line { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
+  .rank-line .name { flex: 1; min-width: 0; }
+  .next-q-line { margin-top: 6px; padding-top: 6px; border-top: 1px solid #30363d; font-size: 12.5px; }
+  .score-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .score-badge {
+    display: inline-flex; flex-direction: column; gap: 2px;
+    padding: 6px 10px; border-radius: 6px; border: 1px solid #30363d;
+    background: #0d1117; min-width: 140px;
+  }
+  .score-badge .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #8b949e; }
+  .score-badge .v { font-size: 14px; font-weight: 600; color: #e6edf3; }
+  .score-badge .raw { font-size: 10.5px; color: #6e7681; }
+  .score-badge.sev-0 { border-color: #2ea043; }
+  .score-badge.sev-1 { border-color: #d29922; }
+  .score-badge.sev-2 { border-color: #db6d28; }
+  .score-badge.sev-3 { border-color: #f85149; }
+  .score-badge.metric { border-color: #3a4150; }
+  .score-badge .indet {
+    display: inline-block; margin-left: 4px; padding: 0 5px;
+    border: 1px solid #d29922; border-radius: 10px;
+    font-size: 9.5px; font-weight: 600; color: #d29922; vertical-align: 1px;
+  }
+  .score-badge .spark { display: block; margin-top: 4px; }
+  .score-badge .spark .baseline { stroke: #30363d; stroke-width: 0.5; stroke-dasharray: 2 2; }
 </style>
 </head>
 <body>
   <header>
-    <h1>Live Transcript</h1>
+    <h1>Patient Triage Dashboard</h1>
     <span id="status" class="down">connecting…</span>
   </header>
-  <div id="feed"></div>
+
+  <aside id="patients" class="panel">
+    <h2>Patients</h2>
+    <div id="patients-list"></div>
+  </aside>
+
+  <aside id="detail" class="panel">
+    <div id="detail-body"><div class="detail-empty">Select a patient</div></div>
+  </aside>
+
+  <section id="feed-wrap">
+    <div id="feed"><div class="feed-hint">Select a session to view its transcript, or watch a live call.</div></div>
+  </section>
 
 <script>
   const feed = document.getElementById("feed");
-  const status = document.getElementById("status");
-  let lastCall = null;
-  let openAgent = null;   // the agent bubble currently being typed into
+  const statusEl = document.getElementById("status");
+  const patientsListEl = document.getElementById("patients-list");
+  const detailBodyEl = document.getElementById("detail-body");
 
-  function atBottom() {
-    return window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+  const LIVE = "__live__";
+
+  // ----- navigation state -----
+  let patients = [];            // summaries from /api/patients
+  let viewingPatient = null;    // patient key currently selected (or LIVE)
+  let viewingSession = null;    // call_id currently shown in the feed (or LIVE)
+  let patientCache = {};        // key -> full record from /api/patients/{key}
+  let openAgent = null;         // agent bubble currently being typed into
+
+  // ----- live call state -----
+  let liveCall = null;          // call_id of the in-progress call
+  let livePhone = null;         // patient key of the in-progress call
+  const liveCallsSeen = new Set();
+  const live = {                // live differential, rebuilt from SSE metadata
+    symptoms: [], candidates: [], prevCandidates: null,
+    rounds: 0, computing: false, lastQuestion: "", scores: null,
+  };
+
+  // ===== helpers =====
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
   }
-  function scroll() { if (atBottom()) window.scrollTo(0, document.body.scrollHeight); }
+  function fmtTime(t) {
+    if (!t) return "";
+    const d = (typeof t === "number") ? new Date(t * 1000) : new Date(t);
+    return isNaN(d) ? "" : d.toLocaleString();
+  }
+  function atBottom() {
+    const wrap = document.getElementById("feed-wrap");
+    return wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 120;
+  }
+  function scroll() {
+    const wrap = document.getElementById("feed-wrap");
+    if (atBottom()) wrap.scrollTop = wrap.scrollHeight;
+  }
+  function clearFeed() { feed.innerHTML = ""; openAgent = null; lastFeedCandidates = null; }
+  function feedHint(t) { feed.innerHTML = `<div class="feed-hint">${escapeHtml(t)}</div>`; }
 
   function bubble(role, text) {
     const turn = document.createElement("div");
     turn.className = "turn " + role;
-    turn.innerHTML = `<div><div class="role">${role}</div>` +
-                     `<div class="bubble"></div></div>`;
+    turn.innerHTML = `<div><div class="role">${role}</div><div class="bubble"></div></div>`;
     turn.querySelector(".bubble").textContent = text;
     feed.appendChild(turn);
     return turn.querySelector(".bubble");
   }
-
   function system(text) {
     const d = document.createElement("div");
     d.className = "system";
@@ -70,32 +298,449 @@
     feed.appendChild(d);
   }
 
-  function handle(ev) {
-    if (ev.call_id && ev.call_id !== lastCall) { lastCall = ev.call_id; openAgent = null; }
+  // What changed for `name` (position idx) vs the prior round. null on round 1.
+  function rankDelta(name, idx, prev) {
+    if (!prev || !prev.length) return null;
+    const prevIdx = prev.indexOf(name);
+    if (prevIdx === -1) return { kind: "new", text: "NEW" };
+    const move = prevIdx - idx;
+    if (move > 0) return { kind: "up",   text: `↑ ${move}` };
+    if (move < 0) return { kind: "down", text: `↓ ${-move}` };
+    return { kind: "same", text: "—" };
+  }
+
+  // ----- score rendering (shared by feed cards + patient profile) -----
+  function sparkline(perChunk, task, color, maxBand) {
+    if (!perChunk || perChunk.length < 2) return "";
+    const w = 90, h = 20, n = perChunk.length;
+    const pts = perChunk.map((c, i) => {
+      const x = (i / (n - 1)) * w;
+      const norm = Math.max(0, Math.min(maxBand, c[task])) / maxBand;
+      return `${x.toFixed(1)},${(h - norm * h).toFixed(1)}`;
+    }).join(" ");
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+      <line class="baseline" x1="0" x2="${w}" y1="${h}" y2="${h}"></line>
+      <polyline points="${pts}" stroke="${color}" stroke-width="1.6"
+                fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>`;
+  }
+  function scoreBadge(name, level, label, raw, margin, isIndet, perChunk, task, color, maxBand) {
+    const rawStr = (raw === undefined || raw === null) ? "" : ` · raw ${Number(raw).toFixed(2)}`;
+    const marginStr = (margin === undefined || margin === null) ? "" : `margin ${Number(margin).toFixed(2)}`;
+    const indet = isIndet
+      ? `<span class="indet" title="raw is within ${Number(margin).toFixed(2)} of a band threshold">indeterminate</span>`
+      : "";
+    return `<div class="score-badge sev-${level}">
+      <span class="k">${name}${indet}</span>
+      <span class="v">${level} · ${label}</span>
+      <span class="raw">${marginStr}${rawStr}</span>
+      ${sparkline(perChunk, task, color, maxBand)}
+    </div>`;
+  }
+  function voiceBadge(wpm, words, speechSec) {
+    if (wpm === undefined && words === undefined && speechSec === undefined) return "";
+    const wpmStr = (wpm === undefined || wpm === null) ? "—" : `${Number(wpm).toFixed(0)} wpm`;
+    const detail = (words !== undefined && speechSec !== undefined)
+      ? `${words} words · ${Number(speechSec).toFixed(1)}s speech` : "";
+    return `<div class="score-badge metric">
+      <span class="k">Speaking rate</span>
+      <span class="v">${wpmStr}</span>
+      <span class="raw">${detail}</span>
+    </div>`;
+  }
+  // Full score row used in feed cards + patient profile. `data` is a 'scores' payload.
+  function scoreRowHtml(data) {
+    if (!data) return "";
+    if (data.status && data.status !== "ok") {
+      const reason = data.reason || data.error || "";
+      return `<em>scoring ${escapeHtml(data.status)}${reason ? " — " + escapeHtml(reason) : ""}</em>`;
+    }
+    const indMargin = data.indeterminate_margin ?? 0.05;
+    const indDep = (data.depression_margin !== undefined) && data.depression_margin < indMargin;
+    const indAnx = (data.anxiety_margin !== undefined) && data.anxiety_margin < indMargin;
+    return `<div class="score-row">
+      ${scoreBadge("Depression", data.depression, data.depression_label,
+                   data.depression_raw, data.depression_margin, indDep,
+                   data.per_chunk, "depression", "#58a6ff", 2)}
+      ${scoreBadge("Anxiety", data.anxiety, data.anxiety_label,
+                   data.anxiety_raw, data.anxiety_margin, indAnx,
+                   data.per_chunk, "anxiety", "#d29922", 3)}
+      ${voiceBadge(data.speaking_rate_wpm, data.caller_word_count, data.speech_seconds)}
+    </div>`;
+  }
+
+  // ----- feed meta cards (live + replay) -----
+  let lastFeedCandidates = null;
+  function metaEventCard(data) {
+    if (!data) return;
+    if (data.kind === "call_meta") return;   // navigation hint only, not a card
+    const d = document.createElement("div");
+    d.className = "meta-event";
+    let label = data.kind || "metadata", body = "";
+    if (data.kind === "symptom") {
+      body = escapeHtml(data.description || "");
+    } else if (data.kind === "differential_started") {
+      label = "differential · computing";
+      const n = (data.symptoms_so_far || []).length;
+      body = `<div class="computing">re-ranking against ${n} symptom${n === 1 ? "" : "s"}…</div>`;
+    } else if (data.kind === "differential") {
+      const prev = lastFeedCandidates;
+      const cands = data.candidates || [];
+      const roundStr = (typeof data.round === "number" && data.round > 0) ? `Round ${data.round}` : "";
+      label = `differential${roundStr ? " · " + roundStr : ""}${prev ? "" : " · initial ranking"}`;
+      const rows = cands.length
+        ? cands.map((c, i) => {
+            const rd = rankDelta(c, i, prev);
+            const delta = rd ? `<span class="delta ${rd.kind}">${rd.text}</span>` : "";
+            return `<div class="rank-line"><span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+              <span class="name">${escapeHtml(c)}</span>${delta}</div>`;
+          }).join("")
+        : `<div class="rank-line"><em>no candidates returned</em></div>`;
+      const nq = data.next_question
+        ? `<div class="next-q-line"><em>next question:</em> ${escapeHtml(data.next_question)}</div>` : "";
+      body = rows + nq;
+      lastFeedCandidates = cands;
+    } else if (data.kind === "scores") {
+      d.classList.add("scores");
+      label = "depression / anxiety scores"
+        + (data.n_chunks ? ` · ${data.n_chunks} chunk${data.n_chunks === 1 ? "" : "s"}` : "")
+        + (data.indeterminate ? " · borderline" : "");
+      body = scoreRowHtml(data);
+    } else {
+      body = escapeHtml(JSON.stringify(data));
+    }
+    d.innerHTML = `<div class="label">${label}</div><div class="body">${body}</div>`;
+    feed.appendChild(d);
+  }
+
+  // Replay a persisted event (from /api/calls/{id}) into the feed.
+  function replay(ev) {
+    if (ev.role === "system") system(ev.text);
+    else if (ev.role === "caller") bubble("caller", ev.text);
+    else if (ev.role === "agent") bubble("agent", ev.text);
+    else if (ev.role === "metadata") metaEventCard(ev.data || {});
+  }
+
+  // ===== patients column =====
+  function miniScoreBadges(s) {
+    if (!s) return "";
+    if (s.status && s.status !== "ok")
+      return `<span class="mini-badge">DAM ${escapeHtml(s.status)}</span>`;
+    const out = [];
+    if (s.depression !== undefined && s.depression !== null)
+      out.push(`<span class="mini-badge sev-${s.depression}">D ${s.depression}·${escapeHtml(s.depression_label || "")}</span>`);
+    if (s.anxiety !== undefined && s.anxiety !== null)
+      out.push(`<span class="mini-badge sev-${s.anxiety}">A ${s.anxiety}·${escapeHtml(s.anxiety_label || "")}</span>`);
+    return out.join("");
+  }
+  function renderPatients() {
+    const rows = [];
+    if (liveCall) {
+      const active = viewingPatient === LIVE ? " active" : "";
+      rows.push(`<div class="patient-row live${active}" data-key="${LIVE}">
+        <div class="phone">Live call</div>
+        <div class="sub">${livePhone ? escapeHtml(livePhone) : "in progress"} · ${liveCall.slice(0, 8)}</div>
+      </div>`);
+    }
+    for (const p of patients) {
+      const active = viewingPatient === p.key ? " active" : "";
+      const top = (p.candidates && p.candidates.length) ? p.candidates[0] : "no differential yet";
+      const pend = p.pending_checkins ? ` · ${p.pending_checkins} check-in${p.pending_checkins === 1 ? "" : "s"}` : "";
+      rows.push(`<div class="patient-row${active}" data-key="${escapeHtml(p.key)}">
+        <div class="phone">${escapeHtml(p.phone)}</div>
+        <div class="sub">${escapeHtml(top)} · ${p.sessions} call${p.sessions === 1 ? "" : "s"}${pend}</div>
+        <div class="badges">${miniScoreBadges(p.latest_scores)}</div>
+      </div>`);
+    }
+    if (!rows.length) rows.push(`<div class="detail-empty">No patients yet</div>`);
+    patientsListEl.innerHTML = rows.join("");
+    patientsListEl.querySelectorAll(".patient-row").forEach(el => {
+      el.addEventListener("click", () => {
+        const key = el.dataset.key;
+        if (key === LIVE) selectLive(); else selectPatient(key);
+      });
+    });
+  }
+  async function refreshPatients() {
+    try {
+      const r = await fetch("/api/patients");
+      patients = (await r.json()).patients || [];
+      renderPatients();
+    } catch (_) {}
+  }
+
+  // ===== detail column =====
+  // Longitudinal depression/anxiety trend across the patient's scored calls.
+  function trendSvg(history) {
+    const pts = (history || []).filter(h => h && h.status === "ok"
+      && (h.depression !== undefined || h.anxiety !== undefined));
+    if (pts.length < 2) return "";
+    const w = 300, h = 56, n = pts.length;
+    const line = (key, max, color) => {
+      const poly = pts.map((p, i) => {
+        const x = (i / (n - 1)) * w;
+        const v = Math.max(0, Math.min(max, p[key] ?? 0)) / max;
+        return `${x.toFixed(1)},${(h - v * h).toFixed(1)}`;
+      }).join(" ");
+      return `<polyline points="${poly}" stroke="${color}" stroke-width="2" fill="none"
+        stroke-linejoin="round" stroke-linecap="round"/>`;
+    };
+    return `<div class="trend">
+      <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+        <line x1="0" x2="${w}" y1="${h}" y2="${h}" stroke="#30363d" stroke-width="0.5"/>
+        ${line("depression", 2, "#58a6ff")}
+        ${line("anxiety", 3, "#d29922")}
+      </svg>
+      <div class="legend"><span><i style="background:#58a6ff"></i>depression</span>
+        <span><i style="background:#d29922"></i>anxiety</span>
+        <span>${n} scored call${n === 1 ? "" : "s"}</span></div>
+    </div>`;
+  }
+
+  function candidatesHtml(cands) {
+    if (!cands || !cands.length) return `<div class="pill empty">no differential yet</div>`;
+    return cands.map((c, i) =>
+      `<div class="pill cand"><span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+        <span class="name">${escapeHtml(c)}</span></div>`).join("");
+  }
+  // Per-criterion list straight from triage (status: met / not_met / unclear).
+  function dsm5Html(criteria) {
+    if (!criteria || !criteria.length) return `<div class="pill empty">none recorded</div>`;
+    return criteria.map(c => `<div class="crit">
+      <span class="crit-status ${c.status}">${escapeHtml(c.status || "")}</span>
+      <div class="cond">${escapeHtml(c.condition || "")}</div>
+      <div class="criterion">${escapeHtml(c.criterion || "")}</div>
+      ${c.evidence ? `<div class="ev">${escapeHtml(c.evidence)}</div>` : ""}
+    </div>`).join("");
+  }
+  function checkinsHtml(pending) {
+    if (!pending || !pending.length) return `<div class="pill empty">none scheduled</div>`;
+    return pending.map(c => {
+      const msg = (typeof c === "object") ? c.message : c;
+      const when = (typeof c === "object" && c.days != null) ? `day ${c.days}` : "later";
+      return `<div class="checkin"><span class="when">${escapeHtml(when)}</span><span>${escapeHtml(msg || "")}</span></div>`;
+    }).join("");
+  }
+
+  // The background criteria_worker writes a richer per-condition profile; render
+  // it if present, otherwise fall back to the flat per-criterion list.
+  function dsm5IsConditions(d) {
+    return Array.isArray(d) && d.length && d[0] && (d[0].criteria || d[0].name);
+  }
+  function dsm5ConditionsHtml(conds) {
+    return conds.map(c => {
+      const crits = (c.criteria || []).map(cr => {
+        const st = cr.met || cr.status || "unclear";
+        return `<div class="crit"><span class="crit-status ${st}">${escapeHtml(st)}</span>
+          <div class="criterion">${escapeHtml(cr.criterion || cr.name || "")}</div>
+          ${cr.evidence ? `<div class="ev">${escapeHtml(cr.evidence)}</div>` : ""}</div>`;
+      }).join("");
+      return `<div class="section-head" style="margin-top:8px"><h2>${escapeHtml(c.name || c.condition || "")}</h2></div>${crits}`;
+    }).join("");
+  }
+
+  function sessionRowHtml(s) {
+    const isLive = s.call_id === liveCall;
+    const active = viewingSession === s.call_id ? " active" : "";
+    const badges = s.scores ? miniScoreBadges({
+      status: s.scores.status, depression: s.scores.depression,
+      depression_label: s.scores.depression_label, anxiety: s.scores.anxiety,
+      anxiety_label: s.scores.anxiety_label,
+    }) : "";
+    return `<div class="sess-row${active}${isLive ? " live" : ""}" data-id="${escapeHtml(s.call_id)}">
+      <div class="agent">${escapeHtml(s.agent || "?")} · ${s.call_id.slice(0, 8)}</div>
+      <div class="meta">${fmtTime(s.started_at)} · ${(s.turns || []).length} turns ${badges}</div>
+    </div>`;
+  }
+
+  function renderPatientDetail(rec) {
+    const prof = rec.profile || {};
+    const sessions = (rec.sessions || []).slice().reverse();   // newest first
+    const dsm5 = (rec.dsm5_profile && rec.dsm5_profile.conditions) || prof.dsm5_criteria || [];
+    const html = `
+      <div class="patient-head"><span class="num">${escapeHtml(rec.phone || "unknown")}</span>
+        <span class="tag">${sessions.length} call${sessions.length === 1 ? "" : "s"}</span></div>
+
+      <div class="section-head"><h2>Depression / Anxiety Trend</h2></div>
+      ${trendSvg(prof.scores_history) || `<div class="pill empty">need 2+ scored calls for a trend</div>`}
+      ${prof.latest_scores ? `<div class="score-row" style="margin-top:8px">${scoreRowHtml(prof.latest_scores)}</div>` : ""}
+
+      <div class="section-head"><h2>Candidate Conditions</h2></div>
+      <div class="pill-list">${candidatesHtml(prof.candidates)}</div>
+
+      <div class="section-head"><h2>DSM-5 Criteria</h2></div>
+      ${dsm5IsConditions(dsm5) ? dsm5ConditionsHtml(dsm5) : dsm5Html(dsm5)}
+
+      <div class="section-head"><h2>Pending Check-ins</h2></div>
+      ${checkinsHtml(rec.pending_checkins)}
+
+      <div class="section-head"><h2>Sessions</h2></div>
+      <div id="sessions-list">${sessions.map(sessionRowHtml).join("") || `<div class="pill empty">no sessions</div>`}</div>
+    `;
+    detailBodyEl.innerHTML = html;
+    detailBodyEl.querySelectorAll(".sess-row").forEach(el => {
+      el.addEventListener("click", () => selectSession(el.dataset.id));
+    });
+  }
+
+  async function selectPatient(key) {
+    viewingPatient = key;
+    viewingSession = null;
+    renderPatients();
+    detailBodyEl.innerHTML = `<div class="detail-empty">loading…</div>`;
+    try {
+      const r = await fetch(`/api/patients/${encodeURIComponent(key)}`);
+      const rec = await r.json();
+      patientCache[key] = rec;
+      renderPatientDetail(rec);
+      feedHint("Select a session to view its transcript.");
+    } catch (_) {
+      detailBodyEl.innerHTML = `<div class="detail-empty">Failed to load patient.</div>`;
+    }
+  }
+
+  async function selectSession(call_id) {
+    viewingSession = call_id;
+    if (viewingPatient && viewingPatient !== LIVE && patientCache[viewingPatient])
+      renderPatientDetail(patientCache[viewingPatient]);
+    clearFeed();
+    try {
+      const r = await fetch(`/api/calls/${encodeURIComponent(call_id)}`);
+      const j = await r.json();
+      for (const ev of j.events || []) replay(ev);
+    } catch (_) { system("Failed to load transcript."); }
+  }
+
+  // ===== live view =====
+  function selectLive() {
+    viewingPatient = LIVE;
+    viewingSession = LIVE;
+    renderPatients();
+    clearFeed();
+    if (liveCall) {
+      // Replay what we have for the in-progress call, then SSE keeps painting.
+      fetch(`/api/calls/${encodeURIComponent(liveCall)}`)
+        .then(r => r.json()).then(j => { for (const ev of (j.events || [])) replay(ev); })
+        .catch(() => {});
+    } else {
+      feedHint("Waiting for the next call…");
+    }
+    renderLiveDetail();
+  }
+
+  function renderLiveDetail() {
+    const c = live.candidates;
+    const candHtml = (live.computing && !c.length)
+      ? `<div class="computing">awaiting first differential…</div>`
+      : c.length
+        ? c.map((name, i) => {
+            const rd = rankDelta(name, i, live.prevCandidates);
+            const delta = rd ? `<span class="delta ${rd.kind}">${rd.text}</span>` : "";
+            return `<div class="pill cand"><span class="rank r${Math.min(i + 1, 3)}">${i + 1}</span>
+              <span class="name">${escapeHtml(name)}</span>${delta}</div>`;
+          }).join("") + (live.computing ? `<div class="computing">re-ranking with new symptom…</div>` : "")
+        : `<div class="pill empty">awaiting differential</div>`;
+    detailBodyEl.innerHTML = `
+      <div class="patient-head"><span class="num">Live call</span>
+        <span class="tag">${livePhone ? escapeHtml(livePhone) : ""}</span></div>
+
+      <div class="section-head"><h2>Symptoms</h2>
+        ${live.symptoms.length ? `<span class="round-badge">${live.symptoms.length}</span>` : ""}</div>
+      <div class="pill-list">${
+        live.symptoms.length ? live.symptoms.map(s => `<div class="pill">${escapeHtml(s)}</div>`).join("")
+          : `<div class="pill empty">none yet</div>`}</div>
+
+      <div class="section-head"><h2>Candidate Conditions</h2>
+        ${live.rounds ? `<span class="round-badge">Round ${live.rounds}</span>` : ""}</div>
+      <div class="pill-list">${candHtml}</div>
+
+      <div class="section-head"><h2>Latest Question</h2></div>
+      <div class="pill-list">${
+        live.lastQuestion ? `<div class="pill">${escapeHtml(live.lastQuestion)}</div>` : `<div class="pill empty">—</div>`}</div>
+
+      ${live.scores ? `<div class="section-head"><h2>DAM Scores</h2></div>
+        <div class="score-row">${scoreRowHtml(live.scores)}</div>` : ""}
+    `;
+  }
+
+  // Apply a metadata event to the LIVE differential state.
+  function applyLiveMetadata(data) {
+    if (!data) return;
+    if (data.kind === "call_meta") {
+      if (data.phone) livePhone = data.phone;
+    } else if (data.kind === "symptom" && data.description) {
+      live.symptoms.push(data.description);
+    } else if (data.kind === "differential_started") {
+      live.computing = true;
+    } else if (data.kind === "differential") {
+      live.computing = false;
+      if (Array.isArray(data.candidates)) {
+        live.prevCandidates = live.candidates.slice();
+        live.candidates = data.candidates;
+        live.rounds = (typeof data.round === "number" && data.round > 0) ? data.round : live.rounds + 1;
+      }
+      if (data.next_question) live.lastQuestion = data.next_question;
+    } else if (data.kind === "scores") {
+      live.scores = data;
+    }
+    if (viewingPatient === LIVE) renderLiveDetail();
+  }
+  function resetLive() {
+    live.symptoms = []; live.candidates = []; live.prevCandidates = null;
+    live.rounds = 0; live.computing = false; live.lastQuestion = ""; live.scores = null;
+  }
+
+  // ===== live SSE =====
+  function handleLive(ev) {
+    // New call appears -> reset live state, mark live, refresh patient list.
+    if (ev.call_id && !liveCallsSeen.has(ev.call_id)) {
+      liveCallsSeen.add(ev.call_id);
+      if (ev.call_id !== liveCall) resetLive();
+      liveCall = ev.call_id;
+      livePhone = null;
+      renderPatients();
+    }
+    if (ev.call_id) liveCall = ev.call_id;
+
+    if (ev.role === "metadata") applyLiveMetadata(ev.data);
+
+    // A finished call's scores arrived — refresh the list + re-open detail so the
+    // trend and session badges pick up the new numbers.
+    if (ev.role === "metadata" && ev.data && ev.data.kind === "scores") {
+      refreshPatients();
+      if (viewingPatient && viewingPatient !== LIVE) selectPatient(viewingPatient);
+    }
+
+    if (viewingSession !== LIVE) return;   // only paint feed when watching live
 
     if (ev.role === "system") { openAgent = null; system(ev.text); }
     else if (ev.role === "caller") { openAgent = null; bubble("caller", ev.text); }
     else if (ev.role === "agent") {
       if (ev.partial) {
         if (!openAgent) openAgent = bubble("agent", "");
-        openAgent.textContent += ev.text;           // typewriter
+        openAgent.textContent += ev.text;
       } else {
-        // final line: replace the live bubble's text (dedup), then close it
-        if (openAgent) openAgent.textContent = ev.text;
-        else bubble("agent", ev.text);              // replayed on reconnect
+        if (openAgent) openAgent.textContent = ev.text; else bubble("agent", ev.text);
         openAgent = null;
       }
+    } else if (ev.role === "metadata") {
+      metaEventCard(ev.data || {});
     }
     scroll();
   }
 
   function connect() {
     const es = new EventSource("/events");
-    es.onopen = () => { status.className = "live"; status.textContent = "live"; };
-    es.onerror = () => { status.className = "down"; status.textContent = "reconnecting…"; };
-    es.onmessage = (e) => { try { handle(JSON.parse(e.data)); } catch (_) {} };
+    es.onopen = () => { statusEl.className = "live"; statusEl.textContent = "live"; };
+    es.onerror = () => { statusEl.className = "down"; statusEl.textContent = "reconnecting…"; };
+    es.onmessage = (e) => { try { handleLive(JSON.parse(e.data)); } catch (_) {} };
   }
-  connect();
+
+  // ===== bootstrap =====
+  (async () => {
+    await refreshPatients();
+    connect();
+  })();
 </script>
 </body>
 </html>

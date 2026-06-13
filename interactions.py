@@ -158,3 +158,88 @@ def pending_checkins(phone: str) -> list:
 
 def clear_pending(record: dict) -> None:
     record["pending_checkins"] = []
+
+
+def key_for(phone: str) -> str:
+    """Public, filename-safe patient key (digits only) — what the dashboard and
+    the /api/patients/{phone} route use to address a patient."""
+    return _safe(phone)
+
+
+# ---------------------------------------------------------------------------
+# DAM acoustic scores — folded into the patient's longitudinal record so the
+# depression/anxiety trend lives alongside the conversational differential.
+# Called from analysis.analyze_call (a detached background task) AFTER the call
+# is over, so it re-reads from disk, mutates, and writes back — no concurrent
+# writer to this phone's file at that point.
+# ---------------------------------------------------------------------------
+def attach_scores(phone: str, call_id: str, scores: dict) -> None:
+    """Attach a call's DAM scores to its session and append to the patient's
+    rolling depression/anxiety score history (the longitudinal trend)."""
+    record = load(phone)
+    for s in record.get("sessions", []):
+        if s.get("call_id") == call_id:
+            s["scores"] = scores
+            break
+    profile = record.setdefault("profile", {})
+    profile["latest_scores"] = scores
+    history = profile.setdefault("scores_history", [])
+    history.append({
+        "call_id": call_id,
+        "at": _now(),
+        "status": scores.get("status", "ok"),
+        "depression": scores.get("depression"),
+        "depression_label": scores.get("depression_label"),
+        "anxiety": scores.get("anxiety"),
+        "anxiety_label": scores.get("anxiety_label"),
+        "speaking_rate_wpm": scores.get("speaking_rate_wpm"),
+        "indeterminate": scores.get("indeterminate"),
+    })
+    save(record)
+    log.info("Attached DAM scores for call %s to patient %s", call_id, key_for(phone))
+
+
+# ---------------------------------------------------------------------------
+# Dashboard listing — one summary per patient for the nav column.
+# ---------------------------------------------------------------------------
+def _last_seen(record: dict) -> str:
+    """Most recent activity timestamp: profile update, else newest session."""
+    prof_ts = (record.get("profile") or {}).get("updated_at")
+    sess_ts = [s.get("started_at") for s in record.get("sessions", []) if s.get("started_at")]
+    return max([t for t in ([prof_ts] + sess_ts) if t], default="")
+
+
+def list_summaries() -> list:
+    """One lightweight summary per patient (phone), newest activity first."""
+    if not DIR.exists():
+        return []
+    out = []
+    for p in sorted(DIR.glob("*.json")):
+        # Skip the sidecar DSM-5 profile and any atomic-write temp files.
+        if p.name.endswith(".dsm5.json") or p.suffix == ".tmp":
+            continue
+        try:
+            record = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            log.exception("Corrupt interaction file %s; skipping in listing", p)
+            continue
+        profile = record.get("profile") or {}
+        latest = profile.get("latest_scores") or {}
+        out.append({
+            "phone": record.get("phone") or p.stem,
+            "key": p.stem,
+            "last_seen": _last_seen(record),
+            "sessions": len(record.get("sessions", [])),
+            "candidates": list(profile.get("candidates") or []),
+            "pending_checkins": len(record.get("pending_checkins", [])),
+            "latest_scores": {
+                "status": latest.get("status", "ok"),
+                "depression": latest.get("depression"),
+                "depression_label": latest.get("depression_label"),
+                "anxiety": latest.get("anxiety"),
+                "anxiety_label": latest.get("anxiety_label"),
+                "indeterminate": latest.get("indeterminate"),
+            } if latest else None,
+        })
+    out.sort(key=lambda r: r["last_seen"], reverse=True)
+    return out

@@ -43,7 +43,12 @@ XAI_INSTRUCTIONS = get_system_prompt()
 XAI_GREETING = "Hi, I'm Eva from AtLegionX. How are you feeling today?"
 
 HOST = os.getenv("HOST", "0.0.0.0")
+# Telephony port: Telnyx webhook + media stream (point ngrok here).
 PORT = int(os.getenv("PORT", "5000"))
+# Dashboard port: the human-facing web UI + /api + /events SSE. Served by the
+# SAME app/process as telephony (shared in-memory event hub), just bound to a
+# second port so the browser doesn't collide with the Telnyx traffic on :5000.
+DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", "3000"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 # --- Outbound check-in persona (separate agent; see agents.py) ---

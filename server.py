@@ -11,6 +11,13 @@ One server on :5000 does two jobs:
 
 Audio is G.711 μ-law (PCMU) @ 8 kHz end to end — no transcoding.
 
+Two layers run on top of the raw bridge:
+  - Semantic / longitudinal: a per-call DSM-5 triage state machine (triage.py)
+    backed by a per-patient record keyed by phone number (interactions.py).
+  - Acoustic / observability: every call's caller audio is recorded and, after
+    hangup, scored by the DAM voice-biomarker model (analysis.py) — folded back
+    into the patient's record AND surfaced live on the dashboard.
+
 Run:  python server.py      # auto-reloads on file save
       (or: uvicorn server:app --reload --host 0.0.0.0 --port 5000)
 Point your Telnyx Call Control app's webhook at https://<ngrok>/webhook
@@ -29,10 +36,12 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
 import agents
+import analysis
 import config
 import events
 import interactions
 import triage
+from recorder import CallRecorder
 from xai_client import XAIRealtimeClient
 
 logging.basicConfig(
@@ -41,6 +50,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("bridge")
 
+# The DAM voice-biomarker model is loaded LAZILY on the first call that needs
+# scoring (see analysis.analyze_call), not at boot — so the conversational
+# stack starts instantly and runs fine even when the ~702 MB checkpoint or
+# torch isn't installed. Scoring then degrades to a graceful "unavailable".
 app = FastAPI()
 
 
@@ -118,6 +131,91 @@ async def dashboard():
     return HTMLResponse(Path("dashboard.html").read_text(encoding="utf-8"))
 
 
+# ----------------------------------------------------------------------------
+# Patient-centric API — the dashboard's primary navigation axis.
+# A patient is one phone number with a longitudinal record (interactions.py):
+# rolling differential, DSM-5 criteria, a depression/anxiety score trend, and
+# scheduled future check-ins.
+# ----------------------------------------------------------------------------
+@app.get("/api/patients")
+async def api_patients():
+    """List every patient (one per phone), newest activity first, with a summary
+    the dashboard renders in the nav column."""
+    return JSONResponse({"patients": interactions.list_summaries()})
+
+
+@app.get("/api/patients/{phone}")
+async def api_patient(phone: str):
+    """Full longitudinal record for one patient: profile (rolling differential +
+    DSM-5 + score trend), every session (with its DAM scores), pending check-ins,
+    and the deep background DSM-5 criteria profile."""
+    # interactions.load() sanitizes the key to digits, so a crafted phone can't
+    # traverse out of ./interactions.
+    record = interactions.load(phone)
+    if not record.get("sessions") and not record.get("profile"):
+        return JSONResponse({"error": "not found", "phone": phone}, status_code=404)
+    record["dsm5_profile"] = interactions.load_dsm5_profile(phone)
+    return JSONResponse(record)
+
+
+@app.get("/api/calls")
+async def api_calls():
+    """List all persisted call transcripts, newest first.
+    Each entry has call_id, agent, started_at (mtime), turn count."""
+    out = []
+    for p in events.TRANSCRIPT_DIR.glob("*.jsonl"):
+        agent = "unknown"
+        turns = 0
+        try:
+            with p.open(encoding="utf-8") as f:
+                for line in f:
+                    ev = json.loads(line)
+                    role = ev.get("role")
+                    if role == "system" and "agent:" in ev.get("text", ""):
+                        agent = ev["text"].split("agent:", 1)[1].strip()
+                    if role in ("caller", "agent"):
+                        turns += 1
+        except Exception:
+            pass
+        out.append({
+            "call_id": p.stem,
+            "agent": agent,
+            "started_at": p.stat().st_mtime,
+            "turns": turns,
+        })
+    out.sort(key=lambda r: r["started_at"], reverse=True)
+    return JSONResponse({"calls": out})
+
+
+@app.get("/api/calls/{call_id}")
+async def api_call_transcript(call_id: str):
+    """Return one call's full transcript (turns + metadata) for replay."""
+    p = events.TRANSCRIPT_DIR / f"{call_id}.jsonl"
+    if not p.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    events_list = []
+    with p.open(encoding="utf-8") as f:
+        for line in f:
+            try:
+                events_list.append(json.loads(line))
+            except Exception:
+                continue
+    return JSONResponse({"call_id": call_id, "events": events_list})
+
+
+@app.get("/api/scores/{call_id}")
+async def get_scores(call_id: str):
+    """Return persisted DAM scores for a call, or 404 if not yet computed."""
+    # Reject anything that isn't our uuid4().hex[:12] shape, so a crafted id
+    # can't traverse out of scores/.
+    if not call_id.isalnum() or len(call_id) > 32:
+        return JSONResponse({"error": "invalid call_id"}, status_code=400)
+    path = analysis.SCORES_DIR / f"{call_id}.json"
+    if not path.exists():
+        return JSONResponse({"error": "not found", "call_id": call_id}, status_code=404)
+    return JSONResponse(json.loads(path.read_text()))
+
+
 @app.get("/events")
 async def sse():
     """Stream transcript turns to the browser as they happen."""
@@ -141,6 +239,7 @@ async def media_stream(ws: WebSocket):
     persona = agents.get(ws.query_params.get("agent"))
     phone = ws.query_params.get("phone")  # patient's number, keys their record
     call_id = uuid.uuid4().hex[:12]  # session key for the transcript + dashboard
+    recorder = CallRecorder(call_id)  # buffers caller μ-law for post-call DAM scoring
     log.info("Telnyx media stream connected (agent=%s, call=%s, phone=%s)",
              persona.name, call_id, phone)
     await events.emit(call_id, "system", f"Call started · agent: {persona.name}")
@@ -148,6 +247,12 @@ async def media_stream(ws: WebSocket):
     # Load/append the patient's interaction record and open a session for this call.
     record = interactions.load(phone)
     session = interactions.start_session(record, call_id, persona.name)
+    # Let the dashboard associate this live call with its patient.
+    await events.emit_metadata(call_id, {
+        "kind": "call_meta",
+        "phone": interactions.key_for(phone),
+        "agent": persona.name,
+    })
 
     # For the outbound check-in agent, fold the patient's saved follow-up
     # questions into its prompt so it actually asks them, then clear them so we
@@ -197,6 +302,7 @@ async def media_stream(ws: WebSocket):
     last_candidates: list[str] = []   # running differential, fed back each turn
     asked: list[str] = []             # questions already asked (avoid repeats)
     complete = {"v": False}           # True once triage closed (no more questions)
+    rounds = {"n": 0}                 # differential rounds completed (for the UI)
 
     # Agent transcript arrives as deltas; buffer them into one line per turn and
     # flush (persist + finalize) when the caller speaks or the call ends.
@@ -229,6 +335,12 @@ async def media_stream(ws: WebSocket):
                         desc = args.get("description", "")
                         empathy = args.get("empathy", "")
                         descriptions.append(desc)
+                        # Tell the dashboard a symptom landed (live metadata panel).
+                        await events.emit_metadata(call_id, {
+                            "kind": "symptom",
+                            "description": desc,
+                            "empathy": empathy,
+                        })
                         # The model is SPEAKING its empathy line in this same
                         # response. Kick off the next-question lookup in parallel
                         # (it may block, so run it in a thread) so it's ready the
@@ -249,6 +361,14 @@ async def media_stream(ws: WebSocket):
                                     list(descriptions), list(last_candidates),
                                     list(asked), phone)),
                             }
+                            # Signal the UI that a new differential round is in
+                            # flight so the dashboard can show a "computing…"
+                            # state during the empathy-line latency window.
+                            await events.emit_metadata(call_id, {
+                                "kind": "differential_started",
+                                "round": rounds["n"] + 1,
+                                "symptoms_so_far": list(descriptions),
+                            })
                         else:
                             # Multiple symptoms in one turn -> record each, ask once.
                             record_flow["pending"]["call_ids"].append(data["call_id"])
@@ -273,6 +393,15 @@ async def media_stream(ws: WebSocket):
                         future_checkin = result.get("future_checkin", [])
                         # Running memory: feed this turn's differential into the next.
                         last_candidates[:] = candidates
+                        rounds["n"] += 1
+                        # Broadcast the refreshed differential to the dashboard
+                        # (live metadata panel + a feed card).
+                        await events.emit_metadata(call_id, {
+                            "kind": "differential",
+                            "round": rounds["n"],
+                            "candidates": candidates,
+                            "next_question": next_q,
+                        })
                         # Persist the turn + update the patient profile (candidates,
                         # DSM-5 criteria met/not-met, next question, future check-ins).
                         interactions.add_turn(
@@ -341,7 +470,9 @@ async def media_stream(ws: WebSocket):
                 media = m.get("media", {})
                 # On bidirectional streams Telnyx sends only inbound by default.
                 if media.get("track", "inbound") == "inbound" and media.get("payload"):
-                    await xai.append_audio(media["payload"])
+                    payload = media["payload"]
+                    recorder.feed(payload)
+                    await xai.append_audio(payload)
             elif event == "stop":
                 log.info("Telnyx stream stopped")
                 break
@@ -353,6 +484,15 @@ async def media_stream(ws: WebSocket):
         await flush_agent()  # persist the last agent turn
         await events.emit(call_id, "system", "Call ended")
         interactions.save(record)  # final flush of this session's record
+        # Save the caller's audio and fire-and-forget the DAM scoring task.
+        # Runs after the WS closes; results land in scores/{call_id}.json, get
+        # folded into the patient's record, and stream out as a 'scores' event.
+        wav_path = recorder.save()
+        if wav_path is not None:
+            asyncio.create_task(analysis.analyze_call(
+                call_id, wav_path, recorder.duration_seconds, phone=phone))
+            log.info("Queued DAM analysis for %s (%.1fs of audio)",
+                     call_id, recorder.duration_seconds)
         pump_task.cancel()
         await xai.close()
         log.info("Call cleaned up")
@@ -368,13 +508,34 @@ if __name__ == "__main__":
     # lives under OneDrive, whose background sync writes fire spurious reloads.
     # Turn it on only while iterating on prompts/code WITHOUT a call in progress.
     reload_enabled = os.getenv("RELOAD", "0").lower() in ("1", "true", "yes")
-    if not reload_enabled:
-        log.info("Reload disabled (set RELOAD=1 to enable hot-reload for dev).")
-    uvicorn.run(
-        "server:app",
-        host=config.HOST,
-        port=config.PORT,
-        reload=reload_enabled,
-        reload_includes=["*.py", "*.txt"] if reload_enabled else None,
-        log_level=config.LOG_LEVEL.lower(),
-    )
+    log_level = config.LOG_LEVEL.lower()
+
+    if reload_enabled:
+        # Hot-reload needs the import-string + a single bind; serve telephony only.
+        # (The dashboard is reachable on this port too while iterating.)
+        log.info("Reload ON — single port %s (dashboard at http://localhost:%s/).",
+                 config.PORT, config.PORT)
+        uvicorn.run(
+            "server:app",
+            host=config.HOST,
+            port=config.PORT,
+            reload=True,
+            reload_includes=["*.py", "*.txt"],
+            log_level=log_level,
+        )
+    else:
+        # Serve the SAME app on two ports in one process so the in-memory event
+        # hub is shared: Telnyx hits :PORT (telephony), the browser hits
+        # :DASHBOARD_PORT (UI + SSE). Both see the same live call state.
+        async def _serve_dual():
+            servers = [
+                uvicorn.Server(uvicorn.Config(
+                    app, host=config.HOST, port=config.PORT, log_level=log_level)),
+                uvicorn.Server(uvicorn.Config(
+                    app, host=config.HOST, port=config.DASHBOARD_PORT, log_level=log_level)),
+            ]
+            log.info("Telephony on :%s · dashboard on http://localhost:%s/",
+                     config.PORT, config.DASHBOARD_PORT)
+            await asyncio.gather(*(s.serve() for s in servers))
+
+        asyncio.run(_serve_dual())

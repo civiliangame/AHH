@@ -58,3 +58,14 @@ async def emit(call_id: str, role: str, text: str, *, partial: bool = False):
     await hub.publish(ev, remember=not partial)
     if not partial:
         _persist(call_id, role, text, ev["ts"])
+
+
+async def emit_metadata(call_id: str, data: dict):
+    """Broadcast a structured triage-metadata event (symptom, differential, ...).
+    Persisted to the call's JSONL so a refresh replays it."""
+    ev = {"call_id": call_id, "role": "metadata", "data": data,
+          "ts": time.time(), "partial": False}
+    await hub.publish(ev, remember=True)
+    line = json.dumps(ev)
+    with open(TRANSCRIPT_DIR / f"{call_id}.jsonl", "a", encoding="utf-8") as f:
+        f.write(line + "\n")
