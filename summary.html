@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clinician Summary · AtLegionX</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font: 11pt/1.45 Georgia, "Times New Roman", serif;
+    color: #111;
+    background: #f5f4ef;
+    margin: 0; padding: 24px;
+    max-width: 8.5in; margin-left: auto; margin-right: auto;
+  }
+  h1 { font-size: 18pt; margin: 0 0 4px; }
+  h2 {
+    font-size: 11pt; margin: 18px 0 6px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid #555; padding-bottom: 3px;
+  }
+  header {
+    border-bottom: 2px solid #111;
+    padding-bottom: 10px; margin-bottom: 12px;
+  }
+  header .meta { font-size: 10pt; color: #444; margin-top: 4px; }
+  header .controls {
+    float: right; font: 10pt sans-serif;
+  }
+  header .controls button {
+    background: #fff; border: 1px solid #888; padding: 4px 10px;
+    cursor: pointer; border-radius: 3px;
+  }
+
+  .grid2 {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; margin: 8px 0;
+  }
+  .grid2 > section { min-width: 0; }
+
+  .risk-banner {
+    background: #fce8e6; border: 2px solid #b71c1c; border-left-width: 6px;
+    padding: 10px 14px; margin: 8px 0 16px;
+    font-size: 10.5pt;
+  }
+  .risk-banner h2 {
+    color: #b71c1c; border-color: #b71c1c;
+    margin-top: 0;
+  }
+  .risk-banner .crisis {
+    margin-top: 8px; padding: 6px 10px;
+    background: #fff; border: 1px solid #b71c1c;
+    font-weight: bold;
+  }
+  .risk-banner ul { margin: 4px 0 0 18px; padding: 0; }
+  .risk-banner li { margin: 4px 0; }
+  .risk-banner .meta { color: #555; font-size: 9.5pt; }
+
+  ul, ol { margin: 4px 0 4px 18px; padding: 0; }
+  li { margin: 3px 0; }
+  .small { font-size: 9.5pt; color: #555; }
+  .quote {
+    font-style: italic; color: #222;
+    border-left: 2px solid #888; padding-left: 8px; margin: 3px 0;
+  }
+  .pill {
+    display: inline-block; font: 8.5pt sans-serif;
+    border: 1px solid #888; border-radius: 9px;
+    padding: 1px 6px; margin-left: 4px; vertical-align: middle;
+    color: #444;
+  }
+  .pill.lo { border-color: #2e7d32; color: #2e7d32; }
+  .pill.mo { border-color: #ef6c00; color: #ef6c00; }
+  .pill.hi { border-color: #c62828; color: #c62828; }
+  .pill.idk { border-color: #888; color: #888; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 10pt; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ddd; }
+  th { background: #ebe8df; font-weight: 600; }
+  td.indet { color: #888; font-style: italic; }
+
+  .differential {
+    border: 1px solid #c4bfb4; background: #fff;
+    padding: 8px 10px; margin: 6px 0;
+  }
+  .differential .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .differential .name { font-weight: 700; font-size: 11.5pt; }
+
+  .signature {
+    margin-top: 28px; padding-top: 8px; border-top: 1px solid #111;
+    display: flex; justify-content: space-between;
+    font-size: 10pt;
+  }
+  .signature .line {
+    display: inline-block; min-width: 240px;
+    border-bottom: 1px solid #111; padding: 0 4px 2px;
+  }
+
+  .disclaimer {
+    margin-top: 14px; padding: 8px 10px;
+    background: #ebe8df; border: 1px solid #c4bfb4;
+    font-size: 9.5pt; color: #333;
+  }
+  .disclaimer ul { margin: 4px 0 0 18px; }
+
+  .loading, .error {
+    text-align: center; padding: 60px 20px; color: #555; font-style: italic;
+  }
+  .error { color: #b71c1c; }
+
+  @media print {
+    body { background: #fff; padding: 0.4in 0.5in; }
+    header .controls { display: none; }
+    .differential { break-inside: avoid; }
+    .risk-banner { break-inside: avoid; }
+    h2 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div id="root"><div class="loading">Loading summary…</div></div>
+
+<script>
+  const hash = location.pathname.split("/").filter(Boolean).pop() || "";
+  const root = document.getElementById("root");
+
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
+    c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    try {
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      return d.toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+    } catch (_) { return iso; }
+  }
+  function fmtDay(iso) {
+    if (!iso) return "—";
+    try {
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      return d.toLocaleDateString(undefined,
+        {year: "numeric", month: "short", day: "numeric"});
+    } catch (_) { return iso; }
+  }
+  function rangeText(rng) {
+    if (!rng || !rng.includes("/")) return rng || "—";
+    const [a, b] = rng.split("/");
+    return `${fmtDay(a)} – ${fmtDay(b)}`;
+  }
+  const bandPill = b => {
+    if (!b || b === "indeterminate") return `<span class="pill idk">indeterminate</span>`;
+    const cls = (b === "none" || b === "mild") ? "lo"
+              : (b === "severe" || b === "moderate-severe") ? "hi" : "mo";
+    return `<span class="pill ${cls}">${esc(b)}</span>`;
+  };
+  const trendPill = t =>
+    t === "worsening" ? `<span class="pill hi">worsening</span>`
+    : t === "improving" ? `<span class="pill lo">improving</span>`
+    : t === "stable" ? `<span class="pill mo">stable</span>`
+    : `<span class="pill idk">insufficient data</span>`;
+
+  async function load() {
+    let cached;
+    try {
+      const r = await fetch(`/api/patients/${hash}/summary`);
+      if (r.status === 404) {
+        root.innerHTML =
+          `<div class="error">No summary on file. Generate one from the dashboard.</div>`;
+        return;
+      }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      cached = await r.json();
+    } catch (e) {
+      root.innerHTML = `<div class="error">Could not load summary: ${esc(e.message)}</div>`;
+      return;
+    }
+    render(cached);
+  }
+
+  function render(record) {
+    const s = record.summary || {};
+    const pid = s.patient_identifier || {};
+    const risk = Array.isArray(s.risk_flags) ? s.risk_flags : [];
+    const calls = Array.isArray(s.calls_covered) ? s.calls_covered : [];
+    const traj = s.severity_trajectory || {};
+    const cc = Array.isArray(s.chief_complaints) ? s.chief_complaints : [];
+    const tl = Array.isArray(s.symptom_timeline) ? s.symptom_timeline : [];
+    const diffs = Array.isArray(s.dsm5_differentials) ? s.dsm5_differentials : [];
+    const fi = s.functional_impact || {};
+    const wpw = Array.isArray(s.what_patient_wants) ? s.what_patient_wants : [];
+    const sm = s.speech_metrics_trend || {};
+    const cq = Array.isArray(s.clinician_questions) ? s.clinician_questions : [];
+    const dq = s.data_quality_notes || {};
+    const disc = Array.isArray(s.disclaimers) ? s.disclaimers : [];
+
+    const riskBanner = risk.length ? `
+      <section class="risk-banner">
+        <h2>⚠ Risk flags — review before visit</h2>
+        <ul>
+          ${risk.map(rf => `
+            <li>
+              <span class="small">[${esc(fmtDate(rf.ts_iso))}, call ${esc((rf.call_id||"").slice(0,8))}]</span>
+              <strong>${esc(rf.category)}</strong>
+              <span class="pill ${rf.severity==="active_with_plan"?"hi":rf.severity==="active_no_plan"?"hi":"mo"}">${esc(rf.severity)}</span>
+              <div class="quote">"${esc(rf.verbatim_quote)}"</div>
+            </li>`).join("")}
+        </ul>
+        <div class="crisis">
+          Crisis resources: <strong>988</strong> (call or text, US Suicide &amp; Crisis Lifeline) ·
+          <strong>911</strong> · Text <strong>HOME</strong> to <strong>741741</strong> (Crisis Text Line)
+        </div>
+      </section>` : "";
+
+    const chiefList = cc.length
+      ? `<ul>${cc.map(x => `
+          <li><strong>${esc(x.complaint)}</strong>
+            <div class="small">first mentioned ${esc(fmtDay(x.first_mentioned_iso))} ·
+              most recent ${esc(fmtDay(x.most_recent_iso))} ·
+              ${(x.call_ids||[]).length} call(s)</div>
+          </li>`).join("")}</ul>`
+      : `<div class="small">No chief complaints extracted.</div>`;
+
+    const depSeries = (traj.depression_series || []);
+    const anxSeries = (traj.anxiety_series || []);
+    const trajRows = depSeries.map((d, i) => {
+      const a = anxSeries[i] || {};
+      const indet = d.indeterminate || a.indeterminate;
+      return `<tr${indet ? ' class="indet-row"' : ""}>
+        <td>${esc(fmtDay(d.started_iso))}</td>
+        <td>${esc((d.call_id||"").slice(0,8))}</td>
+        <td>${bandPill(d.band)}</td>
+        <td>${bandPill(a.band || "indeterminate")}</td>
+      </tr>`;
+    }).join("");
+    const trajSection = `
+      <table>
+        <thead><tr><th>Date</th><th>Call</th><th>Depression</th><th>Anxiety</th></tr></thead>
+        <tbody>${trajRows || `<tr><td colspan="4" class="indet">No DAM data.</td></tr>`}</tbody>
+      </table>
+      <div class="small" style="margin-top:6px">
+        Depression trend: ${trendPill(traj.depression_trend)} ·
+        Anxiety trend: ${trendPill(traj.anxiety_trend)}
+        ${(traj.caveats||[]).map(c => `<br><em>${esc(c)}</em>`).join("")}
+      </div>`;
+
+    const diffsHtml = diffs.length ? diffs.map(d => `
+      <div class="differential">
+        <div class="head">
+          <span class="name">${esc(d.condition)}</span>
+          ${bandPill(d.confidence)}
+        </div>
+        ${(d.dsm5_criteria_addressed||[]).length
+          ? `<div class="small"><strong>DSM-5 criteria:</strong> ${
+              d.dsm5_criteria_addressed.map(esc).join("; ")}</div>` : ""}
+        ${(d.supporting_evidence||[]).length
+          ? `<div class="small" style="margin-top:4px"><strong>Supporting:</strong></div>
+             ${d.supporting_evidence.map(ev => `
+               <div class="quote">"${esc(ev.quote)}"
+                 <span class="small">— call ${esc((ev.call_id||"").slice(0,8))}</span>
+               </div>`).join("")}` : ""}
+        ${(d.evidence_against||[]).length
+          ? `<div class="small" style="margin-top:4px"><strong>Against:</strong>
+              ${d.evidence_against.map(esc).join("; ")}</div>` : ""}
+      </div>`).join("")
+      : `<div class="small">No DSM-5 differentials extracted.</div>`;
+
+    const timelineHtml = tl.length ? `
+      <ul>${tl.map(t => `
+        <li>
+          <span class="small">${esc(fmtDay(t.ts_iso))}</span>
+          <span class="pill idk">${esc(t.topic)}</span>
+          <div class="quote">"${esc(t.quote)}"
+            <span class="small">— call ${esc((t.call_id||"").slice(0,8))}</span>
+          </div>
+        </li>`).join("")}</ul>`
+      : `<div class="small">No timeline entries.</div>`;
+
+    const fiRows = ["sleep", "appetite", "work_school", "social", "self_care"]
+      .map(k => `<tr><th style="width:30%">${k.replace("_", " ")}</th>
+        <td>${esc(fi[k] || "—")}</td></tr>`).join("");
+
+    const wpmRows = (sm.wpm_series || []).map(w => `
+      <tr><td>${esc(fmtDay(w.started_iso))}</td>
+        <td>${esc((w.call_id||"").slice(0,8))}</td>
+        <td>${Number(w.wpm || 0).toFixed(0)} wpm</td>
+        <td>${Number(w.speech_seconds || 0).toFixed(1)}s of speech</td></tr>`).join("");
+
+    root.innerHTML = `
+      <header>
+        <div class="controls">
+          <button onclick="window.print()">Print / save as PDF</button>
+        </div>
+        <h1>AtLegionX Intake Summary</h1>
+        <div class="meta">
+          Patient ID: <strong>***-***-${esc(pid.phone_last4 || "????")}</strong> ·
+          Calls: <strong>${esc(pid.n_calls || calls.length)}</strong> ·
+          Range: <strong>${esc(rangeText(pid.session_range_iso))}</strong>
+        </div>
+        <div class="meta">Generated: ${esc(fmtDate(s.generated_at_iso))}${
+          record._fallback || s._fallback
+            ? ' · <span style="color:#b71c1c"><strong>(deterministic fallback — AI summary unavailable)</strong></span>'
+            : ""}</div>
+      </header>
+
+      ${riskBanner}
+
+      <div class="grid2">
+        <section>
+          <h2>Chief complaints</h2>
+          ${chiefList}
+        </section>
+        <section>
+          <h2>Severity trajectory</h2>
+          ${trajSection}
+        </section>
+      </div>
+
+      <section>
+        <h2>DSM-5 differentials (candidates — NOT diagnoses)</h2>
+        ${diffsHtml}
+      </section>
+
+      <section>
+        <h2>Symptom timeline (verbatim)</h2>
+        ${timelineHtml}
+      </section>
+
+      <div class="grid2">
+        <section>
+          <h2>Functional impact</h2>
+          <table>${fiRows}</table>
+        </section>
+        <section>
+          <h2>What the patient wants</h2>
+          ${wpw.length
+            ? `<ul>${wpw.map(w => `<li>"${esc(w)}"</li>`).join("")}</ul>`
+            : `<div class="small">Not stated.</div>`}
+        </section>
+      </div>
+
+      <section>
+        <h2>Speech-rate trend</h2>
+        ${wpmRows
+          ? `<table>
+              <thead><tr><th>Date</th><th>Call</th><th>WPM</th><th>Speech time</th></tr></thead>
+              <tbody>${wpmRows}</tbody></table>
+             <div class="small" style="margin-top:4px"><em>${esc(sm.interpretation || "")}</em></div>`
+          : `<div class="small">No speech-rate data.</div>`}
+      </section>
+
+      <section>
+        <h2>Questions your clinician should ask</h2>
+        <ol>${cq.map(q => `<li>${esc(q)}</li>`).join("")}</ol>
+      </section>
+
+      ${
+        (dq.indeterminate_calls || []).length ||
+        (dq.short_calls || []).length ||
+        (dq.contradictions || []).length
+        ? `<section>
+            <h2>Data quality notes</h2>
+            ${(dq.indeterminate_calls||[]).length
+              ? `<div class="small">Indeterminate calls: ${
+                  dq.indeterminate_calls.map(c => esc(c.slice(0,8))).join(", ")}</div>` : ""}
+            ${(dq.short_calls||[]).length
+              ? `<div class="small">Short calls: ${
+                  dq.short_calls.map(c => esc(c.slice(0,8))).join(", ")}</div>` : ""}
+            ${(dq.contradictions||[]).length
+              ? `<div class="small"><strong>Contradictions:</strong>
+                  <ul>${dq.contradictions.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>`
+              : ""}
+          </section>` : ""
+      }
+
+      <section class="disclaimer">
+        <strong>AI disclaimer.</strong>
+        <ul>${disc.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+      </section>
+
+      <div class="signature">
+        <div>Patient signature: <span class="line">&nbsp;</span></div>
+        <div>Date: <span class="line" style="min-width:120px">&nbsp;</span></div>
+      </div>
+    `;
+  }
+
+  load();
+</script>
+</body>
+</html>

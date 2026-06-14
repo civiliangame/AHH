@@ -125,6 +125,22 @@
   .call-row .meta { font-size: 11px; color: #8b949e; margin-top: 2px; }
   .call-row.live .agent::before { content: "● "; color: #3fb950; }
 
+  .patient-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .patient-actions button {
+    flex: 1; font: inherit; font-size: 11px;
+    background: #161b22; color: #c9d1d9;
+    border: 1px solid #30363d; border-radius: 5px;
+    padding: 4px 6px; cursor: pointer;
+  }
+  .patient-actions button:hover { background: #1f2733; border-color: #3a4150; }
+  .patient-actions button:disabled { color: #6e7681; cursor: progress; }
+  .patient-row { cursor: default; }
+  .patient-row:hover { background: transparent; }
+  .patient-empty {
+    font-size: 11.5px; color: #6e7681; font-style: italic;
+    padding: 6px 2px;
+  }
+
   #feed-wrap { grid-area: feed; overflow-y: auto; }
   #feed { max-width: 760px; margin: 0 auto; padding: 20px; }
   .turn { display: flex; margin: 10px 0; }
@@ -195,7 +211,12 @@
   </aside>
 
   <aside id="calls" class="panel">
-    <h2>Calls</h2>
+    <div class="section-head">
+      <h2>Patients</h2>
+      <span id="patients-count"></span>
+    </div>
+    <div id="patients-list"></div>
+    <h2 style="margin-top:18px">Calls</h2>
     <div id="calls-list"></div>
   </aside>
 
@@ -487,6 +508,65 @@
     } catch (_) {}
   }
 
+  // ----- patients (clinician summary) -----
+  const patientsListEl = document.getElementById("patients-list");
+  const patientsCountEl = document.getElementById("patients-count");
+
+  async function refreshPatients() {
+    try {
+      const r = await fetch("/api/patients");
+      const j = await r.json();
+      const ps = j.patients || [];
+      patientsCountEl.innerHTML = ps.length
+        ? `<span class="round-badge">${ps.length}</span>` : "";
+      if (!ps.length) {
+        patientsListEl.innerHTML =
+          `<div class="patient-empty">no patient-tagged calls yet</div>`;
+        return;
+      }
+      patientsListEl.innerHTML = ps.map(p => `
+        <div class="call-row patient-row" data-h="${p.phone_hash}">
+          <div class="agent">***-***-${escapeHtml(p.phone_last4)}</div>
+          <div class="meta">${p.call_count} call${p.call_count === 1 ? "" : "s"}</div>
+          <div class="patient-actions">
+            <button class="sum-open"  data-h="${p.phone_hash}">Open summary</button>
+            <button class="sum-regen" data-h="${p.phone_hash}">Regenerate</button>
+          </div>
+        </div>`).join("");
+      patientsListEl.querySelectorAll(".sum-open").forEach(b =>
+        b.addEventListener("click", () => openSummary(b.dataset.h, false, b)));
+      patientsListEl.querySelectorAll(".sum-regen").forEach(b =>
+        b.addEventListener("click", () => openSummary(b.dataset.h, true, b)));
+    } catch (_) {}
+  }
+
+  async function openSummary(h, regen, btn) {
+    const orig = btn.textContent;
+    btn.textContent = regen ? "regenerating…" : "loading…";
+    btn.disabled = true;
+    try {
+      if (regen) {
+        const r = await fetch(`/api/patients/${h}/summary`, {method: "POST"});
+        if (!r.ok) throw new Error(`POST ${r.status}`);
+      } else {
+        const probe = await fetch(`/api/patients/${h}/summary`);
+        if (probe.status === 404) {
+          btn.textContent = "generating…";
+          const r = await fetch(`/api/patients/${h}/summary`, {method: "POST"});
+          if (!r.ok) throw new Error(`POST ${r.status}`);
+        } else if (!probe.ok) {
+          throw new Error(`GET ${probe.status}`);
+        }
+      }
+      window.open(`/summary/${h}`, "_blank");
+    } catch (e) {
+      alert("Summary failed: " + e.message);
+    } finally {
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  }
+
   async function selectCall(id) {
     viewing = id;
     renderCalls();
@@ -519,6 +599,11 @@
       liveCallsSeen.add(ev.call_id);
       liveCall = ev.call_id;
       refreshCalls();
+    }
+    // A 'patient' metadata event means the call just got phone-tagged —
+    // either a brand-new patient or a new call on an existing one.
+    if (ev.role === "metadata" && ev.data && ev.data.kind === "patient") {
+      refreshPatients();
     }
     if (ev.call_id) liveCall = ev.call_id;
 
@@ -562,6 +647,7 @@
     } catch (_) { renderPanel(); }
     await refreshCalls();
     renderCalls();
+    refreshPatients();
     connect();
   })();
 </script>

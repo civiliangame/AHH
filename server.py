@@ -19,6 +19,8 @@ import asyncio
 import json
 import logging
 import os
+import re
+import time
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -31,9 +33,18 @@ import agents
 import analysis
 import config
 import events
+import summary as summary_mod
 import triage
 from recorder import CallRecorder
 from xai_client import XAIRealtimeClient
+
+# Inbound calls give us the phone in the HTTP webhook (`call.initiated`),
+# but the websocket /media-stream is a separate connection that only knows
+# call_control_id. Stash phone here keyed on call_control_id so the WS can
+# look it up when the `start` event arrives. Entries are popped on use and
+# GC'd lazily if they go stale.
+PENDING_CALLS: dict[str, dict] = {}
+_PHONE_HASH_RE = re.compile(r"[0-9a-f]{16}")
 
 logging.basicConfig(
     level=getattr(logging, config.LOG_LEVEL, logging.INFO),
@@ -96,6 +107,14 @@ async def handle_webhook(request: Request):
     log.info("Webhook: %s", event_type)
 
     if event_type == "call.initiated" and payload.get("direction") == "incoming":
+        # Stash the caller's phone so the websocket can attach it to the call.
+        phone = payload.get("from") or payload.get("calling_number")
+        if phone and ccid:
+            PENDING_CALLS[ccid] = {"phone": phone, "ts": time.time()}
+        # Lazy GC: drop entries older than 5 minutes.
+        cutoff = time.time() - 300
+        for k in [k for k, v in PENDING_CALLS.items() if v["ts"] < cutoff]:
+            PENDING_CALLS.pop(k, None)
         # Answer AND start bidirectional streaming in one command.
         await telnyx_command(ccid, "answer", {
             "stream_url": stream_url_for(request),
@@ -187,6 +206,46 @@ async def get_scores(call_id: str):
     if not path.exists():
         return JSONResponse({"error": "not found", "call_id": call_id}, status_code=404)
     return JSONResponse(json.loads(path.read_text()))
+
+
+@app.get("/api/patients")
+async def api_patients():
+    """List all distinct patients (by phone) and their call counts.
+    Phones are returned as opaque 16-char hashes; the UI shows last-4 only."""
+    return JSONResponse({"patients": summary_mod.list_patients()})
+
+
+@app.get("/api/patients/{phone_hash}/summary")
+async def api_get_summary(phone_hash: str):
+    """Return a cached clinician summary, or 404 if not yet generated."""
+    if not _PHONE_HASH_RE.fullmatch(phone_hash):
+        return JSONResponse({"error": "invalid id"}, status_code=400)
+    cached = summary_mod.read_cached(phone_hash)
+    if not cached:
+        return JSONResponse({"error": "not generated"}, status_code=404)
+    return JSONResponse(cached)
+
+
+@app.post("/api/patients/{phone_hash}/summary")
+async def api_generate_summary(phone_hash: str):
+    """(Re)generate the summary for one patient. Runs the LLM call in a thread.
+    Concurrent regenerate calls for the same patient are serialized."""
+    if not _PHONE_HASH_RE.fullmatch(phone_hash):
+        return JSONResponse({"error": "invalid id"}, status_code=400)
+    async with summary_mod._lock_for(phone_hash):
+        result = await asyncio.to_thread(summary_mod.generate_summary, phone_hash)
+    if result is None:
+        return JSONResponse({"error": "no patient found"}, status_code=404)
+    return JSONResponse(result)
+
+
+@app.get("/summary/{phone_hash}")
+async def summary_page(phone_hash: str):
+    """Printable clinician-facing summary page. JS in the page fetches the
+    cached summary and renders it; this handler just serves the shell."""
+    if not _PHONE_HASH_RE.fullmatch(phone_hash):
+        return Response(status_code=400)
+    return HTMLResponse(Path("summary.html").read_text(encoding="utf-8"))
 
 
 @app.get("/events")
@@ -356,8 +415,27 @@ async def media_stream(ws: WebSocket):
 
             event = m.get("event")
             if event == "start":
-                fmt = m.get("start", {}).get("media_format", {})
+                start = m.get("start", {})
+                fmt = start.get("media_format", {})
                 log.info("Stream start: id=%s format=%s", m.get("stream_id"), fmt)
+                # Attach the patient's phone to this call so all transcripts can
+                # later be grouped per-patient for the clinician summary.
+                # Inbound: the webhook stashed it in PENDING_CALLS keyed by
+                # call_control_id. Outbound: run_checkin.py passes it as ?phone=.
+                # The webhook may land slightly after WS start, so retry briefly.
+                ccid = start.get("call_control_id")
+                phone = None
+                for _ in range(4):
+                    info = PENDING_CALLS.pop(ccid, None) if ccid else None
+                    phone = (info or {}).get("phone") or ws.query_params.get("phone")
+                    if phone:
+                        break
+                    await asyncio.sleep(0.25)
+                if phone:
+                    await events.emit_metadata(call_id, {
+                        "kind": "patient", "phone": phone,
+                    })
+                    log.info("Patient phone for call=%s: %s", call_id, phone)
                 greet["telnyx_started"] = True
                 await maybe_greet()
             elif event == "media":

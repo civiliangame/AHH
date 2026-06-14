@@ -12,6 +12,7 @@ Usage:
 """
 import argparse
 import asyncio
+import urllib.parse
 
 import httpx
 
@@ -28,7 +29,10 @@ async def place_call(to_number: str, agent: str) -> None:
     if missing:
         raise SystemExit("Set these in .env first: " + ", ".join(missing))
 
-    stream_url = f"wss://{config.PUBLIC_HOSTNAME}{config.STREAM_PATH}?agent={agent}"
+    # Carry the dialed number through so the bridge can tag the transcript
+    # with the patient's phone (no inbound webhook fires for outbound calls).
+    phone_q = urllib.parse.quote(to_number)
+    stream_url = f"wss://{config.PUBLIC_HOSTNAME}{config.STREAM_PATH}?agent={agent}&phone={phone_q}"
     body = {
         "connection_id": config.TELNYX_CONNECTION_ID,
         "to": to_number,

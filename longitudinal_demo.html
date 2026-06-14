@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Longitudinal Care Demo</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #101214;
+    --panel: #171a1d;
+    --panel-2: #1f2328;
+    --line: #343a40;
+    --muted: #9aa4ad;
+    --text: #edf2f4;
+    --teal: #4cc9b0;
+    --amber: #f2b84b;
+    --coral: #f36f56;
+    --blue: #75a7ff;
+    --good: #52c878;
+    --shadow: 0 14px 40px rgba(0,0,0,.28);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    border-radius: 6px;
+    padding: 8px 11px;
+    cursor: pointer;
+  }
+  button:hover, button:focus-visible {
+    border-color: var(--teal);
+    outline: none;
+  }
+  button.primary {
+    background: var(--teal);
+    color: #06211d;
+    border-color: var(--teal);
+    font-weight: 700;
+  }
+  .shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+  header {
+    grid-column: 1 / -1;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: #14171a;
+  }
+  h1, h2, h3, p { margin: 0; }
+  h1 { font-size: 18px; letter-spacing: 0; }
+  h2 { font-size: 14px; margin-bottom: 10px; }
+  h3 { font-size: 13px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+  .header-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .tag.hot { color: #251206; background: var(--amber); border-color: var(--amber); font-weight: 700; }
+  .tag.good { color: #061f13; background: var(--good); border-color: var(--good); font-weight: 700; }
+  aside {
+    border-right: 1px solid var(--line);
+    background: #121518;
+    padding: 18px 14px 20px;
+    overflow-y: auto;
+  }
+  main {
+    min-width: 0;
+    overflow-y: auto;
+  }
+  .patient-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+  .patient-card .id {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 3px;
+  }
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .mini {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #111417;
+    padding: 9px;
+    min-height: 66px;
+  }
+  .mini .k {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .mini .v {
+    display: block;
+    margin-top: 4px;
+    font-size: 19px;
+    font-weight: 750;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .timeline button {
+    width: 100%;
+    text-align: left;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 10px;
+    padding: 10px;
+    background: transparent;
+  }
+  .timeline button.active {
+    background: #202821;
+    border-color: var(--teal);
+  }
+  .dot {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .active .dot { background: var(--teal); color: #06211d; border-color: var(--teal); }
+  .t-main { font-weight: 750; }
+  .t-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .t-scores {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 7px;
+  }
+  .score-chip {
+    border: 1px solid var(--line);
+    background: #111417;
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+  .score-chip.dep { border-color: rgba(117,167,255,.45); color: #bcd2ff; }
+  .score-chip.anx { border-color: rgba(242,184,75,.48); color: #ffd88b; }
+  .content {
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+  }
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .band {
+    border-bottom: 1px solid var(--line);
+    background: #15181b;
+    padding: 16px 20px;
+  }
+  .overview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .metric {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 92px;
+  }
+  .metric .k {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .metric .v {
+    margin-top: 5px;
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .metric .d {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    min-width: 0;
+  }
+  .call-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .call-title h2 { font-size: 20px; margin: 0 0 3px; }
+  .subtitle { color: var(--muted); font-size: 13px; }
+  .summary {
+    color: #dfe6ea;
+    max-width: 920px;
+    margin-top: 10px;
+  }
+  .chart {
+    width: 100%;
+    height: 220px;
+    display: block;
+  }
+  .chart text { fill: var(--muted); font-size: 11px; }
+  .chart .grid { stroke: #2c3238; stroke-width: 1; }
+  .chart .dep-line { stroke: var(--blue); }
+  .chart .anx-line { stroke: var(--amber); }
+  .chart .line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .chart .point.dep { fill: var(--blue); }
+  .chart .point.anx { fill: var(--amber); }
+  .legend {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .legend i {
+    width: 22px;
+    height: 3px;
+    border-radius: 99px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .field {
+    border: 1px solid var(--line);
+    background: #111417;
+    border-radius: 7px;
+    padding: 9px;
+    min-height: 66px;
+  }
+  .field .k {
+    color: var(--muted);
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .field .v {
+    margin-top: 5px;
+    display: block;
+    font-weight: 750;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+    gap: 16px;
+  }
+  .turns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .turn {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: #111417;
+  }
+  .turn .role {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 3px;
+  }
+  .turn.agent { border-left: 3px solid var(--teal); }
+  .turn.caller { border-left: 3px solid var(--blue); }
+  .events {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  details {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #111417;
+    overflow: hidden;
+  }
+  summary {
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 750;
+    background: #1b1f23;
+  }
+  .event-body {
+    padding: 10px 12px 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 7px 12px;
+    font-size: 13px;
+  }
+  .kv dt {
+    color: var(--muted);
+  }
+  .kv dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  pre {
+    margin: 0;
+    padding: 10px;
+    overflow: auto;
+    background: #0b0d0f;
+    border: 1px solid #2b3035;
+    border-radius: 7px;
+    color: #d9e1e5;
+    font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .raw-title {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: -4px;
+  }
+  .bar-table {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 90px minmax(120px, 1fr) 56px;
+    gap: 10px;
+    align-items: center;
+  }
+  .bar-row span:first-child { color: var(--muted); font-size: 12px; }
+  .bar {
+    height: 8px;
+    border-radius: 999px;
+    background: #2a3035;
+    overflow: hidden;
+  }
+  .bar i {
+    height: 100%;
+    display: block;
+    background: var(--teal);
+  }
+  .bar.dep i { background: var(--blue); }
+  .bar.anx i { background: var(--amber); }
+  .bar.wpm i { background: var(--coral); }
+  .footnote {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  @media (max-width: 1100px) {
+    .shell { grid-template-columns: 1fr; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: none; }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .hero, .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    header { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .header-meta { margin-left: 0; justify-content: flex-start; }
+    .overview { grid-template-columns: 1fr 1fr; }
+    .timeline { grid-template-columns: 1fr; }
+    .field-grid, .mini-grid { grid-template-columns: 1fr; }
+    .call-title { flex-direction: column; }
+    .kv { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <h1>AtLegionX Longitudinal Care Demo</h1>
+      <p class="subtitle">Initial triage plus 8 check-in calls over 4 weeks</p>
+    </div>
+    <div class="header-meta">
+      <span class="tag hot">Hardcoded hackathon mode</span>
+      <span class="tag">Static HTML</span>
+      <span class="tag good">Function metadata visible</span>
+    </div>
+  </header>
+
+  <aside>
+    <section class="patient-card">
+      <h2>Patient Snapshot</h2>
+      <strong>Demo patient A-1047</strong>
+      <div class="id">DOB redacted &middot; consented outreach &middot; phone channel</div>
+      <div class="mini-grid">
+        <div class="mini"><span class="k">Care window</span><span class="v">4 wk</span></div>
+        <div class="mini"><span class="k">Calls</span><span class="v">9</span></div>
+        <div class="mini"><span class="k">Latest depression</span><span class="v" id="latestDep">-</span></div>
+        <div class="mini"><span class="k">Latest anxiety</span><span class="v" id="latestAnx">-</span></div>
+      </div>
+    </section>
+    <div class="controls">
+      <button id="prevBtn" type="button">Previous</button>
+      <button id="nextBtn" type="button" class="primary">Next</button>
+    </div>
+    <section>
+      <h3>Timeline</h3>
+      <div id="timeline" class="timeline"></div>
+    </section>
+  </aside>
+
+  <main>
+    <section class="band">
+      <div class="overview">
+        <div class="metric">
+          <div class="k">Depression band</div>
+          <div class="v" id="metricDep">-</div>
+          <div class="d" id="metricDepRaw">-</div>
+        </div>
+        <div class="metric">
+          <div class="k">Anxiety band</div>
+          <div class="v" id="metricAnx">-</div>
+          <div class="d" id="metricAnxRaw">-</div>
+        </div>
+        <div class="metric">
+          <div class="k">Speaking rate</div>
+          <div class="v" id="metricWpm">-</div>
+          <div class="d" id="metricSpeech">-</div>
+        </div>
+        <div class="metric">
+          <div class="k">Metadata events</div>
+          <div class="v" id="metricEvents">-</div>
+          <div class="d" id="metricFunctions">-</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="content">
+      <section class="hero">
+        <div class="card">
+          <div class="call-title">
+            <div>
+              <h2 id="callTitle">-</h2>
+              <p class="subtitle" id="callSubtitle">-</p>
+            </div>
+            <span class="tag" id="callAgent">-</span>
+          </div>
+          <p class="summary" id="callSummary"></p>
+          <div class="field-grid" id="callFields"></div>
+        </div>
+        <div class="card">
+          <h2>4 Week Score Trend</h2>
+          <svg id="trendChart" class="chart" viewBox="0 0 620 220" role="img" aria-label="Depression and anxiety trend chart"></svg>
+          <div class="legend">
+            <span><i style="background: var(--blue)"></i>Depression band</span>
+            <span><i style="background: var(--amber)"></i>Anxiety band</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="two-col">
+        <div class="card">
+          <h2>Conversation Highlights</h2>
+          <div id="turns" class="turns"></div>
+        </div>
+        <div class="card">
+          <h2>Selected Call Metrics</h2>
+          <div id="bars" class="bar-table"></div>
+          <p class="footnote" id="scoreFootnote"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Function and Metadata Payloads</h2>
+        <div id="events" class="events"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const DEP_LABELS = ["none", "mild-moderate", "severe"];
+  const ANX_LABELS = ["none", "mild", "moderate", "severe"];
+
+  function ts(iso, seconds = 0) {
+    return Date.parse(iso) / 1000 + seconds;
+  }
+
+  function scorePayload(callId, duration, score) {
+    return {
+      call_id: callId,
+      duration_seconds: duration,
+      status: "ok",
+      per_chunk: score.per_chunk,
+      depression: score.depression,
+      depression_raw: score.depression_raw,
+      depression_label: score.depression_label,
+      depression_margin: score.depression_margin,
+      anxiety: score.anxiety,
+      anxiety_raw: score.anxiety_raw,
+      anxiety_label: score.anxiety_label,
+      anxiety_margin: score.anxiety_margin,
+      indeterminate: score.indeterminate,
+      indeterminate_margin: 0.05,
+      n_chunks: score.per_chunk.length,
+      speech_seconds: score.speech_seconds,
+      caller_word_count: score.caller_word_count,
+      speaking_rate_wpm: score.speaking_rate_wpm
+    };
+  }
+
+  function scoreEvent(call, offset) {
+    return {
+      call_id: call.id,
+      role: "metadata",
+      data: { kind: "scores", ...call.scorePayload },
+      ts: ts(call.startedAt, offset),
+      partial: false
+    };
+  }
+
+  function symptomStep(callId, startedAt, index, round, description, empathy, symptomsSoFar, candidates, nextQuestion, baseOffset) {
+    const toolCallId = `tool_${callId}_${String(index).padStart(2, "0")}`;
+    const sourceEvent = {
+      type: "response.function_call_arguments.done",
+      name: "recordSymptom",
+      call_id: toolCallId,
+      arguments: JSON.stringify({ description, empathy })
+    };
+    const symptomEvent = {
+      call_id: callId,
+      role: "metadata",
+      data: { kind: "symptom", description, empathy },
+      ts: ts(startedAt, baseOffset),
+      partial: false
+    };
+    const startedEvent = {
+      call_id: callId,
+      role: "metadata",
+      data: { kind: "differential_started", round, symptoms_so_far: symptomsSoFar },
+      ts: ts(startedAt, baseOffset + 0.2),
+      partial: false
+    };
+    const differentialEvent = {
+      call_id: callId,
+      role: "metadata",
+      data: { kind: "differential", round, candidates, next_question: nextQuestion },
+      ts: ts(startedAt, baseOffset + 5.6),
+      partial: false
+    };
+    const functionOutput = {
+      type: "conversation.item.create",
+      item: {
+        type: "function_call_output",
+        call_id: toolCallId,
+        output: JSON.stringify({ status: "recorded", next_question: nextQuestion })
+      }
+    };
+    return {
+      title: `recordSymptom round ${round}`,
+      function_name: "recordSymptom",
+      source_event: sourceEvent,
+      emitted_metadata: [symptomEvent, startedEvent, differentialEvent],
+      function_output: functionOutput,
+      summary_fields: {
+        description,
+        empathy,
+        round,
+        candidates,
+        next_question: nextQuestion
+      }
+    };
+  }
+
+  const rawCalls = [
+    {
+      id: "a0511ef74c20",
+      label: "Initial triage",
+      short: "Triage",
+      type: "triage",
+      week: "Week 0",
+      startedAt: "2026-05-11T09:00:00-07:00",
+      duration: 126.4,
+      agent: "triage",
+      persona: {
+        voice: "ara",
+        tools: ["recordSymptom"],
+        greeting: "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+      },
+      summary: "Eva captures the first symptom cluster, grounds a differential against the DSM-5 collection, and produces the first depression/anxiety voice metrics.",
+      turns: [
+        ["agent", "Hi, I'm Eva from AtLegionX. How are you feeling today?"],
+        ["caller", "I have been feeling down for a couple of weeks, and I am not really enjoying hockey anymore."],
+        ["agent", "I'm sorry this has been weighing on you. Have you had changes in sleep, appetite, or energy?"],
+        ["caller", "Sleep has been bad. I wake up early, feel tired all day, and it is hard to concentrate."],
+        ["agent", "That sounds exhausting. Have you had times of unusually high energy or needing much less sleep?"],
+        ["caller", "No, nothing like that. It is mostly low mood and not wanting to do much."],
+        ["agent", "Thank you for telling me. I will pass this to the care team so they can follow up."]
+      ],
+      score: {
+        depression: 1,
+        depression_raw: -0.43,
+        depression_label: "mild-moderate",
+        depression_margin: 0.14,
+        anxiety: 2,
+        anxiety_raw: -0.19,
+        anxiety_label: "moderate",
+        anxiety_margin: 0.03,
+        indeterminate: true,
+        speech_seconds: 24.8,
+        caller_word_count: 84,
+        speaking_rate_wpm: 203.2,
+        per_chunk: [
+          { depression_raw: -0.10, depression: 2, anxiety_raw: 0.10, anxiety: 2 },
+          { depression_raw: 0.13, depression: 2, anxiety_raw: 0.26, anxiety: 3 },
+          { depression_raw: -1.16, depression: 0, anxiety_raw: -0.94, anxiety: 0 },
+          { depression_raw: -0.70, depression: 0, anxiety_raw: -0.41, anxiety: 1 }
+        ]
+      },
+      symptomRounds: [
+        {
+          description: "Patient reports feeling down for a couple of weeks and losing interest in hockey, a previously enjoyed activity.",
+          empathy: "I'm sorry this has been weighing on you.",
+          symptoms: ["Patient reports feeling down for a couple of weeks and losing interest in hockey, a previously enjoyed activity."],
+          candidates: ["Major Depressive Disorder", "Adjustment Disorder with Depressed Mood", "Generalized Anxiety Disorder"],
+          next: "Have you had changes in sleep, appetite, or energy?"
+        },
+        {
+          description: "Patient reports poor sleep with early waking, daytime fatigue, and difficulty concentrating.",
+          empathy: "That sounds exhausting.",
+          symptoms: [
+            "Patient reports feeling down for a couple of weeks and losing interest in hockey, a previously enjoyed activity.",
+            "Patient reports poor sleep with early waking, daytime fatigue, and difficulty concentrating."
+          ],
+          candidates: ["Major Depressive Disorder", "Adjustment Disorder with Depressed Mood", "Generalized Anxiety Disorder"],
+          next: "Have you had times of unusually high energy or needing much less sleep?"
+        },
+        {
+          description: "Patient denies episodes of unusually high energy or needing much less sleep; symptoms remain primarily low mood, fatigue, and withdrawal.",
+          empathy: "Thank you for being clear about that.",
+          symptoms: [
+            "Patient reports feeling down for a couple of weeks and losing interest in hockey, a previously enjoyed activity.",
+            "Patient reports poor sleep with early waking, daytime fatigue, and difficulty concentrating.",
+            "Patient denies episodes of unusually high energy or needing much less sleep; symptoms remain primarily low mood, fatigue, and withdrawal."
+          ],
+          candidates: ["Major Depressive Disorder", "Adjustment Disorder with Depressed Mood"],
+          next: "Have you had any thoughts of hurting yourself or feeling unsafe?"
+        },
+        {
+          description: "Patient denies thoughts of self-harm and says they feel safe at home, while still wanting clinical follow-up for low mood.",
+          empathy: "I'm glad you feel safe, and I still want the team to support you.",
+          symptoms: [
+            "Patient reports feeling down for a couple of weeks and losing interest in hockey, a previously enjoyed activity.",
+            "Patient reports poor sleep with early waking, daytime fatigue, and difficulty concentrating.",
+            "Patient denies episodes of unusually high energy or needing much less sleep; symptoms remain primarily low mood, fatigue, and withdrawal.",
+            "Patient denies thoughts of self-harm and says they feel safe at home, while still wanting clinical follow-up for low mood."
+          ],
+          candidates: ["Major Depressive Disorder", "Adjustment Disorder with Depressed Mood"],
+          next: "Can the care team call you later today to schedule a follow-up?"
+        }
+      ]
+    },
+    {
+      id: "b0514ac09e12",
+      label: "Check-in 1",
+      short: "C1",
+      type: "checkin",
+      week: "Week 1",
+      startedAt: "2026-05-14T10:00:00-07:00",
+      duration: 78.9,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "First outbound check-in confirms the patient answered, slept poorly once, and accepted another follow-up.",
+      turns: [
+        ["agent", "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?"],
+        ["caller", "Yes, I can talk. I am still pretty tired, but it helps that someone is checking in."],
+        ["agent", "I am glad you picked up. How has sleep been since Monday?"],
+        ["caller", "Still waking early, but I went for a short walk yesterday."]
+      ],
+      score: {
+        depression: 1, depression_raw: -0.51, depression_label: "mild-moderate", depression_margin: 0.20,
+        anxiety: 2, anxiety_raw: -0.24, anxiety_label: "moderate", anxiety_margin: 0.08,
+        indeterminate: false, speech_seconds: 18.2, caller_word_count: 45, speaking_rate_wpm: 148.4,
+        per_chunk: [
+          { depression_raw: -0.28, depression: 1, anxiety_raw: -0.18, anxiety: 2 },
+          { depression_raw: -0.62, depression: 1, anxiety_raw: -0.30, anxiety: 2 },
+          { depression_raw: -0.75, depression: 0, anxiety_raw: -0.47, anxiety: 1 }
+        ]
+      }
+    },
+    {
+      id: "c0518f531d90",
+      label: "Check-in 2",
+      short: "C2",
+      type: "checkin",
+      week: "Week 2",
+      startedAt: "2026-05-18T10:00:00-07:00",
+      duration: 84.7,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "Mood remains low, but the patient reports two walks and keeps the care plan appointment.",
+      turns: [
+        ["agent", "How have you been since we last talked?"],
+        ["caller", "Still low, but I did take two walks and I kept the appointment."],
+        ["agent", "That is a meaningful step. Did anything feel harder this weekend?"],
+        ["caller", "Mornings were hard. Once I got moving it was a little better."]
+      ],
+      score: {
+        depression: 1, depression_raw: -0.58, depression_label: "mild-moderate", depression_margin: 0.25,
+        anxiety: 2, anxiety_raw: -0.32, anxiety_label: "moderate", anxiety_margin: 0.12,
+        indeterminate: false, speech_seconds: 20.1, caller_word_count: 53, speaking_rate_wpm: 158.2,
+        per_chunk: [
+          { depression_raw: -0.40, depression: 1, anxiety_raw: -0.20, anxiety: 2 },
+          { depression_raw: -0.64, depression: 1, anxiety_raw: -0.35, anxiety: 2 },
+          { depression_raw: -0.72, depression: 0, anxiety_raw: -0.51, anxiety: 1 }
+        ]
+      }
+    },
+    {
+      id: "d0521bfa4c22",
+      label: "Check-in 3",
+      short: "C3",
+      type: "checkin",
+      week: "Week 2",
+      startedAt: "2026-05-21T10:00:00-07:00",
+      duration: 72.2,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "The patient sounds less rushed, reports one better night of sleep, and names a support person.",
+      turns: [
+        ["agent", "How has your sleep been since Monday?"],
+        ["caller", "One night was better. I also told my sister what has been going on."],
+        ["agent", "That sounds like good support. How is your mood today?"],
+        ["caller", "Still not great, but I do not feel as stuck as last week."]
+      ],
+      score: {
+        depression: 1, depression_raw: -0.65, depression_label: "mild-moderate", depression_margin: 0.31,
+        anxiety: 1, anxiety_raw: -0.52, anxiety_label: "mild", anxiety_margin: 0.25,
+        indeterminate: false, speech_seconds: 19.4, caller_word_count: 48, speaking_rate_wpm: 148.5,
+        per_chunk: [
+          { depression_raw: -0.54, depression: 1, anxiety_raw: -0.42, anxiety: 1 },
+          { depression_raw: -0.68, depression: 1, anxiety_raw: -0.56, anxiety: 1 },
+          { depression_raw: -0.82, depression: 0, anxiety_raw: -0.62, anxiety: 1 }
+        ]
+      }
+    },
+    {
+      id: "e0525d7e8261",
+      label: "Check-in 4",
+      short: "C4",
+      type: "checkin",
+      week: "Week 3",
+      startedAt: "2026-05-25T10:00:00-07:00",
+      duration: 68.1,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "Speech rate settles, anxiety band drops, and the patient reports using a sleep routine.",
+      turns: [
+        ["agent", "What has helped most over the last few days?"],
+        ["caller", "The sleep routine helps. I put my phone away and I am trying to get up at the same time."],
+        ["agent", "That is practical and steady. Any new concerns today?"],
+        ["caller", "No new concerns. I still feel low, just a bit more manageable."]
+      ],
+      score: {
+        depression: 1, depression_raw: -0.71, depression_label: "mild-moderate", depression_margin: 0.37,
+        anxiety: 1, anxiety_raw: -0.61, anxiety_label: "mild", anxiety_margin: 0.35,
+        indeterminate: false, speech_seconds: 21.8, caller_word_count: 57, speaking_rate_wpm: 156.9,
+        per_chunk: [
+          { depression_raw: -0.61, depression: 1, anxiety_raw: -0.55, anxiety: 1 },
+          { depression_raw: -0.78, depression: 0, anxiety_raw: -0.64, anxiety: 1 },
+          { depression_raw: -0.85, depression: 0, anxiety_raw: -0.72, anxiety: 1 }
+        ]
+      }
+    },
+    {
+      id: "f0528c83aa64",
+      label: "Check-in 5",
+      short: "C5",
+      type: "checkin",
+      week: "Week 3",
+      startedAt: "2026-05-28T10:00:00-07:00",
+      duration: 64.5,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "Patient describes re-engaging socially and no safety concerns; depression score approaches the none band.",
+      turns: [
+        ["agent", "How have things felt since the care team appointment?"],
+        ["caller", "Better. I met a friend for coffee and it did not feel impossible."],
+        ["agent", "That is good to hear. Any thoughts of hurting yourself or feeling unsafe?"],
+        ["caller", "No. I feel safe."]
+      ],
+      score: {
+        depression: 0, depression_raw: -0.78, depression_label: "none", depression_margin: 0.11,
+        anxiety: 1, anxiety_raw: -0.68, anxiety_label: "mild", anxiety_margin: 0.41,
+        indeterminate: false, speech_seconds: 17.6, caller_word_count: 44, speaking_rate_wpm: 150.0,
+        per_chunk: [
+          { depression_raw: -0.70, depression: 0, anxiety_raw: -0.60, anxiety: 1 },
+          { depression_raw: -0.82, depression: 0, anxiety_raw: -0.72, anxiety: 1 },
+          { depression_raw: -0.91, depression: 0, anxiety_raw: -0.82, anxiety: 0 }
+        ]
+      }
+    },
+    {
+      id: "a0601bb20f75",
+      label: "Check-in 6",
+      short: "C6",
+      type: "checkin",
+      week: "Week 4",
+      startedAt: "2026-06-01T10:00:00-07:00",
+      duration: 61.4,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "Sustained improvement: the patient reports routine, some enjoyment returning, and calmer mornings.",
+      turns: [
+        ["agent", "How was the weekend?"],
+        ["caller", "I played a little hockey. Not the whole game, but I enjoyed part of it."],
+        ["agent", "That is a real change from where we started. How are mornings now?"],
+        ["caller", "Still slow, but calmer."]
+      ],
+      score: {
+        depression: 0, depression_raw: -0.86, depression_label: "none", depression_margin: 0.19,
+        anxiety: 1, anxiety_raw: -0.74, anxiety_label: "mild", anxiety_margin: 0.48,
+        indeterminate: false, speech_seconds: 18.0, caller_word_count: 41, speaking_rate_wpm: 136.7,
+        per_chunk: [
+          { depression_raw: -0.82, depression: 0, anxiety_raw: -0.69, anxiety: 1 },
+          { depression_raw: -0.90, depression: 0, anxiety_raw: -0.77, anxiety: 1 },
+          { depression_raw: -0.98, depression: 0, anxiety_raw: -0.88, anxiety: 0 }
+        ]
+      }
+    },
+    {
+      id: "b0604e902f41",
+      label: "Check-in 7",
+      short: "C7",
+      type: "checkin",
+      week: "Week 4",
+      startedAt: "2026-06-04T10:00:00-07:00",
+      duration: 58.2,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "The patient reports stable sleep and fewer anxious spikes; anxiety moves to none on the voice model.",
+      turns: [
+        ["agent", "Have there been any hard moments since Monday?"],
+        ["caller", "A couple, but they passed. Sleep has been more regular."],
+        ["agent", "Good. Do you want the team to keep the same check-in schedule?"],
+        ["caller", "Yes, one more call would be good."]
+      ],
+      score: {
+        depression: 0, depression_raw: -0.93, depression_label: "none", depression_margin: 0.26,
+        anxiety: 0, anxiety_raw: -0.84, anxiety_label: "none", anxiety_margin: 0.10,
+        indeterminate: false, speech_seconds: 16.9, caller_word_count: 39, speaking_rate_wpm: 138.5,
+        per_chunk: [
+          { depression_raw: -0.88, depression: 0, anxiety_raw: -0.79, anxiety: 0 },
+          { depression_raw: -0.96, depression: 0, anxiety_raw: -0.86, anxiety: 0 }
+        ]
+      }
+    },
+    {
+      id: "c0608aa31d03",
+      label: "Check-in 8",
+      short: "C8",
+      type: "checkin",
+      week: "Week 4",
+      startedAt: "2026-06-08T10:00:00-07:00",
+      duration: 55.6,
+      agent: "checkin",
+      persona: { voice: "rex", tools: [], greeting: "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?" },
+      summary: "Final demo check-in shows stable low bands, steady speech rate, and a clean handoff back to normal follow-up cadence.",
+      turns: [
+        ["agent", "How are you feeling today compared with when we first spoke?"],
+        ["caller", "More like myself. Not perfect, but I am sleeping and I played hockey again."],
+        ["agent", "I am glad to hear that. I will note that the team can move you to the regular follow-up schedule."],
+        ["caller", "That sounds good. Thanks for checking in."]
+      ],
+      score: {
+        depression: 0, depression_raw: -1.02, depression_label: "none", depression_margin: 0.35,
+        anxiety: 0, anxiety_raw: -0.91, anxiety_label: "none", anxiety_margin: 0.18,
+        indeterminate: false, speech_seconds: 17.3, caller_word_count: 43, speaking_rate_wpm: 149.1,
+        per_chunk: [
+          { depression_raw: -0.96, depression: 0, anxiety_raw: -0.84, anxiety: 0 },
+          { depression_raw: -1.05, depression: 0, anxiety_raw: -0.94, anxiety: 0 }
+        ]
+      }
+    }
+  ];
+
+  const calls = rawCalls.map((call) => {
+    call.scorePayload = scorePayload(call.id, call.duration, call.score);
+    const metadata = [];
+    const functions = [];
+
+    if (call.type === "triage") {
+      call.symptomRounds.forEach((round, idx) => {
+        const step = symptomStep(
+          call.id,
+          call.startedAt,
+          idx + 1,
+          idx + 1,
+          round.description,
+          round.empathy,
+          round.symptoms,
+          round.candidates,
+          round.next,
+          18 + idx * 22
+        );
+        functions.push(step);
+        metadata.push(...step.emitted_metadata);
+      });
+    }
+
+    const analyzer = {
+      title: "analysis.analyze_call",
+      function_name: "analysis.analyze_call",
+      source_event: {
+        type: "call.end",
+        call_id: call.id,
+        wav_path: `recordings/${call.id}.wav`,
+        duration_seconds: call.duration
+      },
+      emitted_metadata: [scoreEvent(call, call.duration + 2.4)],
+      function_output: {
+        path: `scores/${call.id}.json`,
+        payload: call.scorePayload
+      },
+      summary_fields: {
+        status: "ok",
+        depression: `${call.score.depression} (${call.score.depression_label})`,
+        anxiety: `${call.score.anxiety} (${call.score.anxiety_label})`,
+        speaking_rate_wpm: call.score.speaking_rate_wpm,
+        n_chunks: call.score.per_chunk.length
+      }
+    };
+
+    metadata.push(...analyzer.emitted_metadata);
+    functions.push(analyzer);
+
+    if (call.type === "checkin") {
+      call.transport = {
+        place_call: "run_checkin.place_call",
+        stream_url: "wss://demo-ngrok.example/media-stream?agent=checkin",
+        stream_track: "inbound_track",
+        stream_bidirectional_mode: "rtp",
+        stream_bidirectional_codec: "PCMU",
+        persona_tools: []
+      };
+    }
+
+    return { ...call, metadata, functions };
+  });
+
+  let selected = 0;
+
+  function el(id) { return document.getElementById(id); }
+  function fmtDate(iso) {
+    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+  function jsonBlock(value) {
+    return `<pre>${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+  }
+
+  function renderTimeline() {
+    el("timeline").innerHTML = calls.map((call, idx) => `
+      <button type="button" class="${idx === selected ? "active" : ""}" data-index="${idx}">
+        <span class="dot">${idx === 0 ? "T" : idx}</span>
+        <span>
+          <span class="t-main">${escapeHtml(call.label)}</span>
+          <span class="t-meta">${escapeHtml(call.week)} &middot; ${escapeHtml(new Date(call.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }))} &middot; ${escapeHtml(call.agent)}</span>
+          <span class="t-scores">
+            <span class="score-chip dep">D ${call.score.depression} ${escapeHtml(call.score.depression_label)}</span>
+            <span class="score-chip anx">A ${call.score.anxiety} ${escapeHtml(call.score.anxiety_label)}</span>
+          </span>
+        </span>
+      </button>
+    `).join("");
+    el("timeline").querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selected = Number(btn.dataset.index);
+        render();
+      });
+    });
+  }
+
+  function renderTrend() {
+    const svg = el("trendChart");
+    const W = 620, H = 220;
+    const pad = { left: 34, right: 18, top: 16, bottom: 34 };
+    const maxY = 3;
+    const x = (i) => pad.left + (i / (calls.length - 1)) * (W - pad.left - pad.right);
+    const y = (v) => pad.top + (maxY - v) / maxY * (H - pad.top - pad.bottom);
+    const line = (values) => values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
+    const dep = calls.map((c) => c.score.depression);
+    const anx = calls.map((c) => c.score.anxiety);
+    const grids = [0, 1, 2, 3].map((v) => `
+      <line class="grid" x1="${pad.left}" x2="${W - pad.right}" y1="${y(v)}" y2="${y(v)}"></line>
+      <text x="6" y="${y(v) + 4}">${v}</text>
+    `).join("");
+    const labels = calls.map((c, i) => `<text x="${x(i) - 12}" y="${H - 10}">${escapeHtml(c.short)}</text>`).join("");
+    const points = calls.map((c, i) => `
+      <circle class="point dep" cx="${x(i)}" cy="${y(c.score.depression)}" r="${i === selected ? 6 : 4}"></circle>
+      <circle class="point anx" cx="${x(i)}" cy="${y(c.score.anxiety)}" r="${i === selected ? 6 : 4}"></circle>
+    `).join("");
+    svg.innerHTML = `
+      ${grids}
+      <path class="line dep-line" d="${line(dep)}"></path>
+      <path class="line anx-line" d="${line(anx)}"></path>
+      ${points}
+      ${labels}
+    `;
+  }
+
+  function renderFields(call) {
+    const fields = [
+      ["Call ID", call.id],
+      ["Started", fmtDate(call.startedAt)],
+      ["Duration", `${call.duration.toFixed(1)}s`],
+      ["Persona voice", call.persona.voice],
+      ["Tool schemas", call.persona.tools.length ? call.persona.tools.join(", ") : "none"],
+      ["Metadata events", call.metadata.length],
+      ["Function entries", call.functions.length],
+      ["Chunks", call.score.per_chunk.length]
+    ];
+    el("callFields").innerHTML = fields.map(([k, v]) => `
+      <div class="field"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></div>
+    `).join("");
+  }
+
+  function renderTurns(call) {
+    el("turns").innerHTML = call.turns.map(([role, text]) => `
+      <div class="turn ${escapeHtml(role)}">
+        <div class="role">${escapeHtml(role)}</div>
+        <div>${escapeHtml(text)}</div>
+      </div>
+    `).join("");
+  }
+
+  function pct(value, max) {
+    return Math.max(0, Math.min(100, value / max * 100));
+  }
+
+  function renderBars(call) {
+    const score = call.score;
+    const rows = [
+      ["Depression", `${score.depression} / 2`, pct(score.depression, 2), "dep"],
+      ["Anxiety", `${score.anxiety} / 3`, pct(score.anxiety, 3), "anx"],
+      ["Speech", `${score.speaking_rate_wpm.toFixed(0)} wpm`, pct(score.speaking_rate_wpm, 240), "wpm"],
+      ["Words", `${score.caller_word_count}`, pct(score.caller_word_count, 90), ""],
+      ["Speech sec", `${score.speech_seconds.toFixed(1)}s`, pct(score.speech_seconds, 30), ""]
+    ];
+    el("bars").innerHTML = rows.map(([name, value, width, klass]) => `
+      <div class="bar-row">
+        <span>${escapeHtml(name)}</span>
+        <span class="bar ${klass}"><i style="width:${width.toFixed(1)}%"></i></span>
+        <span>${escapeHtml(value)}</span>
+      </div>
+    `).join("");
+    const borderline = score.indeterminate ? "The scorer marked this call as indeterminate because one raw score is near a band threshold." : "No borderline flag on this call.";
+    el("scoreFootnote").textContent = `${borderline} Raw depression ${score.depression_raw.toFixed(2)}, raw anxiety ${score.anxiety_raw.toFixed(2)}.`;
+  }
+
+  function kvRows(fields) {
+    return `<dl class="kv">${Object.entries(fields).map(([k, v]) => `
+      <dt>${escapeHtml(k)}</dt>
+      <dd>${Array.isArray(v) ? escapeHtml(v.join(", ")) : escapeHtml(v)}</dd>
+    `).join("")}</dl>`;
+  }
+
+  function renderEvents(call) {
+    const transport = call.transport ? `
+      <details>
+        <summary>Outbound transport metadata</summary>
+        <div class="event-body">
+          ${kvRows(call.transport)}
+          <div class="raw-title">Raw transport payload</div>
+          ${jsonBlock(call.transport)}
+        </div>
+      </details>
+    ` : "";
+
+    const functionCards = call.functions.map((fn, idx) => {
+      const emitted = fn.emitted_metadata || [];
+      return `
+        <details ${idx === 0 ? "open" : ""}>
+          <summary>${escapeHtml(fn.title)} &middot; ${emitted.length} emitted metadata event${emitted.length === 1 ? "" : "s"}</summary>
+          <div class="event-body">
+            ${kvRows(fn.summary_fields || {})}
+            <div class="raw-title">Source event / function input</div>
+            ${jsonBlock(fn.source_event)}
+            <div class="raw-title">Function output / persisted artifact</div>
+            ${jsonBlock(fn.function_output)}
+            <div class="raw-title">Persisted SSE metadata events</div>
+            ${jsonBlock(emitted)}
+          </div>
+        </details>
+      `;
+    }).join("");
+
+    const fullTranscriptEvents = call.turns.map(([role, text], idx) => ({
+      call_id: call.id,
+      role,
+      text,
+      ts: ts(call.startedAt, 8 + idx * 10),
+      partial: false
+    }));
+    const allEvents = [
+      { call_id: call.id, role: "system", text: `Call started \u00b7 agent: ${call.agent}`, ts: ts(call.startedAt), partial: false },
+      ...fullTranscriptEvents,
+      ...call.metadata,
+      { call_id: call.id, role: "system", text: "Call ended", ts: ts(call.startedAt, call.duration), partial: false }
+    ].sort((a, b) => a.ts - b.ts);
+
+    const full = `
+      <details>
+        <summary>Full replay event list &middot; ${allEvents.length} events</summary>
+        <div class="event-body">
+          <div class="raw-title">Same event shape consumed by dashboard.html replay()</div>
+          ${jsonBlock(allEvents)}
+        </div>
+      </details>
+    `;
+
+    el("events").innerHTML = transport + functionCards + full;
+  }
+
+  function render() {
+    const call = calls[selected];
+    const latest = calls[calls.length - 1];
+    el("latestDep").textContent = latest.score.depression_label;
+    el("latestAnx").textContent = latest.score.anxiety_label;
+    el("metricDep").textContent = `${call.score.depression} \u00b7 ${call.score.depression_label}`;
+    el("metricDepRaw").textContent = `raw ${call.score.depression_raw.toFixed(2)} \u00b7 margin ${call.score.depression_margin.toFixed(2)}`;
+    el("metricAnx").textContent = `${call.score.anxiety} \u00b7 ${call.score.anxiety_label}`;
+    el("metricAnxRaw").textContent = `raw ${call.score.anxiety_raw.toFixed(2)} \u00b7 margin ${call.score.anxiety_margin.toFixed(2)}`;
+    el("metricWpm").textContent = `${call.score.speaking_rate_wpm.toFixed(0)} wpm`;
+    el("metricSpeech").textContent = `${call.score.caller_word_count} words \u00b7 ${call.score.speech_seconds.toFixed(1)}s speech`;
+    el("metricEvents").textContent = call.metadata.length;
+    el("metricFunctions").textContent = `${call.functions.length} function entries`;
+    el("callTitle").textContent = call.label;
+    el("callSubtitle").textContent = `${fmtDate(call.startedAt)} \u00b7 ${call.week} \u00b7 ${call.duration.toFixed(1)}s`;
+    el("callAgent").textContent = `${call.agent} agent`;
+    el("callSummary").textContent = call.summary;
+    el("prevBtn").disabled = selected === 0;
+    el("nextBtn").disabled = selected === calls.length - 1;
+    renderTimeline();
+    renderTrend();
+    renderFields(call);
+    renderTurns(call);
+    renderBars(call);
+    renderEvents(call);
+  }
+
+  el("prevBtn").addEventListener("click", () => {
+    selected = Math.max(0, selected - 1);
+    render();
+  });
+  el("nextBtn").addEventListener("click", () => {
+    selected = Math.min(calls.length - 1, selected + 1);
+    render();
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") {
+      selected = Math.max(0, selected - 1);
+      render();
+    } else if (event.key === "ArrowRight") {
+      selected = Math.min(calls.length - 1, selected + 1);
+      render();
+    }
+  });
+  render();
+</script>
+</body>
+</html>
