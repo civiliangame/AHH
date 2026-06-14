@@ -1,34 +1,34 @@
 {
   "phone": "+14155943155",
-  "updated_at": "2026-06-14T00:18:51.465257+00:00",
+  "updated_at": "2026-06-14T00:24:26.372130+00:00",
   "conditions": [
     {
       "condition": "Major Depressive Disorder",
       "criteria": [
         {
-          "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms: 1. Depressed mood most of the day... 2. Markedly diminished interest or pleasure... 3. Significant weight/appetite change... 4. Insomnia or hypersomnia... 5. Psychomotor agitation or retardation... 6. Fatigue or loss of energy... 7. Feelings of worthlessness or excessive/inappropriate guilt... 8. Diminished ability to think or concentrate, or indecisiveness. 9. Recurrent thoughts of death...",
+          "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms (each present nearly every day unless otherwise noted): 1. Depressed mood most of the day... 2. Markedly diminished interest or pleasure in all or almost all activities most of the day. ... 6. Fatigue or loss of energy. ... 8. Diminished ability to think or concentrate, or indecisiveness.",
           "status": "need_checkin",
-          "evidence": "Patient reports 'pretty lethargic and hopeless lately' (suggests possible depressed mood and fatigue/loss of energy) and 'inability to concentrate, specifically can't concentrate worth shit lately' (matches symptom 8). Duration reported as 'past 30 days' exceeds 2 weeks, but only 3 symptoms mentioned so far; no report on anhedonia, weight/appetite, sleep, psychomotor changes, guilt, or suicidal thoughts. Need more symptoms and confirmation of 2-week period with change from prior functioning."
+          "evidence": "Patient reports 'feeling pretty lethargic lately and reports being unable to feel any enthusiasm or interest in things' (matches anhedonia/fatigue), 'feeling down a lot' (depressed mood), 'significant difficulty concentrating, stating they \"can't concentrate worth shit\"' (concentration issue). Symptoms reported for 'the past three days' only; duration criterion of same 2-week period not yet met."
         },
         {
           "criterion": "Criterion B: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
           "status": "need_checkin",
-          "evidence": "Patient reports symptoms but no explicit statement of distress or impairment in functioning (e.g., work, relationships). 'Lately' and concentration issues imply possible impact, but not confirmed."
+          "evidence": "Patient reports symptoms but no explicit statements about distress or impairment in functioning provided so far."
         },
         {
           "criterion": "Criterion C: The episode is not attributable to the physiological effects of a substance or another medical condition.",
           "status": "need_psychiatrist",
-          "evidence": "No patient report on substances or medical conditions; requires clinical judgment and history not available in phone intake."
+          "evidence": "No patient statements about substances or medical conditions; requires clinical judgment."
         },
         {
           "criterion": "Criterion D: The episode is not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
           "status": "need_psychiatrist",
-          "evidence": "No patient report on psychotic symptoms or related disorders; requires clinical judgment."
+          "evidence": "No patient statements about psychotic symptoms or related disorders; requires clinical judgment."
         },
         {
           "criterion": "Criterion E: There has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition).",
           "status": "need_psychiatrist",
-          "evidence": "No patient report on history of mania/hypomania; requires clinical judgment to rule out bipolar."
+          "evidence": "No patient statements about history of mania/hypomania; requires clinical judgment."
         }
       ]
     },
@@ -36,39 +36,34 @@
       "condition": "Persistent Depressive Disorder",
       "criteria": [
         {
-          "criterion": "Criterion A: Depressed mood for most of the day, for more days than not, for at least 2 years (1 year in children/adolescents).",
+          "criterion": "Criterion A: Depressed mood for most of the day, for more days than not, as indicated by either subjective account or observation by others, for at least 2 years.",
           "status": "no",
-          "evidence": "Patient reports symptoms 'for the past 30 days' only; far short of 2-year requirement."
+          "evidence": "Patient reports symptoms 'for the past three days' only; far short of 2-year duration requirement."
         },
         {
-          "criterion": "Criterion B: Presence, while depressed, of two or more of: poor appetite or overeating; insomnia or hypersomnia; low energy or fatigue; low self-esteem; poor concentration or difficulty making decisions; feelings of hopelessness.",
+          "criterion": "Criterion B: Presence, while depressed, of two (or more) of the following: 1. Poor appetite or overeating. 2. Insomnia or hypersomnia. 3. Low energy or fatigue. 4. Low self-esteem. 5. Poor concentration or difficulty making decisions. 6. Feelings of hopelessness.",
           "status": "need_checkin",
-          "evidence": "Patient reports 'lethargic and hopeless' (low energy/fatigue and feelings of hopelessness) and 'inability to concentrate' (poor concentration); meets at least 3 but duration too short for full criteria."
+          "evidence": "Patient reports lethargy (low energy/fatigue), lack of enthusiasm (possible anhedonia/hopelessness proxy), difficulty concentrating; but duration too short to assess persistence and full criteria."
         },
         {
-          "criterion": "Criterion C: During the 2-year period, the person has never been without the symptoms in Criteria A and B for more than 2 months at a time.",
+          "criterion": "Criterion C: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
           "status": "need_checkin",
-          "evidence": "Only 30 days reported; cannot assess 2-year persistence or gaps."
+          "evidence": "Patient reports symptoms but no explicit statements about distress or impairment in functioning provided so far."
         },
         {
-          "criterion": "Criterion D: Criteria for a major depressive episode may be continuously present for 2 years.",
-          "status": "need_checkin",
-          "evidence": "30 days reported; insufficient duration."
-        },
-        {
-          "criterion": "Criterion E: There has never been a manic episode and the disturbance is not better explained by... [schizoaffective, schizophrenia spectrum, etc.].",
+          "criterion": "Criterion D: The disturbance is not attributable to the physiological effects of a substance or another medical condition.",
           "status": "need_psychiatrist",
-          "evidence": "No report on mania or psychotic disorders; requires clinical judgment."
+          "evidence": "No patient statements about substances or medical conditions; requires clinical judgment."
         },
         {
-          "criterion": "Criterion F: The symptoms are not attributable to the physiological effects of a substance or another medical condition.",
+          "criterion": "Criterion E: The disturbance is not better explained by a persistent schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified or unspecified schizophrenia spectrum and other psychotic disorder.",
           "status": "need_psychiatrist",
-          "evidence": "No patient report on substances or medical conditions; requires clinical judgment."
+          "evidence": "No patient statements about psychotic symptoms or related disorders; requires clinical judgment."
         },
         {
-          "criterion": "Criterion G: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
-          "status": "need_checkin",
-          "evidence": "No explicit report of distress or impairment."
+          "criterion": "Criterion F: There has never been a manic episode and the symptoms are not better explained by cyclothymic disorder.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient statements about history of mania; requires clinical judgment."
         }
       ]
     },
@@ -78,27 +73,27 @@
         {
           "criterion": "Criterion A: The development of emotional or behavioral symptoms in response to an identifiable stressor(s) occurring within 3 months of the onset of the stressor(s).",
           "status": "need_checkin",
-          "evidence": "Patient reports symptoms for 'past 30 days' (within 3 months possible) but no mention of any identifiable stressor."
+          "evidence": "Patient reports symptoms for past three days but no statements identifying any specific stressor(s)."
         },
         {
-          "criterion": "Criterion B: These symptoms/behaviors are clinically significant as evidenced by either of the following: 1. Marked distress that is out of proportion to the severity or intensity of the stressor... 2. Significant impairment in social or occupational functioning.",
+          "criterion": "Criterion B: These symptoms/behaviors are clinically significant as evidenced by one or both of the following: 1. Marked distress that is out of proportion to the severity or intensity of the stressor. 2. Significant impairment in social, occupational, or other important areas of functioning.",
           "status": "need_checkin",
-          "evidence": "Patient reports 'lethargic and hopeless' and concentration issues but no explicit distress level, proportionality to stressor, or impairment; no stressor identified."
+          "evidence": "Patient reports symptoms but no explicit statements about distress level relative to stressor or impairment in functioning provided so far."
         },
         {
           "criterion": "Criterion C: The stress-related disturbance does not meet the criteria for another mental disorder and is not merely an exacerbation of a preexisting mental disorder.",
           "status": "need_psychiatrist",
-          "evidence": "Requires ruling out other disorders like MDD; clinical judgment needed."
+          "evidence": "No patient statements ruling out other disorders; requires clinical judgment."
         },
         {
           "criterion": "Criterion D: The symptoms do not represent normal bereavement.",
-          "status": "need_checkin",
-          "evidence": "No mention of bereavement or loss."
+          "status": "need_psychiatrist",
+          "evidence": "No patient statements about bereavement; requires clinical judgment."
         },
         {
           "criterion": "Criterion E: Once the stressor or its consequences have terminated, the symptoms do not persist for more than an additional 6 months.",
           "status": "need_checkin",
-          "evidence": "Symptoms ongoing for 30 days; stressor status and termination unknown."
+          "evidence": "Symptoms ongoing for three days; persistence after stressor termination not yet observable."
         }
       ]
     }

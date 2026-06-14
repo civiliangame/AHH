@@ -1,0 +1,116 @@
+# Bipolar I Disorder
+
+Bipolar I requires at least one lifetime **manic episode** (Criteria A–D). The manic episode may be preceded or followed by hypomanic or major depressive episodes, but neither is required for the diagnosis.
+
+**Manic Episode:**
+
+**Criterion A:** A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased goal-directed activity or energy, lasting at least 1 week (or any duration if hospitalization is necessary), present most of the day, nearly every day. (The mandatory inclusion of increased activity/energy alongside mood is a DSM-5 change from DSM-IV.)
+
+**Criterion B:** During the period of mood disturbance and increased energy/activity, ≥3 of the following symptoms (≥4 if mood is only irritable) are present to a significant degree and represent a noticeable change from usual behavior:
+1. Inflated self-esteem or grandiosity.
+2. Decreased need for sleep (e.g., feels rested after only 3 hours of sleep).
+3. More talkative than usual or pressure to keep talking.
+4. Flight of ideas or subjective experience that thoughts are racing.
+5. Distractibility (attention too easily drawn to unimportant/irrelevant stimuli; reported or observed).
+6. Increase in goal-directed activity (social, occupational, or sexual) or psychomotor agitation (purposeless, non-goal-directed activity).
+7. Excessive involvement in activities with high potential for painful consequences (e.g., unrestrained spending sprees, sexual indiscretions, foolish business investments).
+
+**Criterion C:** The mood disturbance is severe enough to cause marked impairment in social or occupational functioning, to necessitate hospitalization to prevent harm to self or others, or there are psychotic features. (Because of this criterion, a manic episode can never be classified "mild" in the DSM-5 severity sense—it always involves marked impairment; DSM-5-TR added manic-specific severity definitions.)
+
+**Criterion D:** The episode is not attributable to the physiological effects of a substance or another medical condition. **Note:** a full manic episode emerging during antidepressant treatment (medication or ECT) but persisting at a fully syndromal level beyond the physiological effect of that treatment is sufficient evidence for a manic episode and therefore a bipolar I diagnosis.
+
+**Diagnostic criteria for the disorder:**
+- **Criterion A:** Criteria A–D have been met for at least one manic episode.
+- **Criterion B (DSM-5-TR wording):** at least one manic episode is not better explained by schizoaffective disorder and is not superimposed on schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders. (DSM-5-TR reverted toward the clearer DSM-IV phrasing—"is not better explained by…and is not superimposed on"—because the original DSM-5 "better explained by" wording was difficult to apply to psychotic disorders that do not include mood episodes in their definitions.)
+
+
+
+# Generalized Anxiety Disorder (GAD)
+
+**Criterion A:** Excessive anxiety and worry (apprehensive expectation), occurring more days than not for at least 6 months, about a number of events or activities (e.g., work or school performance).
+
+**Criterion B:** The individual finds it difficult to control the worry.
+
+**Criterion C:** The anxiety and worry are associated with ≥3 of the following 6 symptoms (with at least some symptoms present more days than not for the past 6 months). **Only 1 item is required in children:**
+1. Restlessness or feeling keyed up or on edge.
+2. Being easily fatigued.
+3. Difficulty concentrating or mind going blank.
+4. Irritability.
+5. Muscle tension.
+6. Sleep disturbance (difficulty falling/staying asleep, or restless, unsatisfying sleep).
+
+**Criterion D:** The anxiety, worry, or physical symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.
+
+**Criterion E:** Not attributable to the physiological effects of a substance (drug of abuse, medication) or another medical condition (e.g., hyperthyroidism).
+
+**Criterion F:** Not better explained by another mental disorder—e.g., worry about panic attacks (panic disorder), negative evaluation (social anxiety disorder), contamination/obsessions (OCD), separation from attachment figures (separation anxiety disorder), trauma reminders (PTSD), weight gain (anorexia nervosa), physical complaints (somatic symptom disorder), perceived appearance flaws (body dysmorphic disorder), having a serious illness (illness anxiety disorder), or delusional content (schizophrenia/delusional disorder).
+
+
+
+
+# Bipolar II Disorder
+
+Bipolar II requires **at least one hypomanic episode AND at least one major depressive episode**, with the lifetime absence of any manic episode.
+
+**Hypomanic Episode:**
+
+**Criterion A:** A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased activity or energy, lasting at least 4 consecutive days, present most of the day, nearly every day.
+
+**Criterion B:** ≥3 symptoms (≥4 if mood only irritable) from the same 7-symptom list used for mania, persisting, representing a noticeable change from usual behavior, and present to a significant degree.
+
+**Criterion C:** The episode is associated with an unequivocal change in functioning that is uncharacteristic of the individual when not symptomatic.
+
+**Criterion D:** The disturbance in mood and the change in functioning are observable by others.
+
+**Criterion E:** The episode is **NOT** severe enough to cause marked impairment in social or occupational functioning or to necessitate hospitalization. **If there are psychotic features, the episode is, by definition, manic** (not hypomanic).
+
+**Criterion F:** The episode is not attributable to the physiological effects of a substance. (The same antidepressant-emergent note applies: a full hypomanic episode persisting at a fully syndromal level beyond the physiological effect of treatment counts; however, the DSM cautions that one or two symptoms—particularly increased irritability, edginess, or agitation following antidepressant use—should not alone be taken as evidence of a hypomanic episode or a bipolar diathesis.)
+
+**Diagnostic criteria for the disorder:**
+- **Criterion A:** Criteria have been met for at least one hypomanic episode and at least one major depressive episode.
+- **Criterion B:** There has never been a manic episode.
+- **Criterion C (DSM-5-TR wording):** at least one hypomanic episode and at least one major depressive episode are not better explained by schizoaffective disorder and are not superimposed on schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.
+- **Criterion D:** The symptoms of depression OR the unpredictability caused by frequent alternation between periods of depression and hypomania cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.
+
+A key clinical pitfall: Bipolar II is frequently misdiagnosed as unipolar MDD because depressive episodes dominate the clinical picture, depressive episodes tend to be longer and more frequent than in Bipolar I, and patients rarely present during—or volunteer a history of—hypomania (which they may experience as desirable productivity).
+
+## Recommendations
+- **Always screen for a lifetime history of mania/hypomania before diagnosing MDD.** Conversion from unipolar depression to bipolar disorder is meaningful and time-dependent: Kessing et al. (2017, *Bipolar Disorders*) found a 12.9% conversion rate over 10 years, with the yearly conversion rate falling from ~3.9% in the first year to ~0.8% in years 5–10; Ratheesh et al. (2017, *Acta Psychiatrica Scandinavica*) found 22.5% over 12–18 years. A positive history reclassifies the diagnosis and changes pharmacotherapy.
+- **Use a collateral informant for suspected hypomania.** Hypomanic Criteria C–D require that the change in functioning be unequivocal and observable by others; relying on patient self-report alone systematically underdetects Bipolar II.
+- **For grief presentations, apply clinical judgment per the DSM-5 bereavement note** rather than an automatic 2-month exclusion; diagnose and treat a superimposed MDE when present (e.g., marked worthlessness, suicidality, psychomotor retardation, or functional incapacity beyond expected grief).
+- **Threshold that changes management:** any episode meeting full manic criteria—marked impairment, hospitalization, or psychotic features—shifts the diagnosis from Bipolar II to Bipolar I and alters treatment (mood stabilization rather than, or before, antidepressant use).
+
+## Caveats
+- These are paraphrased summaries for clinical reference; consult DSM-5-TR directly for verbatim criteria, full specifier definitions, and coding.
+- Prevalence figures vary by survey and reporting convention—e.g., NIMH/NCS-R (2.7% 12-month, 5.7% lifetime) versus ADAA (3.1%, ~6.8 million adults)—reflecting methodological and rounding differences, not contradictions.
+- StatPearls' abbreviated GAD criteria list is imprecise (it duplicates "irritability" and does not cleanly label criteria A–F); the APA DSM-5-TR text is the authoritative source.
+- Episode-duration thresholds (7 days for mania, 4 days for hypomania) remain debated—some experts (e.g., per *Psychiatric Times* coverage of an AREDOC task force) advocate shorter durations—but DSM-5-TR retains the standard thresholds.
+
+
+
+# Major Depressive Disorder (MDD)
+
+A major depressive episode (Criteria A–C below) is the diagnostic building block of MDD.
+
+**Criterion A — ≥5 of 9 symptoms during the same 2-week period**, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms (each present nearly every day unless otherwise noted):
+1. Depressed mood most of the day (subjective report or observed; in children/adolescents may present as irritable mood).
+2. Markedly diminished interest or pleasure in all or almost all activities most of the day.
+3. Significant unintentional weight change (e.g., >5% of body weight in a month) or appetite change.
+4. Insomnia or hypersomnia.
+5. Psychomotor agitation or retardation (observable by others, not merely subjective).
+6. Fatigue or loss of energy.
+7. Feelings of worthlessness or excessive/inappropriate guilt (may be delusional; not merely self-reproach about being ill).
+8. Diminished ability to think or concentrate, or indecisiveness.
+9. Recurrent thoughts of death, recurrent suicidal ideation without a specific plan, or a suicide attempt or specific plan.
+
+**Criterion B — Functional impairment:** the symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.
+
+**Criterion C — Substance/medical exclusion:** the episode is not attributable to the physiological effects of a substance or another medical condition.
+
+Criteria A–C constitute a major depressive episode. For the disorder diagnosis, two further criteria apply:
+- **Criterion D:** the episode is not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.
+- **Criterion E:** there has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition). Per StatPearls, ruling out a history of mania/hypomania is essential to distinguish MDD from bipolar disorder.
+
+**Bereavement note (DSM-5/DSM-5-TR change):** DSM-IV excluded an MDD diagnosis for depressive symptoms lasting <2 months following the death of a loved one (the "bereavement exclusion"). This was removed in DSM-5. A clinical note now directs clinicians to use judgment to distinguish a normal grief response to a significant loss (bereavement, financial ruin, natural disaster, serious medical illness/disability) from a major depressive episode. The APA's stated rationale: bereavement is recognized to commonly last longer than the 2-month period implied by DSM-IV; bereavement is a severe psychosocial stressor that can precipitate a true MDE in vulnerable individuals; and bereavement-related depression responds to treatment like depression in other contexts. Clinically useful differentiators noted by the APA: in grief, self-esteem is usually preserved and dysphoria comes in waves tied to thoughts of the deceased, whereas in MDE pervasive depressed mood and corrosive feelings of worthlessness and self-loathing predominate.
+
+**Specifiers:** with anxious distress, mixed features, melancholic features, atypical features, psychotic features, catatonia, peripartum onset, seasonal pattern; plus severity (mild/moderate/severe) and remission status.
