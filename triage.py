@@ -14,6 +14,7 @@ and calls these functions, which return structured results it then speaks.
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -66,11 +67,9 @@ _NEXT_STEP_SCHEMA = {
     "schema": {
         "type": "object",
         "properties": {
-            "candidates": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "Most likely candidate mental health conditions given the symptoms so far.",
-            },
+            # next_question and done are declared first on purpose: the model
+            # emits properties in schema order, so streaming can surface the
+            # spoken question + done flag before the bulkier fields below finish.
             "next_question": {
                 "type": "string",
                 "description": "ONE short, spoken-friendly question that best narrows the differential. Must NOT repeat any already-asked question. Empty string if done.",
@@ -78,6 +77,11 @@ _NEXT_STEP_SCHEMA = {
             "done": {
                 "type": "boolean",
                 "description": "true if there is enough information for an initial impression, OR no further question would meaningfully narrow the differential.",
+            },
+            "candidates": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Most likely candidate mental health conditions given the symptoms so far.",
             },
             "dsm5_criteria": {
                 "type": "array",
@@ -93,19 +97,19 @@ _NEXT_STEP_SCHEMA = {
                         "condition": {"type": "string", "description": "DSM-5 condition, e.g. 'Major Depressive Disorder'."},
                         "criterion": {"type": "string", "description": "The specific criterion, e.g. 'A1: Depressed mood most of the day, nearly every day'."},
                         "status": {"type": "string", "enum": ["met", "not_met", "unclear"], "description": "Whether the patient's reports meet this criterion."},
-                        "evidence": {"type": "string", "description": "What the patient said that supports this status (or why it's unclear)."},
                     },
-                    "required": ["condition", "criterion", "status", "evidence"],
+                    "required": ["condition", "criterion", "status"],
                     "additionalProperties": False,
                 },
             },
             "future_checkin": {
                 "type": "array",
                 "description": (
-                    "Zero or more follow-up questions worth asking in a LATER call "
-                    "to track how the patient changes over time (sleep, mood "
-                    "trajectory, treatment response) — for longitudinal accuracy, "
-                    "not this call. Empty array if none are warranted."
+                    "Follow-up questions to ask on a LATER call to track how the "
+                    "patient changes over time (sleep, mood trajectory, treatment "
+                    "response) — for longitudinal accuracy, not this call. MUST be "
+                    "an empty array unless `done` is true: only populate this on the "
+                    "final turn. Empty array if none are warranted."
                 ),
                 "items": {
                     "type": "object",
@@ -118,7 +122,7 @@ _NEXT_STEP_SCHEMA = {
                 },
             },
         },
-        "required": ["candidates", "next_question", "done", "dsm5_criteria", "future_checkin"],
+        "required": ["next_question", "done", "candidates", "dsm5_criteria", "future_checkin"],
         "additionalProperties": False,
     },
 }
@@ -128,13 +132,14 @@ _DIFFERENTIAL_SYSTEM = (
     "Given the patient's reported symptoms so far, use the DSM-5 reference "
     "collection (file_search) to identify the most likely candidate conditions "
     "and to build a profile: for the relevant DSM-5 criteria, mark each as met / "
-    "not_met / unclear with the patient's own words as evidence (`dsm5_criteria`). "
+    "not_met / unclear (`dsm5_criteria`). "
     "Re-assess the criteria against ALL symptoms every turn — the profile grows as "
     "the patient answers. Propose ONE short, spoken-friendly question that best "
-    "narrows the differential or resolves an `unclear` criterion. Also propose "
-    "`future_checkin`: zero or more {days, message} follow-ups to ask on a LATER "
-    "call to track change over time (set days to when it should be asked, e.g. 3, "
-    "7, 14). If earlier candidate conditions are provided, refine that running "
+    "narrows the differential or resolves an `unclear` criterion. ONLY when you "
+    "set `done` to true (the final turn) propose `future_checkin`: {days, message} "
+    "follow-ups to ask on a LATER call to track change over time (set days to when "
+    "it should be asked, e.g. 3, 7, 14). On every non-final turn, return an empty "
+    "`future_checkin` array. If earlier candidate conditions are provided, refine that running "
     "differential rather than starting over. Do NOT repeat any question already "
     "asked (the list is provided) — pick a genuinely new angle. Set `done` to true "
     "(and leave `next_question` empty) when you have enough for an initial "
@@ -187,23 +192,37 @@ def _spawn_criteria_worker(phone, symptoms, candidates):
         log.exception("could not spawn criteria_worker")
 
 
-def get_next_question(symptoms, prior_candidates=None, asked_questions=None, phone=None):
+# Cheap partial-JSON extractors used while streaming, before the full object is
+# parseable. next_question/done are emitted first (see _NEXT_STEP_SCHEMA), so once
+# `done` appears the question string is already complete.
+_NEXT_Q_RE = re.compile(r'"next_question"\s*:\s*"((?:[^"\\]|\\.)*)"')
+_DONE_RE = re.compile(r'"done"\s*:\s*(true|false)')
+
+
+async def get_next_question(symptoms, prior_candidates=None, asked_questions=None,
+                            questions_asked=0, max_questions=None, ready=None, phone=None):
     """Differential step: feed the recorded symptoms (+ the running list of prior
-    candidates) and the DSM-5 collection to a fast Grok model. Returns
-    {"candidates": [...], "next_question": "...", "future_checkin": [...]}.
+    candidates) and the DSM-5 collection to a fast Grok model. Returns the full
+    {"next_question", "done", "candidates", "dsm5_criteria", "future_checkin"} dict.
 
     `symptoms` is the per-call list of everything recordSymptom has logged.
     `prior_candidates` is the differential from earlier turns, so the model
-    refines its running memory instead of starting over.
+    refines its running memory instead of starting over. `questions_asked` /
+    `max_questions` tell the model how much budget is left so it can wrap up
+    (set done=true, emit future_checkin) on the final allowed turn.
 
-    Uses the Responses API (/v1/responses) because file_search over a collection
-    is NOT supported on chat/completions. Sync on purpose — server.py runs it via
-    asyncio.to_thread so its latency overlaps the empathy line instead of
-    blocking the audio relay. Always returns a dict with next_question; falls
-    back on any error.
+    Streams the Responses API (/v1/responses) — file_search over a collection is
+    NOT supported on chat/completions. If `ready` (an asyncio.Future) is given, it
+    is resolved with (next_question, done) the moment those two fields finish
+    streaming, BEFORE the bulkier candidates/dsm5_criteria/future_checkin arrive —
+    so the caller can speak the question without waiting for the whole object.
+    Always returns a dict with next_question; falls back on any error.
     """
     symptoms = list(symptoms or [])
+    max_questions = max_questions or MAX_QUESTIONS
     if not symptoms:
+        if ready is not None and not ready.done():
+            ready.set_result((_FALLBACK["next_question"], False))
         return dict(_FALLBACK)
 
     bullets = "\n".join(f"- {s}" for s in symptoms)
@@ -215,16 +234,31 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None, pho
     if asked_questions:
         asked = "\n\nQuestions already asked (do NOT repeat these): " + \
             "; ".join(asked_questions)
+    # Let the model see how much budget is left so the final turn is deliberate
+    # (done=true + future_checkin) rather than cut off by the server's hard cap.
+    this_q = questions_asked + 1
+    if this_q >= max_questions:
+        budget = (
+            f"\n\nThis is your FINAL turn (question {this_q} of at most "
+            f"{max_questions}); no more questions can be asked after this. You MUST "
+            "set done=true, leave next_question empty, and provide future_checkin."
+        )
+    else:
+        budget = (
+            f"\n\nThis is question {this_q} of at most {max_questions}. Set "
+            "done=true now if you already have enough for an initial impression."
+        )
     payload = {
         "model": config.GROK_TRIAGE_MODEL,
         # Disable reasoning ("none") — grok-4.3 answers directly, lower latency.
         "reasoning": {"effort": "none"},
+        "stream": True,
         "instructions": _DIFFERENTIAL_SYSTEM,
         "input": (
-            f"Patient-reported symptoms so far:\n{bullets}{prior}{asked}\n\n"
-            "List the candidate conditions, ONE new narrowing question (or set "
-            "done=true with an empty question if no more are needed), and any "
-            "future check-in questions."
+            f"Patient-reported symptoms so far:\n{bullets}{prior}{asked}{budget}\n\n"
+            "List the candidate conditions and ONE new narrowing question (or set "
+            "done=true with an empty question if no more are needed). Only include "
+            "future check-in questions if you set done=true."
         ),
         # Server-side tool: xAI searches the DSM-5 collection and grounds the
         # answer. file_search lives on the Responses API, not chat/completions.
@@ -240,10 +274,52 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None, pho
         "Content-Type": "application/json",
     }
     url = f"{config.XAI_API_BASE}/responses"
+
+    buf = []
+    signaled = False
+
+    def _maybe_signal():
+        # As soon as both next_question and done have fully streamed, hand the
+        # caller the spoken question without waiting for the rest of the object.
+        nonlocal signaled
+        if signaled or ready is None or ready.done():
+            return
+        text = "".join(buf)
+        dm = _DONE_RE.search(text)
+        if dm is None:
+            return
+        qm = _NEXT_Q_RE.search(text)
+        if qm is None:
+            return
+        try:
+            next_q = json.loads(f'"{qm.group(1)}"')
+        except Exception:
+            next_q = ""
+        done = dm.group(1) == "true"
+        if not done and not next_q:
+            next_q = _FALLBACK["next_question"]
+        ready.set_result((next_q, done))
+        signaled = True
+
     try:
-        resp = httpx.post(url, headers=headers, json=payload, timeout=30)
-        resp.raise_for_status()
-        result = json.loads(_extract_output_text(resp.json()))
+        async with httpx.AsyncClient(timeout=30) as client:
+            async with client.stream("POST", url, headers=headers, json=payload) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data = line[len("data:"):].strip()
+                    if not data or data == "[DONE]":
+                        continue
+                    try:
+                        evt = json.loads(data)
+                    except Exception:
+                        continue
+                    if evt.get("type") == "response.output_text.delta":
+                        buf.append(evt.get("delta", ""))
+                        _maybe_signal()
+
+        result = json.loads("".join(buf))
         result.setdefault("candidates", [])
         result.setdefault("future_checkin", [])
         result.setdefault("dsm5_criteria", [])
@@ -252,6 +328,10 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None, pho
         # is the "close the call" signal and must be preserved.
         if not result.get("done") and not result.get("next_question"):
             result["next_question"] = _FALLBACK["next_question"]
+        # If parsing finished before _maybe_signal fired (e.g. tiny response),
+        # still hand the caller the answer.
+        if ready is not None and not ready.done():
+            ready.set_result((result["next_question"], result["done"]))
         global latest_candidates
         latest_candidates = result["candidates"]
         log.info("Differential: candidates=%s next_q=%r",
@@ -263,6 +343,8 @@ def get_next_question(symptoms, prior_candidates=None, asked_questions=None, pho
         return result
     except Exception:
         log.exception("get_next_question failed; using fallback question")
+        if ready is not None and not ready.done():
+            ready.set_result((_FALLBACK["next_question"], False))
         return dict(_FALLBACK)
 
 # ---------------------------------------------------------------------------
