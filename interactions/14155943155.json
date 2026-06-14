@@ -2,196 +2,312 @@
   "phone": "+14155943155",
   "sessions": [
     {
-      "call_id": "b394902d59b5",
+      "call_id": "b93540c58c8e",
       "agent": "triage",
-      "started_at": "2026-06-13T23:23:18.847020+00:00",
+      "started_at": "2026-06-14T00:06:35.696211+00:00",
       "turns": [
         {
-          "at": "2026-06-13T23:23:34.562633+00:00",
+          "at": "2026-06-14T00:06:53.209814+00:00",
           "descriptions": [
-            "Patient has been feeling pretty angry with the world so far and doesn't know why."
+            "Patient reports feeling pretty sad and upset lately, without knowing the reason why."
           ],
           "empathy": "",
           "candidates": [
             "Major Depressive Disorder",
             "Persistent Depressive Disorder",
-            "Generalized Anxiety Disorder",
-            "Intermittent Explosive Disorder"
-          ],
-          "next_question": "Have you noticed any changes in your sleep, appetite, or energy level lately?",
-          "future_checkin": [
-            "How has your mood been over the past few days—any shifts in anger or other feelings?",
-            "Have you noticed any changes in sleep, appetite, or energy since we last spoke?"
-          ]
-        },
-        {
-          "at": "2026-06-13T23:23:49.963923+00:00",
-          "descriptions": [
-            "Patient reports not having much of an appetite and can't get that much sleep."
-          ],
-          "empathy": "",
-          "candidates": [
-            "Major Depressive Disorder",
-            "Persistent Depressive Disorder",
-            "Generalized Anxiety Disorder",
-            "Intermittent Explosive Disorder"
-          ],
-          "next_question": "Have you been feeling more irritable or having outbursts that feel out of proportion to the situation?",
-          "future_checkin": [
-            "How has your mood and irritability been over the past few days?",
-            "Any changes in sleep or appetite since we last spoke?"
-          ]
-        },
-        {
-          "at": "2026-06-13T23:24:08.907033+00:00",
-          "descriptions": [
-            "Patient reports being on a hair trigger with irritability, feeling like they have outbursts that feel out of proportion to the situation."
-          ],
-          "empathy": "",
-          "candidates": [
-            "Major Depressive Disorder",
-            "Persistent Depressive Disorder",
-            "Generalized Anxiety Disorder",
-            "Intermittent Explosive Disorder"
-          ],
-          "next_question": "",
-          "future_checkin": [
-            "Over the next few days, how has your irritability or anger been compared to when we last spoke?",
-            "Have you noticed any shifts in your sleep or appetite since our last conversation?"
-          ]
-        }
-      ],
-      "transcript": [
-        {
-          "role": "agent",
-          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
-        },
-        {
-          "role": "caller",
-          "text": " Hi, I've been feeling pretty, uh, angry with the world so far. I don't know why."
-        },
-        {
-          "role": "agent",
-          "text": "I'm really sorry you've been feeling that way.Have you noticed any changes in your sleep, appetite, or energy level lately?"
-        },
-        {
-          "role": "caller",
-          "text": " Well, yeah, I, I, I don't have much of an appetite and I can't get that much sleep."
-        },
-        {
-          "role": "agent",
-          "text": "That sounds really tough—I'm glad you shared it with me.Have you been feeling more irritable or having outbursts that feel out of proportion to the situation?"
-        },
-        {
-          "role": "caller",
-          "text": " Uh, yeah, now that you mention it, yes. Uh, it seems like I am on a hair trigger."
-        },
-        {
-          "role": "agent",
-          "text": "I'm sorry to hear it's been that intense for you.I think I have everything I need to get this started. I'll call you in a few days to follow up and see how you're doing."
-        },
-        {
-          "role": "caller",
-          "text": " Okay, thank you."
-        },
-        {
-          "role": "agent",
-          "text": "You're welcome—take care of yourself, and I'll be in touch soon. If anything comes up in the meantime or you need to talk sooner, just let us know."
-        }
-      ]
-    },
-    {
-      "call_id": "212b9b29b5c2",
-      "agent": "triage",
-      "started_at": "2026-06-13T23:35:03.204152+00:00",
-      "turns": [
-        {
-          "at": "2026-06-13T23:35:20.761318+00:00",
-          "descriptions": [
-            "Patient reports feeling pretty upset and angry at the world right now."
-          ],
-          "empathy": "",
-          "candidates": [
-            "Major Depressive Disorder",
-            "Persistent Depressive Disorder",
-            "Generalized Anxiety Disorder",
-            "Intermittent Explosive Disorder"
+            "Adjustment Disorder with Depressed Mood"
           ],
           "dsm5_criteria": [
             {
               "condition": "Major Depressive Disorder",
               "criterion": "A1: Depressed mood most of the day, nearly every day",
-              "status": "unclear",
-              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+              "status": "met",
+              "evidence": "Patient reports feeling pretty sad and upset lately"
             },
             {
               "condition": "Major Depressive Disorder",
-              "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities",
+              "criterion": "A2: Anhedonia or markedly diminished interest or pleasure",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet on loss of interest or pleasure"
             },
             {
               "condition": "Major Depressive Disorder",
-              "criterion": "A3: Significant weight loss or gain, or change in appetite",
+              "criterion": "Duration of at least 2 weeks",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "Patient said 'lately' but no specific timeframe given"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "unclear",
+              "evidence": "No duration information provided"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "unclear",
+              "evidence": "Patient reports not knowing the reason why"
+            }
+          ],
+          "next_question": "How long have these sad or upset feelings been going on?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:07:11.493417+00:00",
+          "descriptions": [
+            "Patient reports feeling pretty sad and upset for the past four days, without knowing the reason why."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met",
+              "evidence": "Patient reports feeling pretty sad and upset lately, without knowing the reason why."
             },
             {
               "condition": "Major Depressive Disorder",
-              "criterion": "A4: Insomnia or hypersomnia nearly every day",
+              "criterion": "A2: Anhedonia or markedly diminished interest or pleasure in activities",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet about loss of interest or pleasure."
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Duration of at least two weeks",
+              "status": "not_met",
+              "evidence": "Patient reports symptoms for the past four days."
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least two years",
+              "status": "not_met",
+              "evidence": "Patient reports symptoms for the past four days."
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "unclear",
+              "evidence": "Patient states without knowing the reason why, so no identifiable stressor reported yet."
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms occur within three months of the stressor and do not persist more than six months after stressor ends",
+              "status": "unclear",
+              "evidence": "No information on timing relative to any stressor."
+            }
+          ],
+          "next_question": "Have you noticed any changes in your sleep, appetite, energy, or ability to concentrate lately?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:07:31.831031+00:00",
+          "descriptions": [
+            "Patient reports inability to concentrate, particularly struggling with work tasks for some reason without knowing why, in addition to feeling pretty sad and upset for the past four days."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met",
+              "evidence": "Patient reports feeling pretty sad and upset lately... for the past four days"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Anhedonia or markedly diminished interest or pleasure",
+              "status": "unclear",
+              "evidence": "No information provided yet on loss of interest or pleasure"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss/gain or appetite change",
+              "status": "unclear",
+              "evidence": "No information provided yet on appetite or weight"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear",
+              "evidence": "No information provided yet on sleep"
             },
             {
               "condition": "Major Depressive Disorder",
               "criterion": "A5: Psychomotor agitation or retardation",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet"
             },
             {
               "condition": "Major Depressive Disorder",
               "criterion": "A6: Fatigue or loss of energy",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet on energy"
             },
             {
               "condition": "Major Depressive Disorder",
               "criterion": "A7: Feelings of worthlessness or excessive guilt",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet"
             },
             {
               "condition": "Major Depressive Disorder",
-              "criterion": "A8: Diminished ability to think or concentrate",
-              "status": "unclear",
-              "evidence": "No information provided yet."
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "met",
+              "evidence": "Patient reports inability to concentrate, particularly struggling with work tasks"
             },
             {
               "condition": "Major Depressive Disorder",
               "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
               "status": "unclear",
-              "evidence": "No information provided yet."
+              "evidence": "No information provided yet"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Symptoms cause clinically significant distress or impairment",
+              "status": "met",
+              "evidence": "Struggling with work tasks"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Episode not attributable to substances or another medical condition",
+              "status": "unclear",
+              "evidence": "No information provided yet"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Duration: At least two weeks",
+              "status": "not_met",
+              "evidence": "Only four days reported so far"
             },
             {
               "condition": "Persistent Depressive Disorder",
-              "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years",
-              "status": "unclear",
-              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least two years",
+              "status": "not_met",
+              "evidence": "Only four days reported so far"
             },
             {
-              "condition": "Generalized Anxiety Disorder",
-              "criterion": "A: Excessive anxiety and worry occurring more days than not",
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
               "status": "unclear",
-              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+              "evidence": "Patient does not know the reason why; no stressor identified yet"
             },
             {
-              "condition": "Intermittent Explosive Disorder",
-              "criterion": "A: Recurrent behavioral outbursts representing a failure to control aggressive impulses",
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms occur within 3 months of the stressor",
               "status": "unclear",
-              "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+              "evidence": "No stressor identified yet"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms do not persist more than 6 months after stressor ends",
+              "status": "unclear",
+              "evidence": "No stressor identified yet"
             }
           ],
-          "next_question": "How long have these feelings of being upset and angry been going on for you?",
+          "next_question": "Have you been feeling this way for more than two weeks, or has anything stressful happened recently that might explain it?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:07:49.883107+00:00",
+          "descriptions": [
+            "Patient reports that their dog died, which appears to be the trigger for feeling pretty sad and upset for the past four days, along with inability to concentrate particularly with work tasks."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met",
+              "evidence": "Patient reports feeling pretty sad and upset lately... for the past four days"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Anhedonia (markedly diminished interest or pleasure in all or almost all activities)",
+              "status": "unclear",
+              "evidence": "No information provided yet on loss of interest or pleasure"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss/gain or appetite change",
+              "status": "unclear",
+              "evidence": "No information provided yet on appetite or weight"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear",
+              "evidence": "No information provided yet on sleep"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear",
+              "evidence": "No information provided yet"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "unclear",
+              "evidence": "No information provided yet"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "met",
+              "evidence": "Patient reports inability to concentrate, particularly struggling with work tasks"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death, suicidal ideation",
+              "status": "unclear",
+              "evidence": "No information provided yet"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Duration: symptoms present for at least 2 weeks",
+              "status": "not_met",
+              "evidence": "Symptoms reported for the past four days only"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "not_met",
+              "evidence": "Symptoms only reported for the past four days"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "met",
+              "evidence": "Patient reports their dog died, which appears to be the trigger"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms occur within 3 months of the stressor and do not persist more than 6 months after stressor ends",
+              "status": "unclear",
+              "evidence": "Dog died recently (timing within 3 months is implied but exact onset relative to death not specified)"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Marked distress in excess of what would be expected or significant impairment",
+              "status": "met",
+              "evidence": "Inability to concentrate at work"
+            }
+          ],
+          "next_question": "Besides the sadness and trouble concentrating, have you noticed any other changes like feeling tired, losing interest in things you usually enjoy, or thoughts that life isn't worth living?",
           "future_checkin": []
         }
       ],
@@ -202,103 +318,150 @@
         },
         {
           "role": "caller",
-          "text": " Hi, uh, I'm feeling pretty upset and angry at the world right now."
+          "text": " Yeah, hi. I've been feeling pretty sad and upset lately. I don't know why."
         },
         {
           "role": "agent",
-          "text": "I'm really sorry you've been feeling that way.How long have these feelings of being upset and angry been going on for you?"
+          "text": "I'm really sorry you've been feeling that way.How long have these sad or upset feelings been going on?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, probably the past, uh, four days."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds like it's been weighing on you for a few days now.Have you noticed any changes in your sleep, appetite, energy, or ability to concentrate lately?"
+        },
+        {
+          "role": "caller",
+          "text": " Yeah, I, I can't concentrate, work shit for some reason. I don't know why."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry that's making things even harder for you right now.Have you been feeling this way for more than two weeks, or has anything stressful happened recently that might explain it?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, my dog died."
+        },
+        {
+          "role": "agent",
+          "text": "I'm so sorry to hear about your dog—that's a really painful loss.Besides the sadness and trouble concentrating, have you noticed any other changes like feeling tired, losing interest in things you usually enjoy, or thoughts that life isn't worth living?"
         }
-      ]
+      ],
+      "scores": {
+        "call_id": "b93540c58c8e",
+        "duration_seconds": 80.18,
+        "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+        "status": "unavailable"
+      }
     }
   ],
-  "pending_checkins": [
-    "How has your mood been over the past few days—any shifts in anger or other feelings?",
-    "Have you noticed any changes in sleep, appetite, or energy since we last spoke?",
-    "How has your mood and irritability been over the past few days?",
-    "Any changes in sleep or appetite since we last spoke?",
-    "Over the next few days, how has your irritability or anger been compared to when we last spoke?",
-    "Have you noticed any shifts in your sleep or appetite since our last conversation?"
-  ],
+  "pending_checkins": [],
   "profile": {
-    "updated_at": "2026-06-13T23:35:20.761318+00:00",
+    "updated_at": "2026-06-14T00:07:49.883107+00:00",
     "candidates": [
       "Major Depressive Disorder",
       "Persistent Depressive Disorder",
-      "Generalized Anxiety Disorder",
-      "Intermittent Explosive Disorder"
+      "Adjustment Disorder with Depressed Mood"
     ],
     "dsm5_criteria": [
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A1: Depressed mood most of the day, nearly every day",
-        "status": "unclear",
-        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+        "status": "met",
+        "evidence": "Patient reports feeling pretty sad and upset lately... for the past four days"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities",
+        "criterion": "A2: Anhedonia (markedly diminished interest or pleasure in all or almost all activities)",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet on loss of interest or pleasure"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A3: Significant weight loss or gain, or change in appetite",
+        "criterion": "A3: Significant weight loss/gain or appetite change",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet on appetite or weight"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A4: Insomnia or hypersomnia nearly every day",
+        "criterion": "A4: Insomnia or hypersomnia",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet on sleep"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A5: Psychomotor agitation or retardation",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A6: Fatigue or loss of energy",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A7: Feelings of worthlessness or excessive guilt",
-        "status": "unclear",
-        "evidence": "No information provided yet."
+        "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+        "status": "met",
+        "evidence": "Patient reports inability to concentrate, particularly struggling with work tasks"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A8: Diminished ability to think or concentrate",
+        "criterion": "A9: Recurrent thoughts of death, suicidal ideation",
         "status": "unclear",
-        "evidence": "No information provided yet."
+        "evidence": "No information provided yet"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
-        "status": "unclear",
-        "evidence": "No information provided yet."
+        "criterion": "Duration: symptoms present for at least 2 weeks",
+        "status": "not_met",
+        "evidence": "Symptoms reported for the past four days only"
       },
       {
         "condition": "Persistent Depressive Disorder",
-        "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years",
-        "status": "unclear",
-        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+        "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
+        "status": "not_met",
+        "evidence": "Symptoms only reported for the past four days"
       },
       {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "A: Excessive anxiety and worry occurring more days than not",
-        "status": "unclear",
-        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+        "condition": "Adjustment Disorder with Depressed Mood",
+        "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+        "status": "met",
+        "evidence": "Patient reports their dog died, which appears to be the trigger"
       },
       {
-        "condition": "Intermittent Explosive Disorder",
-        "criterion": "A: Recurrent behavioral outbursts representing a failure to control aggressive impulses",
+        "condition": "Adjustment Disorder with Depressed Mood",
+        "criterion": "Symptoms occur within 3 months of the stressor and do not persist more than 6 months after stressor ends",
         "status": "unclear",
-        "evidence": "Patient reports feeling pretty upset and angry at the world right now."
+        "evidence": "Dog died recently (timing within 3 months is implied but exact onset relative to death not specified)"
+      },
+      {
+        "condition": "Adjustment Disorder with Depressed Mood",
+        "criterion": "Marked distress in excess of what would be expected or significant impairment",
+        "status": "met",
+        "evidence": "Inability to concentrate at work"
+      }
+    ],
+    "latest_scores": {
+      "call_id": "b93540c58c8e",
+      "duration_seconds": 80.18,
+      "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+      "status": "unavailable"
+    },
+    "scores_history": [
+      {
+        "call_id": "b93540c58c8e",
+        "at": "2026-06-14T00:07:56.466902+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
       }
     ]
   }

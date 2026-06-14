@@ -1,0 +1,101 @@
+{
+  "phone": "+14155943155",
+  "updated_at": "2026-06-14T00:07:59.477278+00:00",
+  "conditions": [
+    {
+      "condition": "Major Depressive Disorder",
+      "criteria": [
+        {
+          "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms (each present nearly every day unless otherwise noted): 1. Depressed mood most of the day... 8. Diminished ability to think or concentrate, or indecisiveness. 9. Recurrent thoughts of death...",
+          "status": "need_checkin",
+          "evidence": "Patient reports 'feeling pretty sad and upset for the past four days' and 'inability to concentrate, particularly struggling with work tasks' but duration is only four days so far; no report of other symptoms like anhedonia, weight/appetite change, sleep issues, fatigue, guilt, or suicidal thoughts."
+        },
+        {
+          "criterion": "Criterion B: Functional impairment: the symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "status": "yes",
+          "evidence": "Patient reports 'inability to concentrate, particularly struggling with work tasks for some reason'."
+        },
+        {
+          "criterion": "Criterion C: Substance/medical exclusion: the episode is not attributable to the physiological effects of a substance or another medical condition.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on substances or medical conditions; requires clinical assessment."
+        },
+        {
+          "criterion": "Criterion D: the episode is not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on psychotic symptoms or related disorders; requires clinical judgment."
+        },
+        {
+          "criterion": "Criterion E: there has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition).",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on history of mania/hypomania; requires clinical assessment."
+        }
+      ]
+    },
+    {
+      "condition": "Persistent Depressive Disorder",
+      "criteria": [
+        {
+          "criterion": "Criterion A: Depressed mood for most of the day, for more days than not, as indicated by either subjective account or observation by others, for at least 2 years.",
+          "status": "no",
+          "evidence": "Patient reports symptoms 'for the past four days' only; 'Patient reports feeling pretty sad and upset for the past four days'."
+        },
+        {
+          "criterion": "Criterion B: Presence, while depressed, of two (or more) of the following: 1. Poor appetite or overeating. 2. Insomnia or hypersomnia. 3. Low energy or fatigue. 4. Low self-esteem. 5. Poor concentration or difficulty making decisions. 6. Feelings of hopelessness.",
+          "status": "need_checkin",
+          "evidence": "Patient reports 'inability to concentrate' (matches poor concentration) but only for four days; no reports on other symptoms or 2-year duration."
+        },
+        {
+          "criterion": "Criterion C: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "status": "yes",
+          "evidence": "Patient reports 'inability to concentrate, particularly struggling with work tasks'."
+        },
+        {
+          "criterion": "Criterion D: The disturbance is not attributable to the physiological effects of a substance or another medical condition.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on substances or medical conditions; requires clinical assessment."
+        },
+        {
+          "criterion": "Criterion E: The disturbance is not better explained by a persistent schizoaffective disorder, schizophrenia, delusional disorder, or other specified or unspecified schizophrenia spectrum and other psychotic disorder.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on psychotic disorders; requires clinical judgment."
+        },
+        {
+          "criterion": "Criterion F: There has never been a manic episode and not better explained by cyclothymic disorder.",
+          "status": "need_psychiatrist",
+          "evidence": "No patient report on manic history; requires clinical assessment."
+        }
+      ]
+    },
+    {
+      "condition": "Adjustment Disorder with Depressed Mood",
+      "criteria": [
+        {
+          "criterion": "Criterion A: The development of emotional or behavioral symptoms in response to an identifiable stressor(s) occurring within 3 months of the onset of the stressor(s).",
+          "status": "yes",
+          "evidence": "Patient reports 'their dog died, which appears to be the trigger for feeling pretty sad and upset for the past four days' and symptoms started after the death."
+        },
+        {
+          "criterion": "Criterion B: These symptoms are clinically significant as evidenced by one or both of the following: 1. Marked distress that is out of proportion to the severity or intensity of the stressor. 2. Significant impairment in social or occupational (or other important areas) functioning.",
+          "status": "need_checkin",
+          "evidence": "Patient reports 'inability to concentrate, particularly struggling with work tasks' (possible impairment) but 'without knowing the reason why' and duration only four days; proportionality to dog death requires clinical judgment."
+        },
+        {
+          "criterion": "Criterion C: The stress-related disturbance does not meet the criteria for another mental disorder and is not merely an exacerbation of a preexisting mental disorder.",
+          "status": "need_psychiatrist",
+          "evidence": "Patient reports symptoms for four days after dog death; cannot yet rule out other disorders like MDD; requires clinical judgment."
+        },
+        {
+          "criterion": "Criterion D: The symptoms do not represent normal bereavement.",
+          "status": "need_psychiatrist",
+          "evidence": "Patient reports dog died as trigger; DSM-5 notes bereavement can be distinguished from disorder via clinical judgment."
+        },
+        {
+          "criterion": "Criterion E: Once the stressor or its consequences have terminated, the symptoms do not persist for more than an additional 6 months.",
+          "status": "need_checkin",
+          "evidence": "Symptoms ongoing for four days; dog death is recent; persistence after stressor termination not yet observable."
+        }
+      ]
+    }
+  ]
+}
