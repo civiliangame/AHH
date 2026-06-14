@@ -1205,15 +1205,503 @@
         "reason": "DAM model unavailable: DAM checkpoint not found at /home/ubuntu/AHH/dam/dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
         "status": "unavailable"
       }
+    },
+    {
+      "call_id": "dbf569fb4939",
+      "agent": "checkin",
+      "started_at": "2026-06-14T00:28:41.301816+00:00",
+      "turns": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        }
+      ],
+      "scores": {
+        "call_id": "dbf569fb4939",
+        "duration_seconds": 6.48,
+        "reason": "DAM model unavailable: No module named 'torch'",
+        "status": "unavailable"
+      }
+    },
+    {
+      "call_id": "9a4554d7418e",
+      "agent": "triage",
+      "started_at": "2026-06-14T00:30:01.053384+00:00",
+      "turns": [
+        {
+          "at": "2026-06-14T00:30:18.993884+00:00",
+          "descriptions": [
+            "Patient has been feeling pretty nostalgic and down recently, without knowing why. These feelings have been persistent but the cause is unclear to them."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Not due to substances or medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "A: Excessive anxiety/worry more days than not for ≥6 months",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "B: Difficulty controlling the worry",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C: ≥3 associated physical/cognitive symptoms",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "D: Clinically significant distress or impairment",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have these down feelings lasted most of the day, nearly every day, for at least the past two weeks?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:30:41.627331+00:00",
+          "descriptions": [
+            "Patient confirms that the down feelings have lasted most of the day, nearly every day, for at least the past two weeks, and explicitly requests that the clinician follow up on this detail."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight/appetite change",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Not due to substances or medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "A: Excessive anxiety/worry more days than not for ≥6 months",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "B: Difficulty controlling the worry",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C1: Restlessness or feeling keyed up",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C2: Easily fatigued",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C3: Difficulty concentrating",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C4: Irritability",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C5: Muscle tension",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C6: Sleep disturbance",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "D: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "E: Not due to substances or medical condition",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have you noticed any changes in your sleep, energy, appetite, or ability to concentrate during this same two-week period?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:30:59.305410+00:00",
+          "descriptions": [
+            "Patient confirms they have noticed changes in their sleep, energy, appetite, or ability to concentrate during the same two-week period when the down feelings have been present."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight/appetite change",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Not due to substance or medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "A: Excessive anxiety/worry more days than not for ≥6 months",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "B: Difficulty controlling the worry",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C1: Restlessness or feeling keyed up/on edge",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C2: Easily fatigued",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C3: Difficulty concentrating or mind going blank",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C4: Irritability",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C5: Muscle tension",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C6: Sleep disturbance",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "D: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "E: Not due to substance or medical condition",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have you been feeling more restless, keyed up, or on edge than usual during these past two weeks?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:31:21.004654+00:00",
+          "descriptions": [
+            "Patient confirms they have been feeling more restless, keyed up, or on edge than usual during the past two weeks, describing it as a pretty difficult time."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight/appetite change",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Not due to substances or medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "A: Excessive anxiety/worry more days than not for 6 months",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "B: Difficulty controlling the worry",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C1: Restlessness or feeling keyed up/on edge",
+              "status": "met"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C2: Easily fatigued",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C3: Difficulty concentrating or mind going blank",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C4: Irritability",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C5: Muscle tension",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C6: Sleep disturbance",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "D: Clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "E: Not due to substances or medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "F: Not better explained by another disorder",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have you had any periods in the past where your mood was unusually elevated or energetic for several days in a row, with little need for sleep?",
+          "future_checkin": []
+        }
+      ],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        },
+        {
+          "role": "caller",
+          "text": " Hi, I've been feeling pretty nostalgic and down recently. I don't know why."
+        },
+        {
+          "role": "agent",
+          "text": "I'm really sorry you've been feeling that way.Have these down feelings lasted most of the day, nearly every day, for at least the past two weeks?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, I think so, yeah, but I think you might need to follow up with that on me. Follow up for that."
+        },
+        {
+          "role": "agent",
+          "text": "I'll make sure the clinician follows up on that detail for you.Have you noticed any changes in your sleep, energy, appetite, or ability to concentrate during this same two-week period?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, yes, I have."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry to hear that—changes like these can really add to how heavy everything feels.Have you been feeling more restless, keyed up, or on edge than usual during these past two weeks?"
+        },
+        {
+          "role": "caller",
+          "text": " I, I have, yes. That, that sounds like me. It's, it's, it's been a pretty difficult time."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds really tough—I'm glad you're sharing this with me.Have you had any periods in the past where your mood was unusually elevated or energetic for several days in a row, with little need for sleep?"
+        }
+      ],
+      "scores": {
+        "call_id": "9a4554d7418e",
+        "duration_seconds": 89.34,
+        "reason": "DAM model unavailable: No module named 'torch'",
+        "status": "unavailable"
+      }
     }
   ],
   "pending_checkins": [],
   "profile": {
-    "updated_at": "2026-06-14T00:24:17.555315+00:00",
+    "updated_at": "2026-06-14T00:31:21.004673+00:00",
     "candidates": [
       "Major Depressive Disorder",
-      "Persistent Depressive Disorder",
-      "Adjustment Disorder with Depressed Mood"
+      "Generalized Anxiety Disorder"
     ],
     "dsm5_criteria": [
       {
@@ -1223,12 +1711,12 @@
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities",
-        "status": "met"
+        "criterion": "A2: Markedly diminished interest or pleasure in activities",
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A3: Significant weight loss/gain or change in appetite",
+        "criterion": "A3: Significant weight/appetite change",
         "status": "unclear"
       },
       {
@@ -1244,7 +1732,7 @@
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A6: Fatigue or loss of energy",
-        "status": "met"
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
@@ -1254,53 +1742,83 @@
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+        "status": "unclear"
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+        "status": "unclear"
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "B: Clinically significant distress or impairment",
+        "status": "unclear"
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "criterion": "C: Not due to substances or medical condition",
+        "status": "unclear"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "A: Excessive anxiety/worry more days than not for 6 months",
+        "status": "unclear"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "B: Difficulty controlling the worry",
+        "status": "unclear"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C1: Restlessness or feeling keyed up/on edge",
         "status": "met"
       },
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A9: Recurrent thoughts of death, suicidal ideation, or suicide attempt",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C2: Easily fatigued",
         "status": "unclear"
       },
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "B: Symptoms cause clinically significant distress or impairment",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C3: Difficulty concentrating or mind going blank",
         "status": "unclear"
       },
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "C: Episode not attributable to substances or another medical condition",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C4: Irritability",
         "status": "unclear"
       },
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "Duration: At least two weeks",
-        "status": "not_met"
-      },
-      {
-        "condition": "Persistent Depressive Disorder",
-        "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
-        "status": "not_met"
-      },
-      {
-        "condition": "Adjustment Disorder with Depressed Mood",
-        "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C5: Muscle tension",
         "status": "unclear"
       },
       {
-        "condition": "Adjustment Disorder with Depressed Mood",
-        "criterion": "Symptoms occur within 3 months of the stressor",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "C6: Sleep disturbance",
         "status": "unclear"
       },
       {
-        "condition": "Adjustment Disorder with Depressed Mood",
-        "criterion": "Symptoms do not persist more than 6 months after stressor ends",
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "D: Clinically significant distress or impairment",
+        "status": "unclear"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "E: Not due to substances or medical condition",
+        "status": "unclear"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "criterion": "F: Not better explained by another disorder",
         "status": "unclear"
       }
     ],
     "latest_scores": {
-      "call_id": "bbb75f3b298c",
-      "duration_seconds": 76.88,
-      "reason": "DAM model unavailable: DAM checkpoint not found at /home/ubuntu/AHH/dam/dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+      "call_id": "9a4554d7418e",
+      "duration_seconds": 89.34,
+      "reason": "DAM model unavailable: No module named 'torch'",
       "status": "unavailable"
     },
     "scores_history": [
@@ -1340,6 +1858,28 @@
       {
         "call_id": "bbb75f3b298c",
         "at": "2026-06-14T00:24:21.565189+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
+      },
+      {
+        "call_id": "dbf569fb4939",
+        "at": "2026-06-14T00:28:53.954498+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
+      },
+      {
+        "call_id": "9a4554d7418e",
+        "at": "2026-06-14T00:31:30.762222+00:00",
         "status": "unavailable",
         "depression": null,
         "depression_label": null,

@@ -127,10 +127,31 @@ _NEXT_STEP_SCHEMA = {
     },
 }
 
+# DSM-5 reference material, loaded ONCE into memory at import (process start) and
+# held for the life of the server, so every call/turn reuses it with zero disk or
+# network cost. This replaces the xAI file_search vector store: instead of a
+# server-side retrieval round-trip per turn, the (small) reference text is inlined
+# into the model's instructions — which are constant, so xAI can prompt-cache them.
+_DSM_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dsm.txt")
+
+
+def _load_dsm_reference():
+    try:
+        with open(_DSM_PATH, encoding="utf-8") as f:
+            text = f.read().strip()
+        log.info("Loaded DSM-5 reference from %s (%d chars)", _DSM_PATH, len(text))
+        return text
+    except Exception:
+        log.exception("could not load %s — differential will run UNGROUNDED", _DSM_PATH)
+        return ""
+
+
+_DSM_REFERENCE = _load_dsm_reference()
+
 _DIFFERENTIAL_SYSTEM = (
     "You are a clinical triage reasoning engine for a mental-health intake line. "
-    "Given the patient's reported symptoms so far, use the DSM-5 reference "
-    "collection (file_search) to identify the most likely candidate conditions "
+    "Given the patient's reported symptoms so far, use ONLY the DSM-5 reference "
+    "material provided below to identify the most likely candidate conditions "
     "and to build a profile: for the relevant DSM-5 criteria, mark each as met / "
     "not_met / unclear (`dsm5_criteria`). "
     "Re-assess the criteria against ALL symptoms every turn — the profile grows as "
@@ -145,6 +166,7 @@ _DIFFERENTIAL_SYSTEM = (
     "(and leave `next_question` empty) when you have enough for an initial "
     "impression or no further question would meaningfully help. You are NOT "
     "diagnosing — you are guiding intake. Respond with JSON only."
+    "\n\n===== DSM-5 REFERENCE MATERIAL =====\n" + _DSM_REFERENCE
 )
 
 # Safe fallback so the voice flow never stalls if the API call fails.
@@ -260,12 +282,10 @@ async def get_next_question(symptoms, prior_candidates=None, asked_questions=Non
             "done=true with an empty question if no more are needed). Only include "
             "future check-in questions if you set done=true."
         ),
-        # Server-side tool: xAI searches the DSM-5 collection and grounds the
-        # answer. file_search lives on the Responses API, not chat/completions.
-        "tools": [{
-            "type": "file_search",
-            "vector_store_ids": [config.DSM5_COLLECTION_ID],
-        }],
+        # No file_search tool: the DSM-5 reference is inlined into the
+        # instructions above (see _DSM_REFERENCE), so the model grounds its
+        # answer directly from in-memory text — no vector-store retrieval round
+        # trip per turn.
         "text": {"format": {"type": "json_schema", **_NEXT_STEP_SCHEMA}},
         "temperature": 0,
     }
