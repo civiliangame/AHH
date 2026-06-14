@@ -20,7 +20,7 @@ import config
 import interactions
 
 
-async def place_call(to_number: str, agent: str) -> None:
+async def place_call(to_number: str, agent: str, ask_all: bool = False) -> None:
     missing = [k for k, v in {
         "TELNYX_API_KEY": config.TELNYX_API_KEY,
         "TELNYX_CONNECTION_ID": config.TELNYX_CONNECTION_ID,
@@ -31,13 +31,19 @@ async def place_call(to_number: str, agent: str) -> None:
         raise SystemExit("Set these in .env first: " + ", ".join(missing))
 
     # Pass the patient's number so the server keys their interaction record and
-    # injects their saved future check-in questions into the agent's prompt.
+    # injects their DUE follow-up questions into the agent's prompt. --all forces
+    # the server to ask every pending question regardless of its `days` schedule.
     stream_url = (f"wss://{config.PUBLIC_HOSTNAME}{config.STREAM_PATH}"
                   f"?agent={agent}&phone={quote(to_number)}")
-    pending = interactions.pending_checkins(to_number)
-    print(f"{len(pending)} saved follow-up question(s) for {to_number}"
-          + (":" if pending else "."))
-    for c in pending:
+    if ask_all:
+        stream_url += "&due=all"
+
+    all_pending = interactions.pending_checkins(to_number)
+    to_ask = all_pending if ask_all else interactions.filter_due(all_pending)
+    label = "pending" if ask_all else "due"
+    print(f"{len(to_ask)} of {len(all_pending)} follow-up question(s) {label} "
+          f"for {to_number}" + (":" if to_ask else "."))
+    for c in to_ask:
         if isinstance(c, dict):
             print(f"  - (day {c.get('days')}) {c.get('message')}")
         else:
@@ -74,8 +80,11 @@ def main():
     ap.add_argument("to", help="Number to call, E.164 (e.g. +15551234567)")
     ap.add_argument("--agent", default="checkin",
                     help="Persona name from agents.py (default: checkin)")
+    ap.add_argument("--all", action="store_true", dest="ask_all",
+                    help="Ask every pending question now, ignoring the days schedule "
+                         "(useful for testing/demos).")
     args = ap.parse_args()
-    asyncio.run(place_call(args.to, args.agent))
+    asyncio.run(place_call(args.to, args.agent, args.ask_all))
 
 
 if __name__ == "__main__":

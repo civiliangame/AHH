@@ -35,7 +35,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 log = logging.getLogger("interactions")
@@ -143,7 +143,9 @@ def add_turn(record: dict, session: dict, descriptions, empathy,
     seen = {c["message"] for c in pending if isinstance(c, dict) and c.get("message")}
     for c in future_checkin or []:
         if isinstance(c, dict) and c.get("message") and c["message"] not in seen:
-            pending.append({"days": c.get("days"), "message": c["message"]})
+            # saved_at lets run_checkin.py honor the `days` schedule (filter_due).
+            pending.append({"days": c.get("days"), "message": c["message"],
+                            "saved_at": _now()})
             seen.add(c["message"])
 
 
@@ -154,6 +156,40 @@ def add_transcript(session: dict, role: str, text: str) -> None:
 
 def pending_checkins(phone: str) -> list:
     return load(phone).get("pending_checkins", [])
+
+
+def filter_due(pending: list, now=None) -> list:
+    """Return the check-ins whose `days` have elapsed since `saved_at`.
+
+    An item missing saved_at or days (or unparseable) is treated as due, so old
+    records and schedule-less questions still get asked.
+    """
+    now = now or datetime.now(timezone.utc)
+    due = []
+    for c in pending or []:
+        if not isinstance(c, dict):
+            due.append(c)
+            continue
+        saved, days = c.get("saved_at"), c.get("days")
+        if not saved or days is None:
+            due.append(c)
+            continue
+        try:
+            if now >= datetime.fromisoformat(saved) + timedelta(days=days):
+                due.append(c)
+        except Exception:
+            due.append(c)
+    return due
+
+
+def remove_checkins(record: dict, items: list) -> None:
+    """Drop the given check-ins (matched by message) from pending — call after a
+    check-in call has actually asked them, so unasked/not-yet-due ones survive."""
+    msgs = {c.get("message") for c in items if isinstance(c, dict)}
+    record["pending_checkins"] = [
+        c for c in record.get("pending_checkins", [])
+        if not (isinstance(c, dict) and c.get("message") in msgs)
+    ]
 
 
 def clear_pending(record: dict) -> None:

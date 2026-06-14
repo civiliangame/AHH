@@ -254,22 +254,29 @@ async def media_stream(ws: WebSocket):
         "agent": persona.name,
     })
 
-    # For the outbound check-in agent, fold the patient's saved follow-up
-    # questions into its prompt so it actually asks them, then clear them so we
-    # don't re-ask on the next check-in.
-    if persona.name == "checkin" and record.get("pending_checkins"):
-        # pending_checkins are {days, message} dicts (older records may be strings).
-        qs = "\n".join(
-            f"- {c['message'] if isinstance(c, dict) else c}"
-            for c in record["pending_checkins"])
-        persona = dataclasses.replace(
-            persona,
-            instructions=persona.instructions
-            + f"\n\nAsk the patient these follow-up questions, one at a time:\n{qs}",
-        )
-        log.info("Check-in: injected %d follow-up question(s)",
-                 len(record["pending_checkins"]))
-        interactions.clear_pending(record)
+    # For the outbound check-in agent, fold the patient's DUE follow-up questions
+    # into its prompt so it actually asks them. "Due" = the `days` schedule has
+    # elapsed; pass ?due=all on the stream URL to force all of them (for demos).
+    # We DON'T clear them here — only after the call ends (see finally), so a
+    # dropped call doesn't silently lose unasked questions.
+    asked_checkins: list = []
+    if persona.name == "checkin":
+        pending = record.get("pending_checkins", [])
+        force_all = ws.query_params.get("due") == "all"
+        asked_checkins = pending if force_all else interactions.filter_due(pending)
+        if asked_checkins:
+            qs = "\n".join(
+                f"- {c['message'] if isinstance(c, dict) else c}"
+                for c in asked_checkins)
+            persona = dataclasses.replace(
+                persona,
+                instructions=persona.instructions
+                + f"\n\nAsk the patient these follow-up questions, one at a time:\n{qs}",
+            )
+            log.info("Check-in: injected %d follow-up question(s)%s",
+                     len(asked_checkins), " (forced all)" if force_all else " (due)")
+        else:
+            log.info("Check-in: no follow-up questions are due yet")
     interactions.save(record)
 
     xai = XAIRealtimeClient(persona=persona)
@@ -289,7 +296,9 @@ async def media_stream(ws: WebSocket):
         if greet["done"] or not greet["telnyx_started"] or not xai.ready:
             return
         greet["done"] = True
-        await xai.force_message(config.XAI_GREETING, interruptible=False)
+        # Use THIS persona's greeting — the triage opener vs the check-in opener
+        # ("…calling to check in. Is now a good time?"), not a hard-coded line.
+        await xai.force_message(xai.persona.greeting, interruptible=False)
         log.info("Triggered greeting")
 
     # State for the recordSymptom flow: model speaks empathy + calls recordSymptom
@@ -483,6 +492,10 @@ async def media_stream(ws: WebSocket):
     finally:
         await flush_agent()  # persist the last agent turn
         await events.emit(call_id, "system", "Call ended")
+        # Now that the check-in call is over, drop the questions it asked (keeping
+        # any not-yet-due ones) — so a mid-call drop never loses unasked questions.
+        if asked_checkins:
+            interactions.remove_checkins(record, asked_checkins)
         interactions.save(record)  # final flush of this session's record
         # Save the caller's audio and fire-and-forget the DAM scoring task.
         # Runs after the WS closes; results land in scores/{call_id}.json, get
