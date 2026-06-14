@@ -34,6 +34,19 @@ GROK_TRIAGE_MODEL = os.getenv("GROK_TRIAGE_MODEL", "grok-4.3")
 DSM5_COLLECTION_ID = os.getenv(
     "DSM5_COLLECTION_ID", "collection_44862946-181e-4ce3-b710-bb6f3df35f07")
 
+# --- Gemini text model for the triage differential step (optional, faster) ---
+# If GEMINI_API_KEY is set, the differential step (get_next_question) routes to
+# Gemini's Flash tier instead of Grok. Flash-Lite is the fastest/cheapest tier;
+# override GEMINI_TRIAGE_MODEL once you've confirmed the exact id against the
+# models endpoint. Thinking is disabled (thinkingBudget=0) for lowest latency.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_API_BASE = os.getenv(
+    "GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta")
+GEMINI_TRIAGE_MODEL = os.getenv("GEMINI_TRIAGE_MODEL", "gemini-3.1-flash-lite")
+# Provider selector for the differential step: "auto" uses Gemini when a key is
+# present, else Grok. Force with "gemini" or "xai".
+TRIAGE_PROVIDER = os.getenv("TRIAGE_PROVIDER", "auto")
+
 
 # Voice: eve, ara, rex, sal, leo, or a custom voice ID.
 XAI_VOICE = os.getenv("XAI_VOICE", "ara")

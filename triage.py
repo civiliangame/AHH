@@ -127,6 +127,34 @@ _NEXT_STEP_SCHEMA = {
     },
 }
 
+
+def _to_gemini_schema(node):
+    """Translate our OpenAI/xAI-style JSON schema into Gemini's responseSchema
+    dialect (OpenAPI 3.0 subset): UPPERCASE type names, no `strict` /
+    `additionalProperties`, and an explicit `propertyOrdering` so Gemini emits
+    fields in declaration order — which our streaming early-extract relies on
+    (next_question + done first). Translating from the one schema keeps the two
+    providers from drifting apart."""
+    types = {"object": "OBJECT", "string": "STRING", "boolean": "BOOLEAN",
+             "array": "ARRAY", "integer": "INTEGER", "number": "NUMBER"}
+    out = {"type": types.get(node.get("type"), "STRING")}
+    if "description" in node:
+        out["description"] = node["description"]
+    if "enum" in node:
+        out["enum"] = node["enum"]
+    if node.get("type") == "object":
+        props = node.get("properties", {})
+        out["properties"] = {k: _to_gemini_schema(v) for k, v in props.items()}
+        out["propertyOrdering"] = list(props.keys())
+        if node.get("required"):
+            out["required"] = node["required"]
+    elif node.get("type") == "array":
+        out["items"] = _to_gemini_schema(node["items"])
+    return out
+
+
+_GEMINI_SCHEMA = _to_gemini_schema(_NEXT_STEP_SCHEMA["schema"])
+
 # DSM-5 reference material, loaded ONCE into memory at import (process start) and
 # held for the life of the server, so every call/turn reuses it with zero disk or
 # network cost. This replaces the xAI file_search vector store: instead of a
@@ -221,6 +249,70 @@ _NEXT_Q_RE = re.compile(r'"next_question"\s*:\s*"((?:[^"\\]|\\.)*)"')
 _DONE_RE = re.compile(r'"done"\s*:\s*(true|false)')
 
 
+def _use_gemini():
+    """Whether the differential step routes to Gemini. 'auto' (the default) uses
+    Gemini when GEMINI_API_KEY is set, otherwise falls back to xAI Grok."""
+    provider = config.TRIAGE_PROVIDER.lower()
+    if provider == "gemini":
+        return True
+    if provider == "xai":
+        return False
+    return bool(config.GEMINI_API_KEY)
+
+
+def _xai_request(user_input):
+    """Return (url, headers, payload, extract_delta) for xAI's Responses API.
+    extract_delta pulls the incremental JSON text out of one SSE event."""
+    payload = {
+        "model": config.GROK_TRIAGE_MODEL,
+        # Disable reasoning ("none") — grok answers directly, lower latency.
+        "reasoning": {"effort": "none"},
+        "stream": True,
+        "instructions": _DIFFERENTIAL_SYSTEM,
+        "input": user_input,
+        "text": {"format": {"type": "json_schema", **_NEXT_STEP_SCHEMA}},
+        "temperature": 0,
+    }
+    headers = {
+        "Authorization": f"Bearer {config.XAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    url = f"{config.XAI_API_BASE}/responses"
+
+    def extract_delta(evt):
+        if evt.get("type") == "response.output_text.delta":
+            return evt.get("delta", "")
+        return ""
+
+    return url, headers, payload, extract_delta
+
+
+def _gemini_request(user_input):
+    """Return (url, headers, payload, extract_delta) for Gemini's streaming
+    generateContent. thinkingBudget=0 disables Flash 'thinking' for lowest
+    latency; responseSchema + JSON mime type give the same structured output as
+    the xAI path. DSM-5 grounding rides in system_instruction, same as xAI."""
+    payload = {
+        "system_instruction": {"parts": [{"text": _DIFFERENTIAL_SYSTEM}]},
+        "contents": [{"role": "user", "parts": [{"text": user_input}]}],
+        "generationConfig": {
+            "temperature": 0,
+            "responseMimeType": "application/json",
+            "responseSchema": _GEMINI_SCHEMA,
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
+    headers = {"Content-Type": "application/json"}
+    url = (f"{config.GEMINI_API_BASE}/models/{config.GEMINI_TRIAGE_MODEL}"
+           f":streamGenerateContent?alt=sse&key={config.GEMINI_API_KEY}")
+
+    def extract_delta(evt):
+        parts = (evt.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+        return "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+
+    return url, headers, payload, extract_delta
+
+
 async def get_next_question(symptoms, prior_candidates=None, asked_questions=None,
                             questions_asked=0, max_questions=None, ready=None, phone=None):
     """Differential step: feed the recorded symptoms (+ the running list of prior
@@ -270,30 +362,22 @@ async def get_next_question(symptoms, prior_candidates=None, asked_questions=Non
             f"\n\nThis is question {this_q} of at most {max_questions}. Set "
             "done=true now if you already have enough for an initial impression."
         )
-    payload = {
-        "model": config.GROK_TRIAGE_MODEL,
-        # Disable reasoning ("none") — grok-4.3 answers directly, lower latency.
-        "reasoning": {"effort": "none"},
-        "stream": True,
-        "instructions": _DIFFERENTIAL_SYSTEM,
-        "input": (
-            f"Patient-reported symptoms so far:\n{bullets}{prior}{asked}{budget}\n\n"
-            "List the candidate conditions and ONE new narrowing question (or set "
-            "done=true with an empty question if no more are needed). Only include "
-            "future check-in questions if you set done=true."
-        ),
-        # No file_search tool: the DSM-5 reference is inlined into the
-        # instructions above (see _DSM_REFERENCE), so the model grounds its
-        # answer directly from in-memory text — no vector-store retrieval round
-        # trip per turn.
-        "text": {"format": {"type": "json_schema", **_NEXT_STEP_SCHEMA}},
-        "temperature": 0,
-    }
-    headers = {
-        "Authorization": f"Bearer {config.XAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    url = f"{config.XAI_API_BASE}/responses"
+    user_input = (
+        f"Patient-reported symptoms so far:\n{bullets}{prior}{asked}{budget}\n\n"
+        "List the candidate conditions and ONE new narrowing question (or set "
+        "done=true with an empty question if no more are needed). Only include "
+        "future check-in questions if you set done=true."
+    )
+    # Provider dispatch: Gemini Flash when a key is configured (faster), else xAI
+    # Grok. Both stream JSON matching the same schema; only the request shape and
+    # how a text delta is pulled from each SSE event differ. DSM-5 grounding is
+    # inlined into the system prompt for both — no vector-store retrieval.
+    if _use_gemini():
+        url, headers, payload, extract_delta = _gemini_request(user_input)
+        provider = config.GEMINI_TRIAGE_MODEL
+    else:
+        url, headers, payload, extract_delta = _xai_request(user_input)
+        provider = config.GROK_TRIAGE_MODEL
 
     buf = []
     signaled = False
@@ -335,8 +419,9 @@ async def get_next_question(symptoms, prior_candidates=None, asked_questions=Non
                         evt = json.loads(data)
                     except Exception:
                         continue
-                    if evt.get("type") == "response.output_text.delta":
-                        buf.append(evt.get("delta", ""))
+                    delta = extract_delta(evt)
+                    if delta:
+                        buf.append(delta)
                         _maybe_signal()
 
         result = json.loads("".join(buf))
@@ -354,8 +439,8 @@ async def get_next_question(symptoms, prior_candidates=None, asked_questions=Non
             ready.set_result((result["next_question"], result["done"]))
         global latest_candidates
         latest_candidates = result["candidates"]
-        log.info("Differential: candidates=%s next_q=%r",
-                 result["candidates"], result["next_question"])
+        log.info("Differential [%s]: candidates=%s next_q=%r",
+                 provider, result["candidates"], result["next_question"])
         # Kick off the deep EXACT-criteria profiling in a separate background
         # process. It runs independently and persists to <phone>.dsm5.json — we
         # do NOT wait on it, so it adds zero latency to the next question.

@@ -1,34 +1,39 @@
 {
   "phone": "15551234567",
-  "updated_at": "2026-06-14T00:28:34.211637+00:00",
+  "updated_at": "2026-06-14T00:42:43.485719+00:00",
   "conditions": [
     {
-      "condition": "Major Depressive Disorder",
+      "condition": "Bipolar I Disorder",
       "criteria": [
         {
-          "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms: 1. Depressed mood most of the day... 2. Markedly diminished interest or pleasure... 3. Significant weight/appetite change... 4. Insomnia or hypersomnia... 5. Psychomotor agitation/retardation... 6. Fatigue... 7. Worthlessness/guilt... 8. Diminished concentration... 9. Thoughts of death/suicidality.",
+          "criterion": "Criterion A (Manic Episode): A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased goal-directed activity or energy, lasting at least 1 week (or any duration if hospitalization is necessary), present most of the day, nearly every day.",
           "status": "need_checkin",
-          "evidence": "Patient reported 'low mood 3 weeks', 'poor sleep', 'loss of interest'. Duration meets 2 weeks but only 3 symptoms reported so far; needs confirmation of total ≥5 symptoms and full 2-week period details."
+          "evidence": "Patient reports 'barely sleeping but full of energy' which aligns with increased energy/activity and decreased need for sleep, but duration of at least 1 week not reported."
         },
         {
-          "criterion": "Criterion B: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
-          "status": "need_checkin",
-          "evidence": "No report of distress or impairment provided yet."
+          "criterion": "Criterion B (Manic Episode): During the period of mood disturbance and increased energy/activity, ≥3 of the following symptoms (≥4 if mood is only irritable) are present to a significant degree and represent a noticeable change from usual behavior: 1. Inflated self-esteem or grandiosity. 2. Decreased need for sleep (e.g., feels rested after only 3 hours of sleep). 3. More talkative than usual or pressure to keep talking. 4. Flight of ideas or subjective experience that thoughts are racing. 5. Distractibility. 6. Increase in goal-directed activity or psychomotor agitation. 7. Excessive involvement in activities that have a high potential for painful consequences (e.g., engaging in unrestrained buying sprees, sexual indiscretions, or foolish business investments).",
+          "status": "yes",
+          "evidence": "'barely sleeping but full of energy' (decreased need for sleep), 'talking fast' (more talkative/pressure to keep talking), 'spending sprees' (excessive involvement in activities with high potential for painful consequences)."
         },
         {
-          "criterion": "Criterion C: The episode is not attributable to the physiological effects of a substance or another medical condition.",
+          "criterion": "Criterion C (Manic Episode): The mood disturbance is sufficiently severe to cause marked impairment in social or occupational functioning or to necessitate hospitalization to prevent harm to self or others, or there are psychotic features.",
           "status": "need_psychiatrist",
-          "evidence": "No information on substances or medical conditions; requires clinical judgment."
+          "evidence": "No information reported on marked impairment, hospitalization, or psychotic features."
         },
         {
-          "criterion": "Criterion D: The episode is not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
+          "criterion": "Criterion D (Manic Episode): The episode is not attributable to the physiological effects of a substance or another medical condition.",
           "status": "need_psychiatrist",
-          "evidence": "No information on psychotic disorders; requires clinical judgment."
+          "evidence": "No information reported on substance use or medical conditions."
         },
         {
-          "criterion": "Criterion E: There has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition).",
+          "criterion": "Diagnostic Criterion A: Criteria A–D have been met for at least one manic episode.",
           "status": "need_checkin",
-          "evidence": "No history of mania/hypomania reported yet; needs screening over time."
+          "evidence": "Manic episode criteria partially met but full A–D not yet confirmed due to missing duration, impairment, and exclusion details."
+        },
+        {
+          "criterion": "Diagnostic Criterion B: At least one manic episode is not better explained by schizoaffective disorder and is not superimposed on schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
+          "status": "need_psychiatrist",
+          "evidence": "No information reported on differential diagnosis with psychotic disorders."
         }
       ]
     },
@@ -36,54 +41,54 @@
       "condition": "Bipolar II Disorder",
       "criteria": [
         {
-          "criterion": "Criterion A (Disorder): Criteria have been met for at least one hypomanic episode and at least one major depressive episode.",
+          "criterion": "Criterion A (Hypomanic Episode): A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased activity or energy, lasting at least 4 consecutive days, present most of the day, nearly every day.",
           "status": "need_checkin",
-          "evidence": "Major depressive episode symptoms partially reported ('low mood 3 weeks', 'poor sleep', 'loss of interest'); no hypomanic episode symptoms or history reported."
+          "evidence": "Patient reports 'barely sleeping but full of energy' which aligns with increased energy/activity, but duration of at least 4 consecutive days not reported."
         },
         {
-          "criterion": "Criterion B: There has never been a manic episode.",
-          "status": "need_checkin",
-          "evidence": "No history of manic episode reported yet."
+          "criterion": "Criterion B (Hypomanic Episode): ≥3 symptoms (≥4 if mood only irritable) from the same 7-symptom list used for mania, persisting, representing a noticeable change from usual behavior, and present to a significant degree.",
+          "status": "yes",
+          "evidence": "'barely sleeping but full of energy' (decreased need for sleep), 'talking fast' (more talkative/pressure to keep talking), 'spending sprees' (excessive involvement in activities with high potential for painful consequences)."
         },
         {
-          "criterion": "Criterion C: At least one hypomanic episode and at least one major depressive episode are not better explained by schizoaffective disorder and are not superimposed on schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
+          "criterion": "Criterion C (Hypomanic Episode): The episode is associated with an unequivocal change in functioning that is uncharacteristic of the individual when not symptomatic.",
+          "status": "need_checkin",
+          "evidence": "No information reported on unequivocal change in functioning."
+        },
+        {
+          "criterion": "Criterion D (Hypomanic Episode): The disturbance in mood and the change in functioning are observable by others.",
+          "status": "need_checkin",
+          "evidence": "No information reported on observability by others."
+        },
+        {
+          "criterion": "Criterion E (Hypomanic Episode): The episode is NOT severe enough to cause marked impairment in social or occupational functioning or to necessitate hospitalization.",
+          "status": "need_checkin",
+          "evidence": "No information reported on level of impairment or hospitalization."
+        },
+        {
+          "criterion": "Criterion F (Hypomanic Episode): The episode is not attributable to the physiological effects of a substance.",
           "status": "need_psychiatrist",
-          "evidence": "No information on psychotic disorders; requires clinical judgment."
+          "evidence": "No information reported on substance use."
         },
         {
-          "criterion": "Criterion D: The symptoms of depression OR the unpredictability caused by frequent alternation between periods of depression and hypomania cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "criterion": "Diagnostic Criterion A: Criteria have been met for at least one hypomanic episode and at least one major depressive episode.",
+          "status": "no",
+          "evidence": "No major depressive episode symptoms reported so far."
+        },
+        {
+          "criterion": "Diagnostic Criterion B: There has never been a manic episode.",
           "status": "need_checkin",
-          "evidence": "No report of distress, impairment, or hypomania yet."
+          "evidence": "Cannot yet determine if a full manic episode has occurred (requires full criteria assessment)."
         },
         {
-          "criterion": "Hypomanic Episode Criterion A: A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased activity or energy, lasting at least 4 consecutive days, present most of the day, nearly every day.",
-          "status": "no",
-          "evidence": "No report of elevated/expansive/irritable mood or increased activity/energy lasting 4 days."
-        },
-        {
-          "criterion": "Hypomanic Episode Criterion B: ≥3 symptoms (≥4 if mood only irritable) from the 7-symptom list... persisting, representing a noticeable change...",
-          "status": "no",
-          "evidence": "No hypomanic symptoms reported."
-        },
-        {
-          "criterion": "Hypomanic Episode Criterion C: The episode is associated with an unequivocal change in functioning that is uncharacteristic of the individual when not symptomatic.",
-          "status": "no",
-          "evidence": "No hypomanic episode reported."
-        },
-        {
-          "criterion": "Hypomanic Episode Criterion D: The disturbance in mood and the change in functioning are observable by others.",
-          "status": "no",
-          "evidence": "No hypomanic episode reported."
-        },
-        {
-          "criterion": "Hypomanic Episode Criterion E: The episode is NOT severe enough to cause marked impairment... or hospitalization. If psychotic features, it is manic.",
-          "status": "no",
-          "evidence": "No hypomanic episode reported."
-        },
-        {
-          "criterion": "Hypomanic Episode Criterion F: The episode is not attributable to the physiological effects of a substance.",
+          "criterion": "Diagnostic Criterion C: At least one hypomanic episode and at least one major depressive episode are not better explained by schizoaffective disorder and are not superimposed on schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
           "status": "need_psychiatrist",
-          "evidence": "No information on substances; requires clinical judgment."
+          "evidence": "No information reported on differential diagnosis with psychotic disorders."
+        },
+        {
+          "criterion": "Diagnostic Criterion D: The symptoms of depression OR the unpredictability caused by frequent alternation between periods of depression and hypomania cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "status": "need_checkin",
+          "evidence": "No depressive symptoms or impairment details reported."
         }
       ]
     }
