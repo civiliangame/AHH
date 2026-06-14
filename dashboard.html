@@ -704,9 +704,12 @@
 
     if (ev.role === "metadata") applyLiveMetadata(ev.data);
 
-    // A finished call's scores arrived — refresh the list + re-open detail so the
-    // trend and session badges pick up the new numbers.
-    if (ev.role === "metadata" && ev.data && ev.data.kind === "scores") {
+    // Pull a just-created/updated patient into the list as soon as the call
+    // ends (regardless of DAM timing), and again when scores land so the trend
+    // + session badges pick up the new numbers.
+    const callEnded = ev.role === "system" && /Call ended/.test(ev.text || "");
+    const scoresIn = ev.role === "metadata" && ev.data && ev.data.kind === "scores";
+    if (callEnded || scoresIn) {
       refreshPatients();
       if (viewingPatient && viewingPatient !== LIVE) selectPatient(viewingPatient);
     }
