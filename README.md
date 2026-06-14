@@ -81,10 +81,3 @@ server VAD) → `session.updated` → stream audio + send greeting.
 
 Not yet tested with a real phone call — the field names match Telnyx's docs,
 but the first live call is the real confirmation.
-
-## Security
-
-Both the xAI key and the Telnyx key were shared in plaintext — **rotate both**
-(console.x.ai and portal.telnyx.com). `.env` is gitignored. Consider adding
-Telnyx webhook signature verification (Ed25519 `telnyx-signature-ed25519`
-header) before going to production.

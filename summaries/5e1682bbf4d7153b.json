@@ -1,0 +1,310 @@
+{
+  "phone_hash": "5e1682bbf4d7153b",
+  "phone_last4": "4567",
+  "generated_at": 1781395412.803165,
+  "cache_key": "004056e68599bf17",
+  "call_ids": [
+    "acc99e9edc1e",
+    "6a3258afab96",
+    "3a497c1e4128"
+  ],
+  "summary": {
+    "patient_identifier": {
+      "phone_last4": "4567",
+      "session_range_iso": "2026-06-13T23:16:04+00:00/2026-06-13T23:31:46+00:00",
+      "n_calls": 3
+    },
+    "generated_at_iso": "2026-06-14T00:03:32+00:00",
+    "calls_covered": [
+      {
+        "call_id": "acc99e9edc1e",
+        "started_iso": "2026-06-13T23:16:04+00:00",
+        "duration_seconds": 135.46
+      },
+      {
+        "call_id": "6a3258afab96",
+        "started_iso": "2026-06-13T23:26:17+00:00",
+        "duration_seconds": 113.0
+      },
+      {
+        "call_id": "3a497c1e4128",
+        "started_iso": "2026-06-13T23:31:46+00:00",
+        "duration_seconds": 90.26
+      }
+    ],
+    "chief_complaints": [
+      {
+        "complaint": "not feeling great / low mood",
+        "first_mentioned_iso": "2026-06-13T23:16:13+00:00",
+        "most_recent_iso": "2026-06-13T23:32:42+00:00",
+        "call_ids": [
+          "acc99e9edc1e",
+          "6a3258afab96",
+          "3a497c1e4128"
+        ]
+      },
+      {
+        "complaint": "loss of interest in hockey",
+        "first_mentioned_iso": "2026-06-13T23:16:54+00:00",
+        "most_recent_iso": "2026-06-13T23:33:06+00:00",
+        "call_ids": [
+          "acc99e9edc1e",
+          "3a497c1e4128"
+        ]
+      },
+      {
+        "complaint": "sleep issues",
+        "first_mentioned_iso": "2026-06-13T23:27:05+00:00",
+        "most_recent_iso": "2026-06-13T23:27:05+00:00",
+        "call_ids": [
+          "6a3258afab96"
+        ]
+      }
+    ],
+    "symptom_timeline": [
+      {
+        "ts_iso": "2026-06-13T23:16:13+00:00",
+        "call_id": "acc99e9edc1e",
+        "quote": "I'm not feeling great.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:16:32+00:00",
+        "call_id": "acc99e9edc1e",
+        "quote": "It's been maybe like a couple weeks.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:16:54+00:00",
+        "call_id": "acc99e9edc1e",
+        "quote": "now I don't really enjoy playing hockey anymore.",
+        "topic": "anhedonia"
+      },
+      {
+        "ts_iso": "2026-06-13T23:17:19+00:00",
+        "call_id": "acc99e9edc1e",
+        "quote": "Sometimes I do like to do some risky behaviors",
+        "topic": "other"
+      },
+      {
+        "ts_iso": "2026-06-13T23:17:39+00:00",
+        "call_id": "acc99e9edc1e",
+        "quote": "there are times where I need less sleep.",
+        "topic": "sleep"
+      },
+      {
+        "ts_iso": "2026-06-13T23:26:26+00:00",
+        "call_id": "6a3258afab96",
+        "quote": "I'm not feeling great.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:26:44+00:00",
+        "call_id": "6a3258afab96",
+        "quote": "It's been about, like, I don't know, two weeks.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:27:05+00:00",
+        "call_id": "6a3258afab96",
+        "quote": "Sleep,",
+        "topic": "sleep"
+      },
+      {
+        "ts_iso": "2026-06-13T23:27:58+00:00",
+        "call_id": "6a3258afab96",
+        "quote": "Yeah, I've been feeling sad most days.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:31:54+00:00",
+        "call_id": "3a497c1e4128",
+        "quote": "I'm feeling a little sad.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:32:16+00:00",
+        "call_id": "3a497c1e4128",
+        "quote": "it's been about like two days or so.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:32:42+00:00",
+        "call_id": "3a497c1e4128",
+        "quote": "I've just been feeling sad and depressed over the last, uh, two weeks or so.",
+        "topic": "mood"
+      },
+      {
+        "ts_iso": "2026-06-13T23:33:06+00:00",
+        "call_id": "3a497c1e4128",
+        "quote": "I used to like playing hockey, but now I don't really like playing hockey at all.",
+        "topic": "anhedonia"
+      }
+    ],
+    "dsm5_differentials": [
+      {
+        "condition": "Major Depressive Disorder",
+        "supporting_evidence": [
+          {
+            "quote": "I've been feeling sad most days.",
+            "call_id": "6a3258afab96"
+          },
+          {
+            "quote": "I've just been feeling sad and depressed over the last, uh, two weeks or so.",
+            "call_id": "3a497c1e4128"
+          },
+          {
+            "quote": "now I don't really enjoy playing hockey anymore.",
+            "call_id": "acc99e9edc1e"
+          }
+        ],
+        "evidence_against": [],
+        "dsm5_criteria_addressed": [
+          "MDD A1 \u2014 depressed mood most of the day",
+          "MDD A2 \u2014 markedly diminished interest or pleasure in all or almost all activities"
+        ],
+        "confidence": "moderate"
+      },
+      {
+        "condition": "Bipolar II Disorder",
+        "supporting_evidence": [
+          {
+            "quote": "there are times where I need less sleep.",
+            "call_id": "acc99e9edc1e"
+          },
+          {
+            "quote": "Sometimes I do like to do some risky behaviors",
+            "call_id": "acc99e9edc1e"
+          }
+        ],
+        "evidence_against": [],
+        "dsm5_criteria_addressed": [
+          "Bipolar II Criterion B \u2014 hypomanic episode"
+        ],
+        "confidence": "low"
+      },
+      {
+        "condition": "Generalized Anxiety Disorder",
+        "supporting_evidence": [],
+        "evidence_against": [],
+        "dsm5_criteria_addressed": [],
+        "confidence": "insufficient_data"
+      },
+      {
+        "condition": "Adjustment Disorder with Depressed Mood",
+        "supporting_evidence": [],
+        "evidence_against": [],
+        "dsm5_criteria_addressed": [],
+        "confidence": "insufficient_data"
+      }
+    ],
+    "severity_trajectory": {
+      "depression_series": [
+        {
+          "call_id": "acc99e9edc1e",
+          "started_iso": "2026-06-13T23:16:04+00:00",
+          "band": "indeterminate",
+          "score": 0,
+          "indeterminate": true
+        },
+        {
+          "call_id": "6a3258afab96",
+          "started_iso": "2026-06-13T23:26:17+00:00",
+          "band": "indeterminate",
+          "score": 0,
+          "indeterminate": true
+        },
+        {
+          "call_id": "3a497c1e4128",
+          "started_iso": "2026-06-13T23:31:46+00:00",
+          "band": "indeterminate",
+          "score": 1,
+          "indeterminate": true
+        }
+      ],
+      "anxiety_series": [
+        {
+          "call_id": "acc99e9edc1e",
+          "started_iso": "2026-06-13T23:16:04+00:00",
+          "band": "indeterminate",
+          "score": 1,
+          "indeterminate": true
+        },
+        {
+          "call_id": "6a3258afab96",
+          "started_iso": "2026-06-13T23:26:17+00:00",
+          "band": "indeterminate",
+          "score": 1,
+          "indeterminate": true
+        },
+        {
+          "call_id": "3a497c1e4128",
+          "started_iso": "2026-06-13T23:31:46+00:00",
+          "band": "indeterminate",
+          "score": 2,
+          "indeterminate": true
+        }
+      ],
+      "depression_trend": "insufficient_data",
+      "anxiety_trend": "insufficient_data",
+      "caveats": [
+        "All calls marked indeterminate by acoustic model; scores not used for trend."
+      ]
+    },
+    "speech_metrics_trend": {
+      "wpm_series": [
+        {
+          "call_id": "acc99e9edc1e",
+          "started_iso": "2026-06-13T23:16:04+00:00",
+          "wpm": 226.0,
+          "speech_seconds": 18.58
+        },
+        {
+          "call_id": "6a3258afab96",
+          "started_iso": "2026-06-13T23:26:17+00:00",
+          "wpm": 112.3,
+          "speech_seconds": 13.36
+        },
+        {
+          "call_id": "3a497c1e4128",
+          "started_iso": "2026-06-13T23:31:46+00:00",
+          "wpm": 169.1,
+          "speech_seconds": 18.8
+        }
+      ],
+      "interpretation": "WPM not monotonically decreasing; latest value above 120. No psychomotor slowing noted."
+    },
+    "risk_flags": [],
+    "functional_impact": {
+      "sleep": "Patient reported sleep issues in one call.",
+      "appetite": "No information provided.",
+      "work_school": "No information provided.",
+      "social": "No information provided.",
+      "self_care": "No information provided."
+    },
+    "what_patient_wants": [],
+    "clinician_questions": [
+      "Can you clarify the duration and pattern of low mood across the past two weeks?",
+      "Have the periods of needing less sleep and risky behaviors occurred with elevated mood or energy?",
+      "Any recent stressors or changes that might relate to these symptoms?",
+      "How has this affected your daily functioning at work or with others?"
+    ],
+    "data_quality_notes": {
+      "indeterminate_calls": [
+        "acc99e9edc1e",
+        "6a3258afab96",
+        "3a497c1e4128"
+      ],
+      "short_calls": [],
+      "contradictions": [
+        "Call 3a497c1e4128: initial report of 'two days or so' then clarified to 'two weeks or so' for feeling sad and depressed."
+      ]
+    },
+    "disclaimers": [
+      "This summary is AI-generated and is not a medical diagnosis.",
+      "It is intended to supplement, not replace, a clinician's assessment.",
+      "Severity scores are from an acoustic screener; they are not PHQ-9 or GAD-7 results.",
+      "If you are in crisis, call or text 988 (US Suicide & Crisis Lifeline) or your local emergency number."
+    ]
+  }
+}
