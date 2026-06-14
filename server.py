@@ -176,6 +176,17 @@ async def api_patient(phone: str):
     return JSONResponse(record)
 
 
+@app.get("/api/state")
+async def api_state():
+    """Current in-memory triage state — accumulated symptoms + latest candidates.
+    Lets the dashboard render the metadata panel on first load (before any live
+    event arrives)."""
+    return JSONResponse({
+        "symptoms": list(triage.global_descriptions),
+        "candidates": list(triage.latest_candidates),
+    })
+
+
 @app.get("/api/calls")
 async def api_calls():
     """List all persisted call transcripts, newest first.
