@@ -1,0 +1,2456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eva · Longitudinal Patient Journey · Jordan Reyes</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    font: 13.5px/1.5 -apple-system, "SF Pro Text", Segoe UI, Roboto, sans-serif;
+    background: #0d1117; color: #e6edf3;
+    display: flex; flex-direction: column;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    flex: 0 0 auto;
+    padding: 0 22px; height: 52px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex; align-items: center; gap: 14px;
+  }
+  header .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; font-weight: 600; color: #e6edf3;
+  }
+  header .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #3fb950; box-shadow: 0 0 8px #3fb95066;
+  }
+  header .patient {
+    display: flex; align-items: center; gap: 10px; margin-left: 18px;
+    padding-left: 18px; border-left: 1px solid #30363d;
+  }
+  header .patient .name { font-size: 13.5px; font-weight: 600; color: #e6edf3; }
+  header .patient .id   { font-size: 11.5px; color: #8b949e; font-family: ui-monospace, SF Mono, Menlo, monospace; }
+  header .position {
+    margin-left: auto; display: flex; gap: 18px;
+    font-size: 12px; color: #8b949e;
+    align-items: center;
+  }
+  header .position b { color: #e6edf3; font-weight: 600; }
+  header .position .day-pill {
+    background: #1f6feb; color: #fff;
+    padding: 3px 10px; border-radius: 12px;
+    font-weight: 700; font-size: 11.5px;
+    letter-spacing: 0.03em;
+  }
+  header .position .agent-pill {
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  header .position .agent-pill.triage { background: #1f6feb; color: #fff; }
+  header .position .agent-pill.checkin { background: #2d2410; color: #d29922; border: 1px solid #5a4419; }
+
+  /* ---------- main metrics area (scrolls if needed) ---------- */
+  main {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 14px 18px 12px;
+    display: grid;
+    grid-template-columns: minmax(360px, 1.2fr) minmax(280px, 1fr) minmax(280px, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "spotlight  symptoms  differential"
+      "transcript scores    scores";
+    gap: 12px;
+    min-height: 0;
+  }
+  @media (max-width: 1100px) {
+    main {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "spotlight   spotlight"
+        "symptoms    differential"
+        "scores      scores"
+        "transcript  transcript";
+    }
+  }
+
+  .card {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 12px 14px;
+    min-width: 0;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+    flex: 0 0 auto;
+  }
+  .card-head h3 {
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #8b949e; margin: 0;
+  }
+  .card-head .count {
+    font-size: 10px; color: #58a6ff;
+    background: #0d2236; border: 1px solid #1f4d7a;
+    padding: 1px 7px; border-radius: 9px;
+    font-weight: 700;
+  }
+  .card-head .right {
+    margin-left: auto; font-size: 10.5px;
+    color: #6e7681; font-family: ui-monospace, SF Mono, Menlo, monospace;
+  }
+  .card-body {
+    flex: 1 1 auto; overflow-y: auto;
+    min-height: 0;
+  }
+  .card-body::-webkit-scrollbar { width: 6px; }
+  .card-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+  /* ---------- spotlight ---------- */
+  #spotlight {
+    grid-area: spotlight;
+    border-left: 3px solid #d29922;
+  }
+  #spotlight.symptom { border-left-color: #1f6feb; }
+  #spotlight.differential_started { border-left-color: #6e7681; }
+  #spotlight.differential { border-left-color: #d29922; }
+  #spotlight.scores { border-left-color: #a371f7; }
+  #spotlight.agent { border-left-color: #1f6feb; }
+  #spotlight.caller { border-left-color: #3fb950; }
+  #spotlight.system { border-left-color: #6e7681; }
+  #spotlight .tool-call {
+    margin-top: 6px; padding: 8px 10px;
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 6px;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 11.5px;
+  }
+  #spotlight .tool-call .fn { color: #d2a8ff; font-weight: 600; }
+  #spotlight .tool-call .key { color: #79c0ff; }
+  #spotlight .tool-call .str { color: #a5d6ff; }
+  #spotlight .tool-call .pair { display: block; padding: 1px 0; }
+  #spotlight .empathy {
+    margin-top: 6px; padding: 6px 10px;
+    background: #1a1f2c; border: 1px solid #30363d;
+    border-left: 3px solid #58a6ff;
+    border-radius: 6px;
+    font-style: italic; color: #c9d1d9;
+    font-size: 12px;
+  }
+  #spotlight .bubble {
+    display: inline-block;
+    max-width: 100%; padding: 8px 12px;
+    border-radius: 12px; white-space: pre-wrap;
+    line-height: 1.45; margin-top: 4px;
+    font-size: 13px;
+  }
+  #spotlight .bubble.agent  { background: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 4px; }
+  #spotlight .bubble.caller { background: #1f6feb; color: #fff; border-bottom-right-radius: 4px; }
+  #spotlight .candidates-list {
+    display: flex; flex-direction: column; gap: 3px; margin-top: 4px;
+  }
+  #spotlight .rank-line {
+    display: flex; align-items: center; gap: 8px; padding: 2px 0;
+    font-size: 12.5px;
+  }
+  #spotlight .rank-line .name { flex: 1; min-width: 0; }
+  #spotlight .next-q {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid #30363d;
+    font-size: 12px;
+  }
+  #spotlight .next-q em { color: #8b949e; font-style: normal; }
+  #spotlight .next-q strong { color: #e6edf3; font-weight: 600; }
+  #spotlight .system-text {
+    text-align: center; padding: 16px 4px; color: #8b949e;
+  }
+  #spotlight .system-text .icon { font-size: 24px; margin-bottom: 6px; }
+  #spotlight .label {
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: #d29922;
+    margin-bottom: 4px;
+  }
+  #spotlight.symptom .label { color: #58a6ff; }
+  #spotlight.differential .label { color: #d29922; }
+  #spotlight.differential_started .label { color: #8b949e; }
+  #spotlight.scores .label { color: #a371f7; }
+  #spotlight.agent .label, #spotlight.caller .label { color: #8b949e; }
+  #spotlight .symptoms-so-far {
+    margin-top: 6px;
+    font-size: 11px; color: #8b949e;
+  }
+  #spotlight .symptoms-so-far .chip {
+    display: inline-block;
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 9px; padding: 1px 7px;
+    font-size: 10px; color: #8b949e;
+    margin: 2px 4px 2px 0;
+  }
+
+  /* ---------- symptoms card ---------- */
+  #symptoms-card { grid-area: symptoms; }
+  .symptom-pill {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 6px; padding: 6px 9px;
+    font-size: 11.5px;
+    margin-bottom: 4px;
+    word-wrap: break-word;
+    display: flex; gap: 6px;
+  }
+  .symptom-pill .n {
+    color: #58a6ff; font-weight: 700;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 11px;
+  }
+  .symptom-pill.fresh {
+    border-color: #1f6feb; background: #0d2236;
+    animation: flash 1.2s ease-out;
+  }
+  @keyframes flash {
+    0%   { background: #1f2733; border-color: #58a6ff; }
+    100% { background: #0d2236; border-color: #1f6feb; }
+  }
+  .empty {
+    color: #6e7681; font-style: italic;
+    border: 1px dashed #30363d;
+    border-radius: 6px; padding: 8px 10px;
+    font-size: 12px; text-align: center;
+  }
+
+  /* ---------- differential card ---------- */
+  #differential-card { grid-area: differential; }
+  .rank-line {
+    display: flex; align-items: center; gap: 8px; padding: 3px 0;
+    font-size: 12.5px;
+  }
+  .rank-line .name { flex: 1; min-width: 0; }
+  .rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px;
+    border-radius: 10px; background: #0d1117; border: 1px solid #30363d;
+    font-size: 11px; font-weight: 700; color: #8b949e;
+  }
+  .rank.r1 { color: #f0f6fc; background: #1f6feb; border-color: #1f6feb; }
+  .rank.r2 { color: #e6edf3; background: #30363d; border-color: #484f58; }
+  .rank.r3 { color: #c9d1d9; }
+  .delta {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 1px 6px; border-radius: 9px;
+    border: 1px solid transparent;
+  }
+  .delta.up   { background: #0d2818; color: #3fb950; border-color: #1f4d2e; }
+  .delta.down { background: #2d1418; color: #f85149; border-color: #5a2129; }
+  .delta.new  { background: #2d2410; color: #d29922; border-color: #5a4419; }
+  .delta.same { color: #6e7681; }
+  .next-q-line {
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid #30363d;
+    font-size: 12px;
+  }
+  .next-q-line em { color: #8b949e; font-style: normal; }
+  .next-q-line strong { color: #e6edf3; font-weight: 600; }
+  .round-pill {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em;
+    color: #d29922; background: #2d2410; border: 1px solid #5a4419;
+    padding: 1px 7px; border-radius: 9px;
+  }
+
+  /* ---------- DAM scores card (multi-call sparkline tabs) ---------- */
+  #scores-card { grid-area: scores; }
+  .scores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+  }
+  .score-badge {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 8px 10px; border-radius: 7px;
+    border: 1px solid #30363d; background: #0d1117;
+    min-width: 0;
+  }
+  .score-badge .k {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #8b949e;
+  }
+  .score-badge .v {
+    font-size: 13.5px; font-weight: 700; color: #e6edf3;
+    margin-top: 1px;
+  }
+  .score-badge .raw {
+    font-size: 10px; color: #6e7681;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+  }
+  .score-badge.sev-0 { border-color: #2ea043; }
+  .score-badge.sev-1 { border-color: #d29922; }
+  .score-badge.sev-2 { border-color: #db6d28; }
+  .score-badge.sev-3 { border-color: #f85149; }
+  .score-badge.metric { border-color: #3a4150; }
+  .score-badge .indet {
+    display: inline-block; margin-left: 4px;
+    padding: 0 5px; border: 1px solid #d29922; border-radius: 10px;
+    font-size: 8.5px; font-weight: 600; color: #d29922;
+    vertical-align: 1px;
+  }
+  .score-badge .spark { display: block; margin-top: 6px; width: 100%; }
+  .score-badge .spark .baseline { stroke: #30363d; stroke-width: 0.5; stroke-dasharray: 2 2; }
+  .score-badge .spark .area { opacity: 0.18; }
+
+  .scores-trajectory {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-top: 10px;
+  }
+  .traj-card {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 6px; padding: 6px 8px;
+  }
+  .traj-card .k {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #8b949e;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .traj-card .k span.now {
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    color: #e6edf3; font-weight: 600; letter-spacing: 0;
+    text-transform: none;
+  }
+  .traj-card svg { display: block; width: 100%; height: 36px; margin-top: 2px; }
+  .traj-card .line { fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .traj-card .area { opacity: 0.18; }
+  .traj-card .dot.now {
+    stroke: #0d1117; stroke-width: 1.2;
+  }
+  .traj-card .dot.now-ring {
+    fill: none; stroke-width: 1.4; opacity: 0.5;
+  }
+
+  /* ---------- transcript card ---------- */
+  #transcript-card { grid-area: transcript; }
+  .turn { display: flex; margin: 6px 0; }
+  .turn.caller { justify-content: flex-end; }
+  .bubble-sm {
+    max-width: 88%; padding: 6px 10px; border-radius: 11px;
+    white-space: pre-wrap; word-wrap: break-word;
+    line-height: 1.4; font-size: 12px;
+  }
+  .caller .bubble-sm { background: #1f6feb; color: #fff; border-bottom-right-radius: 4px; }
+  .agent  .bubble-sm { background: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 4px; }
+  .turn-meta {
+    text-align: center; font-size: 10.5px;
+    color: #6e7681;
+    background: #0d1117; padding: 2px 8px;
+    border-radius: 8px; border: 1px solid #21262d;
+    margin: 4px auto; max-width: 90%;
+    font-style: italic;
+  }
+  .turn .role-sm {
+    font-size: 9.5px; color: #6e7681; margin: 0 4px 1px;
+    text-transform: lowercase; letter-spacing: 0.02em;
+  }
+  .caller .role-sm { text-align: right; }
+  .turn.current .bubble-sm {
+    box-shadow: 0 0 0 2px #58a6ff;
+  }
+
+  /* ---------- timeline strip ---------- */
+  #timeline {
+    flex: 0 0 auto;
+    background: #161b22;
+    border-top: 1px solid #30363d;
+    padding: 10px 22px 12px;
+    user-select: none;
+  }
+  #timeline svg {
+    display: block; width: 100%; height: 78px;
+  }
+  #timeline .baseline {
+    stroke: #30363d; stroke-width: 1;
+  }
+  #timeline .call-band {
+    fill: #161b22;
+  }
+  #timeline .call-band.alt {
+    fill: #0d1117;
+  }
+  #timeline .call-divider {
+    stroke: #30363d; stroke-width: 0.6; stroke-dasharray: 2 2;
+  }
+  #timeline .day-label {
+    font: 600 10px ui-monospace, SF Mono, Menlo, monospace;
+    fill: #c9d1d9;
+  }
+  #timeline .day-sublabel {
+    font: 500 9px -apple-system, sans-serif;
+    fill: #6e7681;
+  }
+  #timeline .agent-tag {
+    font: 700 8px -apple-system, sans-serif;
+    fill: #58a6ff; letter-spacing: 0.04em;
+  }
+  #timeline .agent-tag.checkin { fill: #d29922; }
+  #timeline .tick { cursor: pointer; }
+  #timeline .tick.system   { fill: #484f58; }
+  #timeline .tick.agent    { fill: #58a6ff; }
+  #timeline .tick.caller   { fill: #3fb950; }
+  #timeline .tick.symptom  { fill: #58a6ff; }
+  #timeline .tick.diff_start { fill: #6e7681; }
+  #timeline .tick.diff     { fill: #d29922; }
+  #timeline .tick.scores   { fill: #a371f7; }
+  #timeline .cursor {
+    stroke: #f0f6fc; stroke-width: 1.4;
+    pointer-events: none;
+  }
+  #timeline .cursor-ring {
+    fill: none; stroke: #f0f6fc; stroke-width: 1.8;
+    pointer-events: none;
+  }
+  #timeline .severity-line {
+    fill: none; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round;
+    opacity: 0.7;
+  }
+
+  /* ---------- controls ---------- */
+  #controls {
+    flex: 0 0 auto;
+    background: #0d1117;
+    border-top: 1px solid #30363d;
+    padding: 8px 22px;
+    display: flex; align-items: center; gap: 16px;
+    font-size: 11.5px; color: #8b949e;
+  }
+  #controls .kbd {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 4px; padding: 1px 6px;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 10.5px; color: #c9d1d9;
+    min-width: 14px; justify-content: center;
+  }
+  #controls .grp { display: inline-flex; align-items: center; gap: 5px; }
+  #controls .sep { width: 1px; height: 12px; background: #30363d; }
+  #controls .right {
+    margin-left: auto; display: flex; gap: 14px; align-items: center;
+  }
+  #controls .play-btn {
+    background: #1f6feb; color: #fff; border: none;
+    padding: 4px 12px; border-radius: 4px;
+    font-size: 11.5px; font-weight: 600;
+    cursor: pointer;
+  }
+  #controls .play-btn:hover { background: #388bfd; }
+  #controls .play-btn.playing { background: #db6d28; }
+
+  /* ---------- empty state cleanups ---------- */
+  code.mono {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 4px; padding: 1px 5px;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 11.5px; color: #c9d1d9;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      Eva · AtLegionX
+    </div>
+    <div class="patient">
+      <div>
+        <div class="name">Jordan Reyes · 31</div>
+        <div class="id">MRN-738201 · DOB 1994-04-12</div>
+      </div>
+    </div>
+    <div class="position">
+      <span class="day-pill" id="pos-day">Day 0</span>
+      <span class="agent-pill" id="pos-agent">triage</span>
+      <span>event <b id="pos-event">1</b> of <b id="pos-total">—</b></span>
+      <span>call <b id="pos-call">1</b> of <b>9</b></span>
+      <span>time <b id="pos-clock">0:00</b></span>
+    </div>
+  </header>
+
+  <main>
+    <section id="spotlight" class="card">
+      <!-- populated by render() -->
+    </section>
+
+    <section id="symptoms-card" class="card">
+      <div class="card-head">
+        <h3>Symptoms recorded</h3>
+        <span class="count" id="symptoms-count">0</span>
+        <span class="right">via <code class="mono">recordSymptom</code></span>
+      </div>
+      <div class="card-body" id="symptoms-list"></div>
+    </section>
+
+    <section id="differential-card" class="card">
+      <div class="card-head">
+        <h3>Active differential</h3>
+        <span class="round-pill" id="diff-round">—</span>
+        <span class="right">grok · file_search(DSM-5)</span>
+      </div>
+      <div class="card-body" id="differential-list"></div>
+    </section>
+
+    <section id="scores-card" class="card">
+      <div class="card-head">
+        <h3>DAM trajectory</h3>
+        <span class="count" id="scores-count">0</span>
+        <span class="right">whisper-small + multi-task head</span>
+      </div>
+      <div class="card-body">
+        <div id="scores-latest"></div>
+        <div class="scores-trajectory" id="scores-traj"></div>
+      </div>
+    </section>
+
+    <section id="transcript-card" class="card">
+      <div class="card-head">
+        <h3>Transcript · this call</h3>
+        <span class="right" id="transcript-meta">—</span>
+      </div>
+      <div class="card-body" id="transcript-feed"></div>
+    </section>
+  </main>
+
+  <section id="timeline">
+    <svg id="tl-svg" preserveAspectRatio="none"></svg>
+  </section>
+
+  <div id="controls">
+    <span class="grp"><span class="kbd">←</span><span class="kbd">→</span> step event</span>
+    <span class="sep"></span>
+    <span class="grp"><span class="kbd">⇧</span> + <span class="kbd">←</span><span class="kbd">→</span> jump call</span>
+    <span class="sep"></span>
+    <span class="grp"><span class="kbd">Home</span><span class="kbd">End</span> start / end</span>
+    <span class="sep"></span>
+    <span class="grp"><span class="kbd">Space</span> play / pause</span>
+    <div class="right">
+      <button class="play-btn" id="play-btn">▶ Play</button>
+      <span>speed
+        <select id="speed" style="background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:4px;padding:1px 4px;font-size:11px;">
+          <option value="600">slow</option>
+          <option value="280" selected>normal</option>
+          <option value="120">fast</option>
+          <option value="40">turbo</option>
+        </select>
+      </span>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * Hardcoded longitudinal data — 1 triage + 8 check-ins.
+ *
+ * Mirrors the on-the-wire event shapes from events.py + triage.py +
+ * analysis.py so the demo is a faithful replay of what the live
+ * dashboard would render.
+ *
+ *   metadata kinds:
+ *     - "symptom"               { description, empathy }   (from recordSymptom tool call)
+ *     - "differential_started"  { round, symptoms_so_far[] }
+ *     - "differential"          { round, candidates[], next_question }
+ *     - "scores"                full DAM payload (per_chunk, raw, label, margin, wpm)
+ * ============================================================ */
+
+const PATIENT = {
+  name: "Jordan Reyes",
+  mrn: "MRN-738201",
+  dob: "1994-04-12",
+  age: 31,
+};
+
+/* ---------- INITIAL TRIAGE CALL (Day 0) ---------- */
+const TRIAGE_CALL = {
+  call_id: "triage_0d4f9a1b22e3",
+  agent: "triage",
+  date: "2026-05-16",
+  day: 0,
+  duration_seconds: 312.8,
+  events: [
+    { role: "system", text: "Call started · agent: triage" },
+
+    { role: "agent",  text: "Hi, I'm Eva from AtLegionX. How are you feeling today?" },
+    { role: "caller", text: "Uh, honestly? Not great. I've been kind of down for a while now and a friend suggested I call this line." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+      empathy: "I'm really glad you reached out — and please thank your friend for me too.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 1,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 1,
+      candidates: [
+        "Major Depressive Disorder",
+        "Persistent Depressive Disorder",
+        "Generalized Anxiety Disorder",
+        "Adjustment Disorder with Depressed Mood",
+      ],
+      next_question: "How long have you been feeling this way?",
+    }},
+
+    { role: "agent",  text: "I'm really glad you reached out — and please thank your friend for me too. How long have you been feeling this way?" },
+    { role: "caller", text: "About three weeks. Maybe a little longer. The mornings are the worst — I just lie there." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+      empathy: "Three weeks of mornings like that is exhausting.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 2,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 2,
+      candidates: [
+        "Major Depressive Disorder",
+        "Persistent Depressive Disorder",
+        "Adjustment Disorder with Depressed Mood",
+      ],
+      next_question: "Have you lost interest in things you usually enjoy?",
+    }},
+
+    { role: "agent",  text: "Three weeks of mornings like that is exhausting. Have you lost interest in things you usually enjoy?" },
+    { role: "caller", text: "Yeah. I play hockey on Tuesday nights with the same guys for like five years and I just... skipped the last three weeks. Didn't even want to text them." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+      empathy: "That hockey night clearly means a lot — skipping it three weeks in a row sounds really hard.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 3,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+        "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 3,
+      candidates: [
+        "Major Depressive Disorder",
+        "Persistent Depressive Disorder",
+      ],
+      next_question: "How has your sleep been over those weeks?",
+    }},
+
+    { role: "agent",  text: "That hockey night clearly means a lot — skipping it three weeks in a row sounds really hard. How has your sleep been over those weeks?" },
+    { role: "caller", text: "Terrible. I fall asleep okay but I wake up at like three in the morning and just lie there 'til the alarm. Maybe four hours total a night." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports terminal insomnia — falling asleep without difficulty but waking around 3 AM nightly and unable to return to sleep, with total sleep of approximately four hours per night.",
+      empathy: "Four hours night after night — no wonder the mornings feel so heavy.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 4,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+        "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+        "Patient reports terminal insomnia — falling asleep without difficulty but waking around 3 AM nightly and unable to return to sleep, with total sleep of approximately four hours per night.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 4,
+      candidates: [
+        "Major Depressive Disorder",
+        "Persistent Depressive Disorder",
+      ],
+      next_question: "Has your appetite or weight changed?",
+    }},
+
+    { role: "agent",  text: "Four hours night after night — no wonder the mornings feel so heavy. Has your appetite or weight changed?" },
+    { role: "caller", text: "Yeah, I just... I'm not hungry. I skip lunch most days. My pants are looser. Maybe five or six pounds off." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports significant decreased appetite, skipping lunch on most days, with associated unintentional weight loss of approximately 5-6 pounds, noticed as looser-fitting clothes.",
+      empathy: "Losing your appetite on top of the rest is a lot to carry.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 5,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+        "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+        "Patient reports terminal insomnia — falling asleep without difficulty but waking around 3 AM nightly and unable to return to sleep, with total sleep of approximately four hours per night.",
+        "Patient reports significant decreased appetite, skipping lunch on most days, with associated unintentional weight loss of approximately 5-6 pounds, noticed as looser-fitting clothes.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 5,
+      candidates: [
+        "Major Depressive Disorder",
+      ],
+      next_question: "Are you having trouble concentrating or making decisions?",
+    }},
+
+    { role: "agent",  text: "Losing your appetite on top of the rest is a lot to carry. Are you having trouble concentrating or making decisions?" },
+    { role: "caller", text: "Oh god, yeah. I'm a developer and I'm just... I'll read the same Slack message like five times and still not know what they want. PRs are stacking up." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient reports significant cognitive impairment affecting work performance — describes re-reading the same Slack messages five times without comprehension, with pending pull requests accumulating. Patient identifies as a software developer.",
+      empathy: "That kind of mental fog at work is so frustrating, especially when the work needs your full focus.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 6,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+        "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+        "Patient reports terminal insomnia — falling asleep without difficulty but waking around 3 AM nightly and unable to return to sleep, with total sleep of approximately four hours per night.",
+        "Patient reports significant decreased appetite, skipping lunch on most days, with associated unintentional weight loss of approximately 5-6 pounds, noticed as looser-fitting clothes.",
+        "Patient reports significant cognitive impairment affecting work performance — describes re-reading the same Slack messages five times without comprehension, with pending pull requests accumulating. Patient identifies as a software developer.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 6,
+      candidates: [
+        "Major Depressive Disorder",
+      ],
+      next_question: "I want to ask one more thing — have you had any thoughts of harming yourself, or that life isn't worth living?",
+    }},
+
+    { role: "agent",  text: "That kind of mental fog at work is so frustrating, especially when the work needs your full focus. I want to ask one more thing — have you had any thoughts of harming yourself, or that life isn't worth living?" },
+    { role: "caller", text: "No, nothing like that. I mean — sometimes I think it'd be easier if I just didn't have to do all this. But no plan, no... nothing like that. Just tired." },
+
+    { role: "metadata", data: {
+      kind: "symptom",
+      description: "Patient denies active suicidal ideation, denies any plan or intent, but endorses passive death-related thoughts — describes occasional thoughts that 'it would be easier if I just didn't have to do all this' attributed to exhaustion rather than wish to die. No prior attempts mentioned.",
+      empathy: "Thank you for being honest with me about that — it really helps me make sure you get the right support.",
+    }},
+    { role: "metadata", data: {
+      kind: "differential_started",
+      round: 7,
+      symptoms_so_far: [
+        "Patient reports feeling persistently down for an unspecified extended period, and is calling at the suggestion of a friend — indicating an external prompt to seek help.",
+        "Patient reports persistent low mood for approximately three weeks, possibly longer, with mornings being especially difficult and difficulty getting out of bed.",
+        "Patient reports marked anhedonia — has skipped a longstanding weekly hockey game (five-year tradition with the same teammates) for three consecutive weeks and has avoided social contact with teammates.",
+        "Patient reports terminal insomnia — falling asleep without difficulty but waking around 3 AM nightly and unable to return to sleep, with total sleep of approximately four hours per night.",
+        "Patient reports significant decreased appetite, skipping lunch on most days, with associated unintentional weight loss of approximately 5-6 pounds, noticed as looser-fitting clothes.",
+        "Patient reports significant cognitive impairment affecting work performance — describes re-reading the same Slack messages five times without comprehension, with pending pull requests accumulating. Patient identifies as a software developer.",
+        "Patient denies active suicidal ideation, denies any plan or intent, but endorses passive death-related thoughts — describes occasional thoughts that 'it would be easier if I just didn't have to do all this' attributed to exhaustion rather than wish to die. No prior attempts mentioned.",
+      ],
+    }},
+    { role: "metadata", data: {
+      kind: "differential",
+      round: 7,
+      candidates: [
+        "Major Depressive Disorder",
+      ],
+      next_question: "I'm going to flag this for a clinician on our team to call you back today. Is there anything else you want me to make sure they know?",
+    }},
+
+    { role: "agent",  text: "Thank you for being honest with me about that — it really helps me make sure you get the right support. I'm going to flag this for a clinician on our team to call you back today. Is there anything else you want me to make sure they know?" },
+    { role: "caller", text: "No, I think that's it. Thanks for listening." },
+
+    { role: "agent",  text: "Of course. We'll be in touch within the next hour." },
+
+    { role: "system", text: "Call ended" },
+
+    /* Final DAM analysis — initial baseline */
+    { role: "metadata", data: {
+      kind: "scores",
+      per_chunk: [
+        { depression_raw: 0.4821, depression: 2, anxiety_raw: 0.1418, anxiety: 2 },
+        { depression_raw: 0.5103, depression: 2, anxiety_raw: 0.0894, anxiety: 2 },
+        { depression_raw: 0.3917, depression: 2, anxiety_raw: 0.1652, anxiety: 2 },
+        { depression_raw: 0.4504, depression: 2, anxiety_raw: 0.0721, anxiety: 2 },
+        { depression_raw: 0.5612, depression: 2, anxiety_raw: 0.2014, anxiety: 2 },
+        { depression_raw: 0.3208, depression: 2, anxiety_raw: 0.0463, anxiety: 2 },
+        { depression_raw: 0.3984, depression: 2, anxiety_raw: 0.1147, anxiety: 2 },
+        { depression_raw: 0.4017, depression: 2, anxiety_raw: 0.1308, anxiety: 2 },
+      ],
+      depression: 2,
+      depression_raw: 0.4271,
+      depression_label: "severe",
+      depression_margin: 0.2871,
+      anxiety: 2,
+      anxiety_raw: 0.1202,
+      anxiety_label: "moderate",
+      anxiety_margin: 0.1502,
+      indeterminate: false,
+      indeterminate_margin: 0.05,
+      n_chunks: 8,
+      speech_seconds: 168.4,
+      caller_word_count: 268,
+      speaking_rate_wpm: 95.4,
+    }},
+  ],
+};
+
+/* ---------- 8 CHECK-IN CALLS ---------- */
+const CHECKIN_CALLS = [
+  {
+    call_id: "checkin_d3_e8a1f02c",
+    agent: "checkin",
+    date: "2026-05-19",
+    day: 3,
+    summary: "Three days on sertraline. No relief; fatigue worsening.",
+    duration_seconds: 132.4,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan, it's Eva from AtLegionX — your check-in. Is now an okay time to talk for a couple of minutes?" },
+      { role: "caller", text: "Yeah. I'm not doing anything anyway." },
+      { role: "agent",  text: "How have things been since we last talked?" },
+      { role: "caller", text: "Worse, honestly. I started the sertraline like you said. Three days in. I just feel... dead. Worse than before." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports subjective worsening of depressive symptoms three days into sertraline 50mg initiation, describing feeling 'dead' and worse than prior to medication start, consistent with early SSRI adjustment period.",
+        empathy: "Three days in is brutal — the medication hasn't had time to help yet and your body is adjusting.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 8,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance.",
+          "Patient reports marked anhedonia — skipped longstanding hockey commitment three weeks running.",
+          "Patient reports terminal insomnia with ~4 hours total sleep nightly.",
+          "Patient reports significant appetite loss with 5-6 lb unintentional weight loss.",
+          "Patient reports cognitive impairment affecting work performance.",
+          "Patient reports passive death thoughts without active ideation, plan, or intent.",
+          "Patient reports subjective worsening of depressive symptoms three days into sertraline 50mg initiation, describing feeling 'dead' and worse than prior to medication start, consistent with early SSRI adjustment period.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 8,
+        candidates: [
+          "Major Depressive Disorder",
+        ],
+        next_question: "Have you noticed nausea or any other physical side effects?",
+      }},
+
+      { role: "agent",  text: "Three days in is brutal — the medication hasn't had time to help yet and your body is adjusting. Have you noticed nausea or any other physical side effects?" },
+      { role: "caller", text: "Yeah. Nausea all morning. I threw up yesterday. And I'm down another two pounds." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports sertraline-attributable nausea with one emesis episode and additional 2-pound weight loss over 3 days, compounding prior depressive anorexia.",
+        empathy: "Throwing up on top of everything else — that's miserable.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 9,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance.",
+          "Patient reports marked anhedonia — skipped longstanding hockey commitment three weeks running.",
+          "Patient reports terminal insomnia with ~4 hours total sleep nightly.",
+          "Patient reports significant appetite loss with 5-6 lb unintentional weight loss.",
+          "Patient reports cognitive impairment affecting work performance.",
+          "Patient reports passive death thoughts without active ideation, plan, or intent.",
+          "Patient reports subjective worsening of depressive symptoms three days into sertraline 50mg initiation, describing feeling 'dead' and worse than prior to medication start, consistent with early SSRI adjustment period.",
+          "Patient reports sertraline-attributable nausea with one emesis episode and additional 2-pound weight loss over 3 days, compounding prior depressive anorexia.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 9,
+        candidates: [
+          "Major Depressive Disorder",
+        ],
+        next_question: "I'll make sure your prescriber sees this today. Anything else?",
+      }},
+
+      { role: "agent",  text: "Throwing up on top of everything else — that's miserable. I'll make sure your prescriber sees this today. Anything else?" },
+      { role: "caller", text: "No. Just want to sleep." },
+      { role: "agent",  text: "Then sleep. We'll talk Sunday. Call us before then if anything changes." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.4612, depression: 2, anxiety_raw: 0.1418, anxiety: 2 },
+          { depression_raw: 0.4318, depression: 2, anxiety_raw: 0.1182, anxiety: 2 },
+          { depression_raw: 0.4807, depression: 2, anxiety_raw: 0.1614, anxiety: 2 },
+          { depression_raw: 0.4521, depression: 2, anxiety_raw: 0.1308, anxiety: 2 },
+        ],
+        depression: 2,
+        depression_raw: 0.4565,
+        depression_label: "severe",
+        depression_margin: 0.3165,
+        anxiety: 2,
+        anxiety_raw: 0.1381,
+        anxiety_label: "moderate",
+        anxiety_margin: 0.1681,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 4,
+        speech_seconds: 44.8,
+        caller_word_count: 73,
+        speaking_rate_wpm: 97.8,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d7_3c19b04a",
+    agent: "checkin",
+    date: "2026-05-23",
+    day: 7,
+    summary: "Anxiety spiking. Worry-spirals at night, isolating harder.",
+    duration_seconds: 154.7,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan, Eva again — checking in. How are you doing?" },
+      { role: "caller", text: "Worse. The crying is constant. I cried at my laptop yesterday. I cried in the shower this morning. I can't make it stop." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports marked emotional dysregulation with frequent uncontrollable crying spells at work and during routine activities, indicating worsening depressive symptoms one week into SSRI trial.",
+        empathy: "Crying you can't stop is exhausting, and it's not a sign you're doing anything wrong.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 10,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance.",
+          "Patient reports marked anhedonia — skipped longstanding hockey commitment three weeks running.",
+          "Patient reports terminal insomnia with ~4 hours total sleep nightly.",
+          "Patient reports significant appetite loss with 5-6 lb unintentional weight loss.",
+          "Patient reports cognitive impairment affecting work performance.",
+          "Patient reports passive death thoughts without active ideation, plan, or intent.",
+          "Patient reports subjective worsening of depressive symptoms three days into sertraline 50mg initiation.",
+          "Patient reports sertraline-attributable nausea with one emesis episode and additional 2-pound weight loss over 3 days.",
+          "Patient reports marked emotional dysregulation with frequent uncontrollable crying spells at work and during routine activities, indicating worsening depressive symptoms one week into SSRI trial.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 10,
+        candidates: [
+          "Major Depressive Disorder (with anxious distress)",
+          "Major Depressive Disorder",
+        ],
+        next_question: "Are you having worry-thoughts you can't shut off?",
+      }},
+
+      { role: "agent",  text: "Crying you can't stop is exhausting, and it's not a sign you're doing anything wrong. Are you having worry-thoughts you can't shut off?" },
+      { role: "caller", text: "Constantly. I lie awake at night running the same loop — what if the meds don't work, what if this just keeps getting worse, what if I lose my job. My brain won't let me sleep because of it." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports new prominent worry-based rumination — circular, future-focused, uncontrollable thoughts at night about treatment failure, worsening illness, and job loss, interfering with sleep onset and quality.",
+        empathy: "That kind of nighttime spiral is its own torture.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 11,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance.",
+          "Patient reports marked anhedonia — skipped longstanding hockey commitment three weeks running.",
+          "Patient reports terminal insomnia with ~4 hours total sleep nightly.",
+          "Patient reports significant appetite loss with 5-6 lb unintentional weight loss.",
+          "Patient reports cognitive impairment affecting work performance.",
+          "Patient reports passive death thoughts without active ideation, plan, or intent.",
+          "Patient reports subjective worsening of depressive symptoms three days into sertraline 50mg initiation.",
+          "Patient reports sertraline-attributable nausea with one emesis episode and additional 2-pound weight loss over 3 days.",
+          "Patient reports marked emotional dysregulation with frequent uncontrollable crying spells.",
+          "Patient reports new prominent worry-based rumination — circular, future-focused, uncontrollable thoughts at night about treatment failure, worsening illness, and job loss.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 11,
+        candidates: [
+          "Major Depressive Disorder (with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Major Depressive Disorder",
+        ],
+        next_question: "Are you still going in to the office?",
+      }},
+
+      { role: "agent",  text: "That kind of nighttime spiral is its own torture. Are you still going in to the office?" },
+      { role: "caller", text: "I worked from home all week. I turned down lunch twice. I let my sister's call go to voicemail. I just... can't deal with anyone right now." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports escalating social withdrawal — declined two coworker lunch invitations, avoided sister's phone call, working entirely from home to minimize contact, marking progression from low engagement to active avoidance.",
+        empathy: "Cutting yourself off feels safer in the moment, but it adds to how heavy things feel.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 12,
+        candidates: [
+          "Major Depressive Disorder (with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Major Depressive Disorder",
+        ],
+        next_question: "I'm going to ask your prescriber to consider an adjustment. Can we set up a Wednesday check-in this week instead of Sunday?",
+      }},
+
+      { role: "agent",  text: "Cutting yourself off feels safer in the moment, but it adds to how heavy things feel. I'm going to ask your prescriber to consider an adjustment. Can we set up a Wednesday check-in this week instead of Sunday?" },
+      { role: "caller", text: "Yeah. Sure." },
+      { role: "agent",  text: "Okay. Wednesday morning. Take care, Jordan." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.4912, depression: 2, anxiety_raw: 0.1812, anxiety: 2 },
+          { depression_raw: 0.4718, depression: 2, anxiety_raw: 0.2014, anxiety: 3 },
+          { depression_raw: 0.5108, depression: 2, anxiety_raw: 0.1908, anxiety: 2 },
+          { depression_raw: 0.4607, depression: 2, anxiety_raw: 0.1714, anxiety: 2 },
+          { depression_raw: 0.4818, depression: 2, anxiety_raw: 0.1817, anxiety: 2 },
+        ],
+        depression: 2,
+        depression_raw: 0.4833,
+        depression_label: "severe",
+        depression_margin: 0.3433,
+        anxiety: 2,
+        anxiety_raw: 0.1853,
+        anxiety_label: "moderate",
+        anxiety_margin: 0.0653,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 5,
+        speech_seconds: 58.2,
+        caller_word_count: 109,
+        speaking_rate_wpm: 112.4,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d10_b71fc28d",
+    agent: "checkin",
+    date: "2026-05-26",
+    day: 10,
+    summary: "Unexpected energy after 3 sleepless nights. Bipolar II enters differential.",
+    duration_seconds: 168.5,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hey Jordan, Eva again. How are you doing?" },
+      { role: "caller", text: "Weird, actually. Three nights in a row this week I barely slept — like two, three hours — but I wasn't tired. I had energy. I cleaned my whole apartment yesterday at five AM." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports three consecutive nights of significantly reduced sleep (2-3 hours per night) without daytime fatigue or impairment — paradoxically feeling more energy than baseline. Reports productive activity at 5 AM. This pattern is a textbook decreased-need-for-sleep signal and warrants careful screening for hypomanic/manic features.",
+        empathy: "That's a really notable change — sleeping less but feeling more energized is something I want to make sure your team is tracking.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 13,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance (intake).",
+          "Patient reports marked anhedonia — skipped longstanding hockey commitment three weeks running.",
+          "Patient reports terminal insomnia with ~4 hours total sleep nightly (intake).",
+          "Patient reports significant appetite loss with 5-6 lb unintentional weight loss.",
+          "Patient reports cognitive impairment affecting work performance.",
+          "Patient reports passive death thoughts without active ideation, plan, or intent.",
+          "Patient reports SSRI-attributable nausea and additional 2-pound weight loss.",
+          "Patient reports marked emotional dysregulation with frequent uncontrollable crying spells.",
+          "Patient reports new prominent worry-based rumination at night.",
+          "Patient reports escalating social withdrawal.",
+          "Patient reports three consecutive nights of significantly reduced sleep (2-3 hours per night) without daytime fatigue or impairment — paradoxically feeling more energy than baseline. Reports productive activity at 5 AM. Decreased-need-for-sleep signal warranting hypomanic/manic features screening.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 13,
+        candidates: [
+          "Major Depressive Disorder (with anxious distress)",
+          "Bipolar II Disorder (rule-out)",
+          "Generalized Anxiety Disorder",
+        ],
+        next_question: "When you say you had energy — was your mood elevated too, or just normal?",
+      }},
+
+      { role: "agent",  text: "That's a really notable change — sleeping less but feeling more energized is something I want to make sure your team is tracking. When you say you had energy — was your mood elevated too, or just normal?" },
+      { role: "caller", text: "Honestly? Better than normal. Like I felt good. I knocked out a feature at work that's been blocked for a month. I texted four people I hadn't talked to in weeks. My head was finally clear. I thought the meds were finally working." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports concurrent mood elevation alongside decreased sleep need, with notable behavioral activation — completed a previously stalled work feature, initiated outreach to four lapsed social contacts. Subjective experience interpreted as 'medication working' but pattern of sudden mood elevation + reduced sleep need + goal-directed activity after SSRI initiation warrants screening for SSRI-induced switch.",
+        empathy: "I'm glad you had some clearer days — and I want to be honest with you about what we look for when this pattern shows up.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 14,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for approximately three weeks with morning predominance.",
+          "Patient reports marked anhedonia for previously valued activities.",
+          "Patient reports terminal insomnia at intake (~4 hr/night).",
+          "Patient reports significant appetite loss with cumulative ~8 lb weight loss.",
+          "Patient reports cognitive impairment affecting work.",
+          "Patient reports passive death thoughts at intake.",
+          "Patient reports SSRI-attributable nausea.",
+          "Patient reports emotional dysregulation with frequent crying spells (week 1).",
+          "Patient reports worry-based rumination at night (week 1).",
+          "Patient reports social withdrawal escalation (week 1).",
+          "Patient reports three consecutive nights of reduced sleep (2-3 hr) without daytime fatigue — decreased need for sleep signal.",
+          "Patient reports concurrent mood elevation alongside decreased sleep need, with goal-directed activity — completed stalled work feature, outreach to four lapsed contacts. SSRI-induced switch must be ruled out.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 14,
+        candidates: [
+          "Bipolar II Disorder",
+          "Major Depressive Disorder (with anxious distress)",
+          "Generalized Anxiety Disorder",
+        ],
+        next_question: "Have you ever had a stretch like this before — even briefly — where you needed less sleep and felt unusually energetic?",
+      }},
+
+      { role: "agent",  text: "I'm glad you had some clearer days — and I want to be honest with you about what we look for when this pattern shows up. Have you ever had a stretch like this before — even briefly — where you needed less sleep and felt unusually energetic?" },
+      { role: "caller", text: "Maybe? In college I'd pull these stretches where I'd code for 48 hours straight and feel amazing. Everyone did. I never thought about it." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient endorses a possible historical episode in college of multi-day reduced sleep with sustained energy and elevated mood, previously attributed to normal academic intensity. This retrospective hint of a prior hypomanic episode elevates Bipolar II suspicion and warrants psychiatric assessment.",
+        empathy: "Thank you for telling me that — it's a useful piece of history for your psychiatrist.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 14,
+        candidates: [
+          "Bipolar II Disorder",
+          "Bipolar I Disorder (rule-out)",
+          "Major Depressive Disorder",
+        ],
+        next_question: "I'm flagging this for your psychiatrist today. Can you avoid any big decisions until they see you?",
+      }},
+
+      { role: "agent",  text: "Thank you for telling me that — it's a useful piece of history for your psychiatrist. I'm flagging this for your psychiatrist today. Can you avoid any big decisions until they see you?" },
+      { role: "caller", text: "Yeah, sure. Whatever." },
+      { role: "agent",  text: "I'll talk to you tomorrow. Take care, Jordan." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.1812, depression: 1, anxiety_raw: -0.0114, anxiety: 2 },
+          { depression_raw: 0.0917, depression: 1, anxiety_raw: -0.0808, anxiety: 1 },
+          { depression_raw: 0.1208, depression: 1, anxiety_raw: -0.0512, anxiety: 1 },
+          { depression_raw: 0.1408, depression: 1, anxiety_raw: -0.0316, anxiety: 1 },
+          { depression_raw: 0.0617, depression: 1, anxiety_raw: -0.1102, anxiety: 1 },
+        ],
+        depression: 1,
+        depression_raw: 0.1192,
+        depression_label: "mild-moderate",
+        depression_margin: 0.0208,
+        anxiety: 1,
+        anxiety_raw: -0.0570,
+        anxiety_label: "mild",
+        anxiety_margin: 0.0830,
+        indeterminate: true,
+        indeterminate_margin: 0.05,
+        n_chunks: 5,
+        speech_seconds: 56.4,
+        caller_word_count: 134,
+        speaking_rate_wpm: 142.6,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d14_29d8e147",
+    agent: "checkin",
+    date: "2026-05-30",
+    day: 14,
+    summary: "Full manic episode — pressured speech, impulsive $14k purchase, Bipolar I top diagnosis.",
+    duration_seconds: 224.6,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan, Eva here. How are you?" },
+      { role: "caller", text: "Eva I am AMAZING I'm doing the best I've done in years I have so much to tell you I started three new projects this week one of them is going to be huge I think I might actually quit and do it full time also I bought a motorcycle which I know sounds wild but it's perfect and I got it for fourteen thousand which is a steal —" },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient presents with marked pressured speech (long uninterrupted utterance, rapid pace, flight-of-ideas pattern jumping across multiple topics: project ideation, employment intent, recent $14,000 motorcycle purchase). Acute warning sign for full manic episode.",
+        empathy: "Slow down with me for a second — I want to make sure I'm hearing all of this.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 15,
+        symptoms_so_far: [
+          "Patient reports persistent low mood for ~3 weeks at intake.",
+          "Patient reports marked anhedonia at intake.",
+          "Patient reports terminal insomnia at intake (~4 hr/night).",
+          "Patient reports ~8 lb cumulative weight loss.",
+          "Patient reports cognitive impairment at intake.",
+          "Patient reports passive death thoughts at intake.",
+          "Patient reports SSRI-attributable nausea early.",
+          "Patient reports emotional dysregulation week 1.",
+          "Patient reports worry-based rumination week 1.",
+          "Patient reports social withdrawal week 1.",
+          "Patient reports decreased need for sleep emerging day ~10 with concurrent mood elevation and behavioral activation.",
+          "Patient endorses possible historical hypomanic episode in college.",
+          "Patient presents with marked pressured speech, flight of ideas, recent $14,000 impulsive motorcycle purchase. Acute warning for full manic episode.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 15,
+        candidates: [
+          "Bipolar I Disorder (current manic episode)",
+          "Bipolar II Disorder",
+          "Substance/Medication-Induced Mood Disorder (SSRI activation)",
+        ],
+        next_question: "Slow down with me for a second — how much have you been sleeping the last week?",
+      }},
+
+      { role: "agent",  text: "Slow down with me for a second — I want to make sure I'm hearing all of this. How much have you been sleeping the last week?" },
+      { role: "caller", text: "Three hours. Maybe four. Doesn't matter. I don't need it. Sleep is honestly a waste at this point I have so much to do, I redid my whole apartment Sunday it looks incredible." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient confirms ~5-day period of sustained 3-4 hour sleep without subjective need for more. Describes sleep as a 'waste'. Reports impulsive redecorating of entire apartment in single night. Consistent with reduced need for sleep + increased goal-directed activity (DSM-5 manic criterion B items 2 and 6).",
+        empathy: "Five days of three-hour sleep with this much going on is really significant.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 16,
+        symptoms_so_far: [
+          "Persistent low mood × 3 weeks at intake.",
+          "Anhedonia at intake.",
+          "Terminal insomnia ~4 hr/night at intake.",
+          "~8 lb cumulative weight loss.",
+          "Cognitive impairment at intake.",
+          "Passive death thoughts at intake.",
+          "SSRI-attributable nausea early.",
+          "Crying spells week 1.",
+          "Worry-rumination week 1.",
+          "Social withdrawal week 1.",
+          "Decreased need for sleep + mood elevation day 10.",
+          "Possible historical hypomanic episode in college.",
+          "Pressured speech, flight of ideas, $14k impulsive motorcycle purchase day 14.",
+          "Sustained 5-day period of 3-4 hr sleep without subjective need + impulsive overnight apartment redecorating. Manic criterion B items 2 and 6 met.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 16,
+        candidates: [
+          "Bipolar I Disorder (current manic episode)",
+          "Substance/Medication-Induced Mood Disorder (SSRI-induced manic switch)",
+          "Bipolar II Disorder",
+        ],
+        next_question: "Have you done anything else this week that felt out of character for you?",
+      }},
+
+      { role: "agent",  text: "Five days of three-hour sleep with this much going on is really significant. Have you done anything else this week that felt out of character for you?" },
+      { role: "caller", text: "I called my manager and basically told him the team's been holding me back, I emailed a guy I went on two dates with in 2019 to see if he wanted to grab a drink, I signed up for a marathon, I think the motorcycle counts, I also drafted my resignation letter but didn't send it yet because the coach told me to wait, oh and I started a Substack." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports multiple impulsive high-consequence behaviors across single week: confrontation with manager, romantic outreach to former partner, marathon registration, drafted resignation letter, started new public writing project. Marked acceleration in goal-directed activity with poor consequence-evaluation. DSM-5 criterion B items 4, 6, 7 fulfilled.",
+        empathy: "That is a lot in one week. I'm really glad you have a coach helping you think through some of these.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 17,
+        candidates: [
+          "Bipolar I Disorder (current manic episode)",
+          "Substance/Medication-Induced Mood Disorder (SSRI-induced switch)",
+          "Major Depressive Disorder (recurrent, with mixed/manic features)",
+        ],
+        next_question: "I need to get this in front of your psychiatrist today, not tomorrow. Are you safe to wait until they call you?",
+      }},
+
+      { role: "agent",  text: "That is a lot in one week. I'm really glad you have a coach helping you think through some of these. I need to get this in front of your psychiatrist today, not tomorrow. Are you safe to wait until they call you?" },
+      { role: "caller", text: "I'm great. I told you I'm great. I don't know why everyone keeps asking that." },
+      { role: "agent",  text: "I hear you. Just hang tight for the call — they'll reach you within the hour." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: -0.4612, depression: 0, anxiety_raw: -0.6018, anxiety: 1 },
+          { depression_raw: -0.4918, depression: 0, anxiety_raw: -0.6512, anxiety: 1 },
+          { depression_raw: -0.5217, depression: 0, anxiety_raw: -0.6314, anxiety: 1 },
+          { depression_raw: -0.4408, depression: 0, anxiety_raw: -0.5817, anxiety: 1 },
+          { depression_raw: -0.4708, depression: 0, anxiety_raw: -0.6014, anxiety: 1 },
+          { depression_raw: -0.5102, depression: 0, anxiety_raw: -0.6618, anxiety: 1 },
+        ],
+        depression: 0,
+        depression_raw: -0.4828,
+        depression_label: "none",
+        depression_margin: 0.6402,
+        anxiety: 1,
+        anxiety_raw: -0.6216,
+        anxiety_label: "mild",
+        anxiety_margin: 0.2016,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 6,
+        speech_seconds: 92.4,
+        caller_word_count: 336,
+        speaking_rate_wpm: 218.2,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d17_5e6abc11",
+    agent: "checkin",
+    date: "2026-06-02",
+    day: 17,
+    summary: "Sertraline held. Still activated but irritability + agitation emerging — mixed features.",
+    duration_seconds: 198.7,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan, Eva checking in. I know you talked to Dr. Patel after our last call — how are things now?" },
+      { role: "caller", text: "She held the sertraline. Just stopped it. Three days ago. I'm fine. I told her I'm fine but she put me on a watch." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Psychiatrist (Dr. Patel) discontinued sertraline on day 14 in response to acute activation pattern. Patient is now 3 days post-discontinuation. Patient minimizes clinical concern but acknowledges psychiatrist initiated heightened monitoring.",
+        empathy: "I'm glad she made that call quickly. How are you feeling right now, in your body?",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 18,
+        symptoms_so_far: [
+          "All prior intake symptoms (low mood × 3 weeks, anhedonia, terminal insomnia, weight loss, cognitive impairment, passive death thoughts).",
+          "Crying spells week 1, worry-rumination, social withdrawal.",
+          "Day 10: decreased need for sleep + mood elevation + behavioral activation.",
+          "Possible historical hypomanic episode.",
+          "Day 14: full pressured speech, flight of ideas, $14k motorcycle purchase, marathon registration, resignation drafted, romantic outreach, started Substack — manic criterion B items 4, 6, 7 fulfilled.",
+          "Day 14: sustained 5-day 3-4 hr sleep without subjective need; impulsive apartment redecorating.",
+          "Sertraline discontinued day 14 by psychiatrist; patient under heightened monitoring.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 18,
+        candidates: [
+          "Bipolar I Disorder (current manic episode, with mixed features specifier)",
+          "Substance/Medication-Induced Mood Disorder (SSRI-induced manic switch)",
+          "Bipolar II Disorder",
+        ],
+        next_question: "I'm glad she made that call quickly. How are you feeling right now, in your body?",
+      }},
+
+      { role: "agent",  text: "I'm glad she made that call quickly. How are you feeling right now, in your body?" },
+      { role: "caller", text: "Tight. Like I can't sit still. My jaw hurts from clenching. And I've been snapping at everyone — my mom called yesterday and I hung up on her. I never do that." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports new psychomotor agitation (cannot sit still, jaw clenching) and marked irritability (hung up on mother during phone call, atypical for patient). Mixed features now clearly present alongside continued energy state.",
+        empathy: "Snapping at your mom isn't who you are — and I think your body is telling you something is still off.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 19,
+        symptoms_so_far: [
+          "All prior symptoms through day 14 manic episode.",
+          "Sertraline discontinued day 14 by psychiatrist.",
+          "Day 17: psychomotor agitation, jaw clenching, marked irritability with atypical interpersonal aggression (hung up on mother). Mixed features now present.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 19,
+        candidates: [
+          "Bipolar I Disorder (current manic episode, with mixed features)",
+          "Substance/Medication-Induced Mood Disorder",
+          "Major Depressive Disorder (recurrent, with mixed features)",
+        ],
+        next_question: "And the motorcycle, the resignation letter — what's happening with those?",
+      }},
+
+      { role: "agent",  text: "Snapping at your mom isn't who you are — and I think your body is telling you something is still off. And the motorcycle, the resignation letter — what's happening with those?" },
+      { role: "caller", text: "I didn't send the letter. The motorcycle I can't return. Coach said don't ride it for a few weeks. I'm... starting to think the things I felt last week weren't real. Or they were but they weren't right. I don't know how to say it." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient demonstrates emerging insight into recent activated state — recognizes felt experiences during manic episode were 'not real' or 'not right', expresses uncertainty and self-questioning. Motorcycle non-returnable; resignation letter intentionally unsent. Coach providing external check on impulsive action.",
+        empathy: "What you just said takes a lot of self-awareness — and your coach catching the resignation letter is huge.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 19,
+        candidates: [
+          "Bipolar I Disorder (current manic episode, with mixed features)",
+          "Substance/Medication-Induced Mood Disorder",
+          "Major Depressive Disorder (recurrent, with mixed features)",
+        ],
+        next_question: "Are you sleeping at all? Eating?",
+      }},
+
+      { role: "agent",  text: "What you just said takes a lot of self-awareness — and your coach catching the resignation letter is huge. Are you sleeping at all? Eating?" },
+      { role: "caller", text: "Four hours-ish. Not really hungry. The energy thing is fading. I feel more tired than I was three days ago." },
+      { role: "agent",  text: "Okay. Hold on — Dr. Patel is going to want to see you in the next 48 hours. I'll book it. Stay off the motorcycle." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: -0.3018, depression: 0, anxiety_raw: -0.4214, anxiety: 1 },
+          { depression_raw: -0.3417, depression: 0, anxiety_raw: -0.4518, anxiety: 1 },
+          { depression_raw: -0.2812, depression: 0, anxiety_raw: -0.4117, anxiety: 1 },
+          { depression_raw: -0.3208, depression: 0, anxiety_raw: -0.4318, anxiety: 1 },
+          { depression_raw: -0.3318, depression: 0, anxiety_raw: -0.4412, anxiety: 1 },
+        ],
+        depression: 0,
+        depression_raw: -0.3155,
+        depression_label: "none",
+        depression_margin: 0.4755,
+        anxiety: 1,
+        anxiety_raw: -0.4316,
+        anxiety_label: "mild",
+        anxiety_margin: 0.3916,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 5,
+        speech_seconds: 78.6,
+        caller_word_count: 256,
+        speaking_rate_wpm: 195.4,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d21_a39f7e02",
+    agent: "checkin",
+    date: "2026-06-06",
+    day: 21,
+    summary: "Hard crash. Bipolar ruled out — SSRI-induced switch. MDD returns to top; GAD comorbid.",
+    duration_seconds: 207.3,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hey Jordan, Eva. How are things?" },
+      { role: "caller", text: "Bad. Really bad. Worse than before any of this started." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports severe mood crash one week after sertraline discontinuation, with subjective severity exceeding pre-treatment baseline. Marked depressive shift following resolution of activated state.",
+        empathy: "I'm so sorry. Walk me through this week — when did the shift happen?",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 20,
+        symptoms_so_far: [
+          "All intake symptoms.",
+          "Week 1 worsening (crying, worry, withdrawal).",
+          "Day 10 first hypomanic signal.",
+          "Day 14 full activation with impulsive behaviors.",
+          "Day 17 mixed features emerging, sertraline discontinued by psychiatrist.",
+          "Day 21: severe mood crash one week post-sertraline-discontinuation, subjective severity exceeding pre-treatment baseline.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 20,
+        candidates: [
+          "Substance/Medication-Induced Mood Disorder (SSRI-induced activation, resolved)",
+          "Major Depressive Disorder (recurrent, severe — relapse post-discontinuation)",
+          "Bipolar I Disorder (rule-out, awaiting psychiatric review)",
+        ],
+        next_question: "I'm so sorry. Walk me through this week — when did the shift happen?",
+      }},
+
+      { role: "agent",  text: "I'm so sorry. Walk me through this week — when did the shift happen?" },
+      { role: "caller", text: "Thursday. I just woke up and the energy was gone. And it didn't come back. I haven't gotten out of bed in like four days except for water. I haven't showered. I don't know what day it is right now." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports abrupt anergic depressive state with onset Thursday (day 17-18); has been bed-bound for ~4 days with neglect of basic self-care including hygiene and orientation to date. Severe psychomotor retardation and behavioral collapse.",
+        empathy: "Four days in bed is the depression making the decisions, not you. You're doing the right thing by being on this call.",
+      }},
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports hypersomnia replacing prior insomnia/decreased sleep need — now sleeping or in bed approximately 14+ hours per day.",
+        empathy: "Sleep that doesn't restore anything is its own exhaustion.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 21,
+        symptoms_so_far: [
+          "All prior symptoms.",
+          "Day 21: severe anergic depressive collapse, 4 days bed-bound, hygiene neglect, disorientation to date.",
+          "Day 21: hypersomnia ~14+ hours/day replacing prior insomnia.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 21,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe)",
+          "Substance/Medication-Induced Mood Disorder (SSRI activation, resolved)",
+          "Generalized Anxiety Disorder",
+        ],
+        next_question: "Has Dr. Patel reached out since the crash started?",
+      }},
+
+      { role: "agent",  text: "Four days in bed is the depression making the decisions, not you. You're doing the right thing by being on this call. Has Dr. Patel reached out since the crash started?" },
+      { role: "caller", text: "Yeah, yesterday. She said the activation last week was probably the SSRI, not real bipolar. So bipolar is off the table, I guess. She's switching me to mirtazapine. Starting tonight. She said the underlying thing is depression and the anxiety, that's what we're treating." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Psychiatrist (Dr. Patel) clinical conclusion following 7-day post-discontinuation observation: activated period day 10-17 attributable to SSRI-induced manic-like switch rather than primary bipolar disorder. Bipolar I/II diagnosis ruled out. Working diagnosis revised to MDD recurrent severe with anxious distress. Medication switch to mirtazapine 15mg initiated.",
+        empathy: "That's a clear answer — and your psychiatrist getting on top of it this fast is what we want.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 22,
+        symptoms_so_far: [
+          "All prior intake and treatment symptoms.",
+          "Day 14-17 activated period, retrospectively classified as SSRI-induced switch (per Dr. Patel day 20).",
+          "Day 21: severe anergic depressive collapse, hypersomnia ~14 hr.",
+          "Day 21: bipolar diagnosis ruled out by psychiatrist; mirtazapine 15mg initiated.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 22,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+        ],
+        next_question: "I'll set up daily check-ins this week, not every few days. Same time tomorrow?",
+      }},
+
+      { role: "agent",  text: "That's a clear answer — and your psychiatrist getting on top of it this fast is what we want. I'll set up daily check-ins this week, not every few days. Same time tomorrow?" },
+      { role: "caller", text: "Yeah. Thanks Eva." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.5418, depression: 2, anxiety_raw: 0.6014, anxiety: 3 },
+          { depression_raw: 0.5217, depression: 2, anxiety_raw: 0.6218, anxiety: 3 },
+          { depression_raw: 0.5612, depression: 2, anxiety_raw: 0.6418, anxiety: 3 },
+          { depression_raw: 0.5318, depression: 2, anxiety_raw: 0.6108, anxiety: 3 },
+          { depression_raw: 0.5108, depression: 2, anxiety_raw: 0.5917, anxiety: 3 },
+          { depression_raw: 0.5408, depression: 2, anxiety_raw: 0.6312, anxiety: 3 },
+        ],
+        depression: 2,
+        depression_raw: 0.5347,
+        depression_label: "severe",
+        depression_margin: 0.3947,
+        anxiety: 3,
+        anxiety_raw: 0.6164,
+        anxiety_label: "severe",
+        anxiety_margin: 0.3164,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 6,
+        speech_seconds: 74.8,
+        caller_word_count: 132,
+        speaking_rate_wpm: 105.9,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d25_e84d29b1",
+    agent: "checkin",
+    date: "2026-06-10",
+    day: 25,
+    summary: "Depression deepening. Panic attacks emerging. Passive SI returning more frequently.",
+    duration_seconds: 189.4,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan. How are you?" },
+      { role: "caller", text: "Worse. The mirtazapine isn't doing anything yet. I know it takes time but... I don't know if I can keep doing this." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports continued depressive worsening on day 4 of mirtazapine; verbalizes uncertainty about capacity to continue ('I don't know if I can keep doing this'). Statement requires assessment as possible passive suicidal ideation versus expression of exhaustion.",
+        empathy: "I hear that. Tell me what you mean when you say you don't know if you can keep doing this.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 23,
+        symptoms_so_far: [
+          "All prior intake and treatment-course symptoms.",
+          "Day 21: bipolar ruled out, MDD recurrent severe + GAD diagnosis established.",
+          "Day 25: continued depressive worsening day 4 of mirtazapine; verbalized uncertainty about capacity to continue — possible passive SI vs exhaustion.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 23,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder (rule-out)",
+        ],
+        next_question: "I hear that. Tell me what you mean when you say you don't know if you can keep doing this.",
+      }},
+
+      { role: "agent",  text: "I hear that. Tell me what you mean when you say you don't know if you can keep doing this." },
+      { role: "caller", text: "Not — not anything I'm going to do. I just mean every day is the same and it's so heavy and I keep thinking what's the point. I keep imagining just disappearing. Not dying. Just not existing for a while." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient endorses recurrent passive death-related thoughts ('what's the point', recurrent imagery of disappearing/not existing) but explicitly denies active suicidal intent or plan when asked directly. Frequency increased from prior 'occasional' (intake) to multiple times daily.",
+        empathy: "Thank you for being honest with me about that. We're going to keep talking through this — and your psychiatrist will hear about it today.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 23,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder (rule-out)",
+        ],
+        next_question: "What about anxiety — anything new in the last few days?",
+      }},
+
+      { role: "agent",  text: "Thank you for being honest with me about that. We're going to keep talking through this — and your psychiatrist will hear about it today. What about anxiety — anything new in the last few days?" },
+      { role: "caller", text: "Two panic attacks. Tuesday and yesterday. Heart racing, couldn't breathe, sweating. Tuesday one lasted twenty minutes. I thought I was having a heart attack." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports two discrete panic attacks in past 4 days: Tuesday episode lasted ~20 minutes with tachycardia, dyspnea, diaphoresis, and somatic misattribution (feared cardiac event). Yesterday's episode briefer. New onset; not present at intake.",
+        empathy: "Twenty minutes of feeling like you're dying is its own trauma. You're not crazy for feeling rattled.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 24,
+        symptoms_so_far: [
+          "All prior symptoms.",
+          "Day 25: continued depressive worsening on mirtazapine day 4.",
+          "Day 25: recurrent passive death thoughts increased to multiple times daily, denies active intent.",
+          "Day 25: two panic attacks in past 4 days (20-min Tuesday, briefer yesterday), with cardiac-symptom-like presentation.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 24,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder",
+        ],
+        next_question: "And weight, eating?",
+      }},
+
+      { role: "agent",  text: "Twenty minutes of feeling like you're dying is its own trauma. You're not crazy for feeling rattled. And weight, eating?" },
+      { role: "caller", text: "I'm down twelve pounds total since this started. I can't taste anything. I force-feed myself like one meal a day." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports cumulative 12-pound weight loss since intake (~3.5 weeks), persistent anhedonia for food (anosmia/ageusia denied — described as inability to derive pleasure rather than sensory loss). Forcing single meal daily.",
+        empathy: "Twelve pounds is a lot. We're going to make sure your psychiatrist sees that number today.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 24,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder",
+        ],
+        next_question: "I'm setting up tomorrow's call. Same time. Try to eat something before then.",
+      }},
+
+      { role: "agent",  text: "Twelve pounds is a lot. We're going to make sure your psychiatrist sees that number today. I'm setting up tomorrow's call. Same time. Try to eat something before then." },
+      { role: "caller", text: "Okay. Thanks." },
+      { role: "system", text: "Call ended" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.6418, depression: 2, anxiety_raw: 0.7218, anxiety: 3 },
+          { depression_raw: 0.6618, depression: 2, anxiety_raw: 0.7418, anxiety: 3 },
+          { depression_raw: 0.6217, depression: 2, anxiety_raw: 0.7018, anxiety: 3 },
+          { depression_raw: 0.6512, depression: 2, anxiety_raw: 0.7312, anxiety: 3 },
+          { depression_raw: 0.6308, depression: 2, anxiety_raw: 0.7117, anxiety: 3 },
+          { depression_raw: 0.6708, depression: 2, anxiety_raw: 0.7517, anxiety: 3 },
+        ],
+        depression: 2,
+        depression_raw: 0.6464,
+        depression_label: "severe",
+        depression_margin: 0.5064,
+        anxiety: 3,
+        anxiety_raw: 0.7267,
+        anxiety_label: "severe",
+        anxiety_margin: 0.4267,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 6,
+        speech_seconds: 81.7,
+        caller_word_count: 112,
+        speaking_rate_wpm: 82.2,
+      }},
+    ],
+  },
+
+  {
+    call_id: "checkin_d28_c41a8f95",
+    agent: "checkin",
+    date: "2026-06-13",
+    day: 28,
+    summary: "End of 4-week block. Severe MDD + GAD. Safety concern flagged; in-person clinician callback triggered.",
+    duration_seconds: 218.7,
+    events: [
+      { role: "system", text: "Call started · agent: checkin" },
+      { role: "agent",  text: "Hi Jordan. End of the four-week block. How are you?" },
+      { role: "caller", text: "I'm not okay, Eva. I'm — I think I need more than these calls. Can you say that to someone?" },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient explicitly self-identifies inadequacy of current outpatient telephonic support and directly requests escalation of care. This is a meaningful clinical signal — patient with severe depression rarely volunteers this on their own.",
+        empathy: "Yes. I'm saying it to Dr. Patel the moment we hang up, and I'm marking this call for immediate clinician callback.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 25,
+        symptoms_so_far: [
+          "All prior intake and treatment-course symptoms.",
+          "Day 28: patient explicitly requests escalation — 'I'm not okay, I need more than these calls'. Inadequacy-of-current-care signal.",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 25,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress)",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder",
+        ],
+        next_question: "Yes. I'm saying it to Dr. Patel the moment we hang up. Tell me what you need me to convey.",
+      }},
+
+      { role: "agent",  text: "Yes. I'm saying it to Dr. Patel the moment we hang up. Tell me what you need me to convey." },
+      { role: "caller", text: "That it's gotten worse, not better. That I don't see a way forward. That the thoughts are getting louder." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient reports continued depressive deterioration despite 11 days of mirtazapine; verbalizes 'I don't see a way forward' (cognitive hopelessness) and 'the thoughts are getting louder' (intensification of prior passive death-related ideation).",
+        empathy: "I'm going to ask you something directly because we have to be careful here. Are the thoughts changing — are you starting to think about how, not just about disappearing?",
+      }},
+      { role: "metadata", data: {
+        kind: "differential_started",
+        round: 26,
+        symptoms_so_far: [
+          "All prior symptoms.",
+          "Day 28: patient requests escalation of care.",
+          "Day 28: continued deterioration despite 11d mirtazapine; cognitive hopelessness ('I don't see a way forward'); intensification of passive death-related ideation ('the thoughts are getting louder').",
+        ],
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 26,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress) — safety concern",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder",
+        ],
+        next_question: "I'm going to ask you something directly because we have to be careful here. Are the thoughts changing — are you starting to think about how, not just about disappearing?",
+      }},
+
+      { role: "agent",  text: "I'm going to ask you something directly because we have to be careful here. Are the thoughts changing — are you starting to think about how, not just about disappearing?" },
+      { role: "caller", text: "No. I haven't. I promise. I just — I'm tired of carrying this." },
+
+      { role: "metadata", data: {
+        kind: "symptom",
+        description: "Patient denies active suicidal ideation, plan, or method when asked directly. Volunteers 'tired of carrying this' indicating exhaustion-mediated passive ideation. No prior attempts. Suicide-risk-assessment outcome: elevated passive ideation, no active intent or plan, requires same-day clinician contact and safety planning.",
+        empathy: "Thank you for telling me. I believe you, and I am going to make sure you are not carrying this alone for another night.",
+      }},
+      { role: "metadata", data: {
+        kind: "differential",
+        round: 26,
+        candidates: [
+          "Major Depressive Disorder (recurrent, severe, with anxious distress) — safety concern flagged",
+          "Generalized Anxiety Disorder",
+          "Panic Disorder",
+        ],
+        next_question: "Dr. Patel will call you within the hour. Is there someone who can be with you tonight?",
+      }},
+
+      { role: "agent",  text: "Thank you for telling me. I believe you, and I am going to make sure you are not carrying this alone for another night. Dr. Patel will call you within the hour. Is there someone who can be with you tonight?" },
+      { role: "caller", text: "I can call my mom. She'd come over." },
+      { role: "agent",  text: "Please do that now. I'll stay on with you until she answers." },
+      { role: "caller", text: "Yeah. Okay. Thank you, Eva." },
+      { role: "system", text: "Call ended — escalated · clinician callback queued · safety contact engaged" },
+      { role: "metadata", data: {
+        kind: "scores",
+        per_chunk: [
+          { depression_raw: 0.7918, depression: 2, anxiety_raw: 0.8214, anxiety: 3 },
+          { depression_raw: 0.8104, depression: 2, anxiety_raw: 0.8418, anxiety: 3 },
+          { depression_raw: 0.7717, depression: 2, anxiety_raw: 0.8017, anxiety: 3 },
+          { depression_raw: 0.8018, depression: 2, anxiety_raw: 0.8208, anxiety: 3 },
+          { depression_raw: 0.7818, depression: 2, anxiety_raw: 0.8118, anxiety: 3 },
+          { depression_raw: 0.8208, depression: 2, anxiety_raw: 0.8312, anxiety: 3 },
+          { depression_raw: 0.7617, depression: 2, anxiety_raw: 0.7917, anxiety: 3 },
+        ],
+        depression: 2,
+        depression_raw: 0.7914,
+        depression_label: "severe",
+        depression_margin: 0.6514,
+        anxiety: 3,
+        anxiety_raw: 0.8172,
+        anxiety_label: "severe",
+        anxiety_margin: 0.5172,
+        indeterminate: false,
+        indeterminate_margin: 0.05,
+        n_chunks: 7,
+        speech_seconds: 96.4,
+        caller_word_count: 124,
+        speaking_rate_wpm: 77.2,
+      }},
+    ],
+  },
+];
+
+const ALL_CALLS = [TRIAGE_CALL, ...CHECKIN_CALLS];
+
+/* ============================================================
+ * Flatten all events into a single navigable timeline.
+ *   TIMELINE[i] = { ...event, callIdx, eventIdxInCall }
+ *   STATES[i]   = snapshot of all running counters AT this index
+ * ============================================================ */
+const TIMELINE = [];
+ALL_CALLS.forEach((call, callIdx) => {
+  call.events.forEach((ev, eventIdxInCall) => {
+    TIMELINE.push({ ...ev, callIdx, eventIdxInCall });
+  });
+});
+
+const STATES = (() => {
+  const out = [];
+  let symptoms = [];
+  let differential = null;
+  let prevDifferentialCands = null;
+  const callScores = new Array(ALL_CALLS.length).fill(null);
+  let lastFreshSymptomIdx = -1;
+
+  TIMELINE.forEach((ev, i) => {
+    let freshSymptomIdx = -1;
+    if (ev.role === "metadata" && ev.data) {
+      if (ev.data.kind === "symptom") {
+        symptoms = [...symptoms, ev.data];
+        freshSymptomIdx = symptoms.length - 1;
+      } else if (ev.data.kind === "differential") {
+        prevDifferentialCands = differential ? differential.candidates.slice() : null;
+        differential = ev.data;
+      } else if (ev.data.kind === "scores") {
+        callScores[ev.callIdx] = ev.data;
+      }
+    }
+    if (freshSymptomIdx >= 0) lastFreshSymptomIdx = freshSymptomIdx;
+    out.push({
+      symptoms: symptoms.slice(),
+      differential,
+      prevDifferentialCands,
+      callScores: callScores.slice(),
+      freshSymptomIdx: freshSymptomIdx,
+    });
+  });
+  return out;
+})();
+
+/* Pre-compute, per call, its starting & ending TIMELINE index, plus
+ * the "synthetic timestamp" of every event (linear within a call). */
+const CALL_BOUNDS = ALL_CALLS.map(() => ({ start: -1, end: -1 }));
+TIMELINE.forEach((ev, i) => {
+  if (CALL_BOUNDS[ev.callIdx].start === -1) CALL_BOUNDS[ev.callIdx].start = i;
+  CALL_BOUNDS[ev.callIdx].end = i;
+});
+
+/* ============================================================
+ * Rendering
+ * ============================================================ */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+function fmtRaw(n) { return (n >= 0 ? "+" : "") + Number(n).toFixed(4); }
+function fmtMargin(n) { return Number(n).toFixed(4); }
+function shorten(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+/* ---------- header position bar ---------- */
+function renderHeader(i) {
+  const ev = TIMELINE[i];
+  const call = ALL_CALLS[ev.callIdx];
+  document.getElementById("pos-day").textContent = `Day ${call.day}`;
+  const agentEl = document.getElementById("pos-agent");
+  agentEl.textContent = call.agent;
+  agentEl.className = "agent-pill " + call.agent;
+  document.getElementById("pos-event").textContent = i + 1;
+  document.getElementById("pos-total").textContent = TIMELINE.length;
+  document.getElementById("pos-call").textContent = ev.callIdx + 1;
+  // synthetic clock: linear within a call
+  const bounds = CALL_BOUNDS[ev.callIdx];
+  const pos = (i - bounds.start) / Math.max(1, (bounds.end - bounds.start));
+  const seconds = pos * call.duration_seconds;
+  const mm = Math.floor(seconds / 60);
+  const ss = Math.floor(seconds - mm * 60).toString().padStart(2, "0");
+  document.getElementById("pos-clock").textContent = `${mm}:${ss}`;
+}
+
+/* ---------- spotlight (current event) ---------- */
+function renderSpotlight(i) {
+  const ev = TIMELINE[i];
+  const call = ALL_CALLS[ev.callIdx];
+  const node = document.getElementById("spotlight");
+  let cls = "card";
+  let html = "";
+
+  if (ev.role === "system") {
+    cls += " system";
+    const isStart = ev.text.startsWith("Call started");
+    html = `<div class="system-text">
+      <div class="icon">${isStart ? "📞" : "🏁"}</div>
+      <div style="font-size:14px; color:#e6edf3; font-weight:600">${esc(ev.text)}</div>
+      <div style="font-size:11.5px; color:#6e7681; margin-top:4px; font-family:ui-monospace,SF Mono,Menlo,monospace">
+        call_id: ${esc(call.call_id)}
+      </div>
+      <div style="font-size:11.5px; color:#6e7681; margin-top:2px">
+        ${call.date} · Day ${call.day} of 28 · ${call.duration_seconds.toFixed(0)}s total
+      </div>
+    </div>`;
+  } else if (ev.role === "agent") {
+    cls += " agent";
+    html = `<div class="label">agent · Eva (${esc(call.agent)})</div>
+      <div class="bubble agent">${esc(ev.text)}</div>`;
+  } else if (ev.role === "caller") {
+    cls += " caller";
+    html = `<div class="label">caller · Jordan</div>
+      <div style="text-align:right"><div class="bubble caller">${esc(ev.text)}</div></div>`;
+  } else if (ev.role === "metadata") {
+    const d = ev.data;
+    if (d.kind === "symptom") {
+      cls += " symptom";
+      html = `<div class="label">tool call · recordSymptom() → triage.handle()</div>
+        <div class="tool-call">
+          <span class="pair"><span class="fn">recordSymptom</span>(</span>
+          <span class="pair">&nbsp;&nbsp;<span class="key">description</span>: <span class="str">"${esc(d.description)}"</span>,</span>
+          <span class="pair">&nbsp;&nbsp;<span class="key">empathy</span>: <span class="str">"${esc(d.empathy)}"</span></span>
+          <span class="pair">)</span>
+        </div>
+        <div class="empathy">SYSTEM speaks aloud → "${esc(d.empathy)}"</div>`;
+    } else if (d.kind === "differential_started") {
+      cls += " differential_started";
+      html = `<div class="label">differential · round ${d.round} · computing</div>
+        <div style="font-size:12.5px; color:#c9d1d9; margin-bottom:4px">
+          Re-ranking against ${d.symptoms_so_far.length} symptom${d.symptoms_so_far.length === 1 ? "" : "s"} →
+          <code class="mono">Responses API</code> + <code class="mono">file_search(DSM-5)</code>
+        </div>
+        <div class="symptoms-so-far">
+          ${d.symptoms_so_far.map((s, k) => `<span class="chip">${k + 1}. ${esc(shorten(s, 60))}</span>`).join("")}
+        </div>`;
+    } else if (d.kind === "differential") {
+      cls += " differential";
+      const prev = STATES[i].prevDifferentialCands;
+      const rows = d.candidates.map((c, k) => {
+        const rd = rankDelta(c, k, prev);
+        const delta = rd ? `<span class="delta ${rd.kind}">${rd.text}</span>` : "";
+        return `<div class="rank-line">
+          <span class="rank r${Math.min(k + 1, 3)}">${k + 1}</span>
+          <span class="name">${esc(c)}</span>${delta}
+        </div>`;
+      }).join("");
+      const dropped = prev
+        ? prev.filter(c => !d.candidates.includes(c))
+        : [];
+      const droppedHtml = dropped.length
+        ? `<div style="margin-top:6px; font-size:11px; color:#6e7681">
+             ruled out → ${dropped.map(g => `<span class="delta" style="text-decoration:line-through; color:#6e7681; border-color:#30363d">${esc(g)}</span>`).join(" ")}
+           </div>`
+        : "";
+      html = `<div class="label">differential · round ${d.round} · ${prev ? "re-ranked" : "initial"} <span style="float:right; color:#6e7681; font-weight:500; text-transform:none; letter-spacing:0">grok · json_schema(triage_step)</span></div>
+        <div class="candidates-list">${rows}</div>
+        ${droppedHtml}
+        <div class="next-q">
+          <em>next_question →</em> <strong>${esc(d.next_question)}</strong>
+        </div>`;
+    } else if (d.kind === "scores") {
+      cls += " scores";
+      html = `<div class="label">DAM analysis · post-call · ${d.n_chunks} chunk${d.n_chunks === 1 ? "" : "s"}${d.indeterminate ? " · borderline" : ""}</div>
+        <div class="scores-grid">
+          ${scoreBadgeHtml("Depression", d.depression, d.depression_label, d.depression_raw, d.depression_margin, d.depression_margin < d.indeterminate_margin, d.per_chunk, "depression", "#58a6ff", 2)}
+          ${scoreBadgeHtml("Anxiety", d.anxiety, d.anxiety_label, d.anxiety_raw, d.anxiety_margin, d.anxiety_margin < d.indeterminate_margin, d.per_chunk, "anxiety", "#d29922", 3)}
+          ${voiceBadgeHtml(d.speaking_rate_wpm, d.caller_word_count, d.speech_seconds)}
+        </div>
+        <div style="margin-top:6px; font-size:11px; color:#6e7681; font-family:ui-monospace,SF Mono,Menlo,monospace">
+          depression_raw=${fmtRaw(d.depression_raw)} margin=${fmtMargin(d.depression_margin)} ·
+          anxiety_raw=${fmtRaw(d.anxiety_raw)} margin=${fmtMargin(d.anxiety_margin)} · indeterminate=${d.indeterminate}
+        </div>`;
+    }
+  }
+  node.className = cls;
+  node.innerHTML = html;
+}
+
+function rankDelta(name, idx, prev) {
+  if (!prev || !prev.length) return null;
+  const prevIdx = prev.indexOf(name);
+  if (prevIdx === -1) return { kind: "new", text: "NEW" };
+  const move = prevIdx - idx;
+  if (move > 0) return { kind: "up",   text: `↑ ${move}` };
+  if (move < 0) return { kind: "down", text: `↓ ${-move}` };
+  return { kind: "same", text: "—" };
+}
+
+function scoreBadgeHtml(name, level, label, raw, margin, isIndet, perChunk, task, color, maxBand) {
+  const indet = isIndet ? `<span class="indet">indet</span>` : "";
+  return `<div class="score-badge sev-${level}">
+    <span class="k">${name}${indet}</span>
+    <span class="v">band ${level} · ${esc(label)}</span>
+    <span class="raw">raw ${fmtRaw(raw)} · margin ${fmtMargin(margin)}</span>
+    ${chunkSpark(perChunk, task, color, maxBand)}
+  </div>`;
+}
+
+function voiceBadgeHtml(wpm, words, speechSec) {
+  return `<div class="score-badge metric">
+    <span class="k">Speaking rate</span>
+    <span class="v">${Math.round(wpm)} wpm</span>
+    <span class="raw">${words} words · ${speechSec.toFixed(1)}s</span>
+  </div>`;
+}
+
+function chunkSpark(perChunk, task, color, maxBand) {
+  if (!perChunk || perChunk.length < 2) return "";
+  const W = 140, H = 24, n = perChunk.length;
+  const pts = perChunk.map((c, k) => {
+    const x = (k / (n - 1)) * W;
+    const norm = Math.max(0, Math.min(maxBand, c[task])) / maxBand;
+    const y = H - norm * H;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const linePts = pts.join(" ");
+  const areaPts = `0,${H} ${linePts} ${W},${H}`;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" height="${H}">
+    <line class="baseline" x1="0" x2="${W}" y1="${H}" y2="${H}"></line>
+    <polygon points="${areaPts}" fill="${color}" class="area"></polygon>
+    <polyline points="${linePts}" stroke="${color}" stroke-width="1.5"
+              fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* ---------- symptoms card ---------- */
+function renderSymptoms(i) {
+  const st = STATES[i];
+  document.getElementById("symptoms-count").textContent = st.symptoms.length;
+  const node = document.getElementById("symptoms-list");
+  if (!st.symptoms.length) {
+    node.innerHTML = `<div class="empty">No symptoms recorded yet. <code class="mono">recordSymptom</code> calls will accumulate here as Eva collects them.</div>`;
+    return;
+  }
+  node.innerHTML = st.symptoms.map((s, k) =>
+    `<div class="symptom-pill ${k === st.freshSymptomIdx ? "fresh" : ""}">
+      <span class="n">${k + 1}.</span>
+      <span>${esc(s.description)}</span>
+    </div>`
+  ).join("");
+}
+
+/* ---------- differential card ---------- */
+function renderDifferential(i) {
+  const st = STATES[i];
+  const round = document.getElementById("diff-round");
+  const list = document.getElementById("differential-list");
+  if (!st.differential) {
+    round.textContent = "—";
+    list.innerHTML = `<div class="empty">No differential yet. The model produces one after each <code class="mono">recordSymptom</code>.</div>`;
+    return;
+  }
+  const d = st.differential;
+  round.textContent = `Round ${d.round}`;
+  const prev = st.prevDifferentialCands;
+  const rows = d.candidates.map((c, k) => {
+    const rd = rankDelta(c, k, prev);
+    const delta = rd ? `<span class="delta ${rd.kind}">${rd.text}</span>` : "";
+    return `<div class="rank-line">
+      <span class="rank r${Math.min(k + 1, 3)}">${k + 1}</span>
+      <span class="name">${esc(c)}</span>${delta}
+    </div>`;
+  }).join("");
+  list.innerHTML = rows + `<div class="next-q-line">
+    <em>next_question →</em> <strong>${esc(d.next_question)}</strong>
+  </div>`;
+}
+
+/* ---------- DAM scores card (multi-call trajectory) ---------- */
+function renderScores(i) {
+  const st = STATES[i];
+  const completed = st.callScores.map((s, k) => s ? { ...s, callIdx: k, day: ALL_CALLS[k].day, agent: ALL_CALLS[k].agent } : null)
+                                  .filter(Boolean);
+  document.getElementById("scores-count").textContent = completed.length;
+
+  const latest = document.getElementById("scores-latest");
+  if (!completed.length) {
+    latest.innerHTML = `<div class="empty">DAM scores compute after the first call ends.</div>`;
+    document.getElementById("scores-traj").innerHTML = "";
+    return;
+  }
+  const d = completed[completed.length - 1];
+  latest.innerHTML = `<div style="font-size:11px; color:#8b949e; margin-bottom:4px">latest · Day ${d.day} ${d.agent}</div>
+    <div class="scores-grid">
+      ${scoreBadgeHtml("Depression", d.depression, d.depression_label, d.depression_raw, d.depression_margin, d.depression_margin < d.indeterminate_margin, d.per_chunk, "depression", "#58a6ff", 2)}
+      ${scoreBadgeHtml("Anxiety", d.anxiety, d.anxiety_label, d.anxiety_raw, d.anxiety_margin, d.anxiety_margin < d.indeterminate_margin, d.per_chunk, "anxiety", "#d29922", 3)}
+      ${voiceBadgeHtml(d.speaking_rate_wpm, d.caller_word_count, d.speech_seconds)}
+    </div>`;
+
+  // Trajectory mini-charts across all completed calls (with current marker)
+  const dep = completed.map(s => s.depression);
+  const anx = completed.map(s => s.anxiety);
+  const wpm = completed.map(s => s.speaking_rate_wpm);
+  const days = completed.map(s => s.day);
+  const traj = document.getElementById("scores-traj");
+  traj.innerHTML =
+    trajCard("depression", days, dep, 2, "#58a6ff", DEPRESSION_LABELS_S, completed.length - 1) +
+    trajCard("anxiety", days, anx, 3, "#d29922", ANXIETY_LABELS_S, completed.length - 1) +
+    trajCardWpm("wpm", days, wpm, "#a371f7", completed.length - 1);
+}
+const DEPRESSION_LABELS_S = ["none","mod","sev"];
+const ANXIETY_LABELS_S = ["none","mild","mod","sev"];
+
+function trajCard(label, days, vals, max, color, bandLabels, markerIdx) {
+  return `<div class="traj-card">
+    <div class="k">${label}<span class="now">${bandLabels[Math.min(vals[markerIdx], bandLabels.length - 1)]}</span></div>
+    ${trajSvg(days, vals, 0, max, color, markerIdx)}
+  </div>`;
+}
+function trajCardWpm(label, days, vals, color, markerIdx) {
+  const min = 80, max = 180;
+  return `<div class="traj-card">
+    <div class="k">speaking rate<span class="now">${Math.round(vals[markerIdx])} wpm</span></div>
+    ${trajSvg(days, vals, min, max, color, markerIdx)}
+  </div>`;
+}
+function trajSvg(days, vals, yMin, yMax, color, markerIdx) {
+  const W = 200, H = 36, padX = 4, padY = 3;
+  const w = W - 2 * padX, h = H - 2 * padY;
+  // x axis: 0..28
+  const xs = days.map(d => padX + (d / 28) * w);
+  const ys = vals.map(v => padY + (1 - (v - yMin) / (yMax - yMin)) * h);
+  let line = `M ${xs[0]},${ys[0]}`;
+  for (let k = 1; k < xs.length; k++) line += ` L ${xs[k]},${ys[k]}`;
+  let area = `M ${xs[0]},${padY + h}`;
+  for (let k = 0; k < xs.length; k++) area += ` L ${xs[k]},${ys[k]}`;
+  area += ` L ${xs[xs.length - 1]},${padY + h} Z`;
+  const mx = xs[markerIdx], my = ys[markerIdx];
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <path class="area" d="${area}" fill="${color}"/>
+    <path class="line" d="${line}" stroke="${color}"/>
+    <circle class="dot now-ring" cx="${mx}" cy="${my}" r="5" stroke="${color}"/>
+    <circle class="dot now"      cx="${mx}" cy="${my}" r="2.5" fill="${color}"/>
+  </svg>`;
+}
+
+/* ---------- transcript context (current call, scrolled to current) ---------- */
+function renderTranscript(i) {
+  const ev = TIMELINE[i];
+  const call = ALL_CALLS[ev.callIdx];
+  const bounds = CALL_BOUNDS[ev.callIdx];
+  document.getElementById("transcript-meta").textContent =
+    `Day ${call.day} · ${call.agent} · ${esc(call.call_id)}`;
+  const feed = document.getElementById("transcript-feed");
+
+  let html = "";
+  for (let k = bounds.start; k <= bounds.end; k++) {
+    const tev = TIMELINE[k];
+    const isCurrent = k === i;
+    if (tev.role === "system") {
+      html += `<div class="turn-meta ${isCurrent ? "current" : ""}" data-idx="${k}">${esc(tev.text)}</div>`;
+    } else if (tev.role === "agent") {
+      html += `<div class="turn agent ${isCurrent ? "current" : ""}" data-idx="${k}">
+        <div><div class="role-sm">agent</div><div class="bubble-sm">${esc(tev.text)}</div></div>
+      </div>`;
+    } else if (tev.role === "caller") {
+      html += `<div class="turn caller ${isCurrent ? "current" : ""}" data-idx="${k}">
+        <div><div class="role-sm">caller</div><div class="bubble-sm">${esc(tev.text)}</div></div>
+      </div>`;
+    } else if (tev.role === "metadata") {
+      const tag = tev.data.kind;
+      const short = tag === "symptom"
+        ? `recordSymptom("${shorten(tev.data.description, 80)}")`
+        : tag === "differential_started"
+          ? `differential round ${tev.data.round} · computing`
+          : tag === "differential"
+            ? `differential round ${tev.data.round} → [${tev.data.candidates.slice(0, 2).join(", ")}${tev.data.candidates.length > 2 ? "…" : ""}]`
+            : tag === "scores"
+              ? `DAM scores · D${tev.data.depression} A${tev.data.anxiety} · ${Math.round(tev.data.speaking_rate_wpm)}wpm`
+              : tag;
+      html += `<div class="turn-meta ${isCurrent ? "current" : ""}" data-idx="${k}" style="color:${
+        tag === "symptom" ? "#58a6ff" :
+        tag === "differential" ? "#d29922" :
+        tag === "scores" ? "#a371f7" : "#6e7681"
+      }">▸ ${esc(short)}</div>`;
+    }
+  }
+  feed.innerHTML = html;
+  feed.querySelectorAll("[data-idx]").forEach(el => {
+    el.style.cursor = "pointer";
+    el.addEventListener("click", () => setIndex(parseInt(el.dataset.idx, 10)));
+  });
+  // scroll current event into view
+  const cur = feed.querySelector(".current");
+  if (cur) cur.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+/* ============================================================
+ * Timeline strip (the scrubber)
+ * ============================================================ */
+const TL = { W: 1400, H: 78, padL: 12, padR: 12, padT: 12, padB: 16 };
+
+function layoutTimeline() {
+  // Calls evenly partition the horizontal space.
+  // Within each call, events are linearly spaced.
+  const calls = ALL_CALLS.length;
+  const innerW = TL.W - TL.padL - TL.padR;
+  const callW = innerW / calls;
+  const positions = TIMELINE.map((ev, i) => {
+    const b = CALL_BOUNDS[ev.callIdx];
+    const localCount = b.end - b.start;
+    const local = localCount > 0 ? (i - b.start) / localCount : 0.5;
+    const x = TL.padL + ev.callIdx * callW + local * callW * 0.92 + callW * 0.04;
+    return x;
+  });
+  return { positions, callW, innerW };
+}
+
+const TL_LAYOUT = layoutTimeline();
+
+function buildTimelineSvg() {
+  const svg = document.getElementById("tl-svg");
+  svg.setAttribute("viewBox", `0 0 ${TL.W} ${TL.H}`);
+  const innerW = TL_LAYOUT.innerW;
+  const callW = TL_LAYOUT.callW;
+  const cy = TL.padT + 30;       // tick baseline y
+  const sevY0 = TL.padT;          // top of severity band
+  const sevH = 20;                // height of severity band (depression mini line)
+
+  let s = "";
+
+  // Call-band background (alternate shading)
+  for (let c = 0; c < ALL_CALLS.length; c++) {
+    const x0 = TL.padL + c * callW;
+    s += `<rect class="call-band ${c % 2 ? "alt" : ""}" x="${x0}" y="0" width="${callW}" height="${TL.H}" />`;
+    if (c > 0) {
+      s += `<line class="call-divider" x1="${x0}" x2="${x0}" y1="0" y2="${TL.H}" />`;
+    }
+  }
+
+  // Mini depression-band severity line across all completed calls.
+  // Computed at the "scores" event of each call (post-call).
+  const sevPts = [];
+  for (let c = 0; c < ALL_CALLS.length; c++) {
+    const scoresEv = ALL_CALLS[c].events.find(e => e.role === "metadata" && e.data?.kind === "scores");
+    if (!scoresEv) continue;
+    // map band 0..2 onto severity y band; lower band → bottom (better)
+    const x = TL.padL + c * callW + callW * 0.5;
+    const dep = scoresEv.data.depression;   // 0..2
+    const y = sevY0 + sevH - (dep / 2) * sevH;
+    sevPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  if (sevPts.length > 1) {
+    s += `<polyline class="severity-line" stroke="#db6d28" points="${sevPts.join(" ")}" />`;
+  }
+
+  // Baseline
+  s += `<line class="baseline" x1="${TL.padL}" x2="${TL.W - TL.padR}" y1="${cy}" y2="${cy}" />`;
+
+  // Day labels and agent tags (one per call)
+  for (let c = 0; c < ALL_CALLS.length; c++) {
+    const call = ALL_CALLS[c];
+    const x = TL.padL + c * callW + callW * 0.5;
+    s += `<text class="day-label" x="${x}" y="${TL.H - 4}" text-anchor="middle">Day ${call.day}</text>`;
+    s += `<text class="day-sublabel" x="${x}" y="${TL.H - 16}" text-anchor="middle">${esc(formatDateShort(call.date))}</text>`;
+    s += `<text class="agent-tag ${call.agent}" x="${x}" y="${10}" text-anchor="middle">${call.agent.toUpperCase()}</text>`;
+  }
+
+  // Ticks for each event
+  TIMELINE.forEach((ev, i) => {
+    const x = TL_LAYOUT.positions[i];
+    const kind = tickKind(ev);
+    let shape = "";
+    if (kind === "symptom") {
+      // diamond
+      const s1 = 4;
+      shape = `<polygon class="tick ${kind}" data-idx="${i}" points="${x},${cy - s1} ${x + s1},${cy} ${x},${cy + s1} ${x - s1},${cy}" />`;
+    } else if (kind === "diff") {
+      shape = `<circle class="tick ${kind}" data-idx="${i}" cx="${x}" cy="${cy}" r="3.5" />`;
+    } else if (kind === "scores") {
+      // star-ish (square rotated)
+      shape = `<rect class="tick ${kind}" data-idx="${i}" x="${x - 4}" y="${cy - 4}" width="8" height="8" transform="rotate(45 ${x} ${cy})" />`;
+    } else {
+      shape = `<circle class="tick ${kind}" data-idx="${i}" cx="${x}" cy="${cy}" r="${kind === "system" ? 1.6 : 2.2}" />`;
+    }
+    s += shape;
+  });
+
+  svg.innerHTML = s;
+
+  // Click ticks to jump
+  svg.querySelectorAll(".tick").forEach(t => {
+    t.addEventListener("click", () => setIndex(parseInt(t.dataset.idx, 10)));
+  });
+}
+
+function tickKind(ev) {
+  if (ev.role === "system") return "system";
+  if (ev.role === "agent") return "agent";
+  if (ev.role === "caller") return "caller";
+  if (ev.role === "metadata") {
+    if (ev.data.kind === "symptom") return "symptom";
+    if (ev.data.kind === "differential_started") return "diff_start";
+    if (ev.data.kind === "differential") return "diff";
+    if (ev.data.kind === "scores") return "scores";
+  }
+  return "system";
+}
+
+function renderTimelineCursor(i) {
+  const svg = document.getElementById("tl-svg");
+  // Remove previous cursor
+  svg.querySelectorAll(".cursor, .cursor-ring").forEach(n => n.remove());
+  const x = TL_LAYOUT.positions[i];
+  const cy = TL.padT + 30;
+
+  // Vertical line
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("class", "cursor");
+  line.setAttribute("x1", x); line.setAttribute("x2", x);
+  line.setAttribute("y1", 0); line.setAttribute("y2", TL.H - 12);
+  svg.appendChild(line);
+
+  // Ring around current tick
+  const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  ring.setAttribute("class", "cursor-ring");
+  ring.setAttribute("cx", x); ring.setAttribute("cy", cy); ring.setAttribute("r", 7);
+  svg.appendChild(ring);
+}
+
+function formatDateShort(iso) {
+  const d = new Date(iso + "T12:00:00");
+  const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+  return `${mon} ${d.getDate()}`;
+}
+
+/* ============================================================
+ * Navigation
+ * ============================================================ */
+let CURRENT = 0;
+
+function setIndex(i) {
+  CURRENT = clamp(i, 0, TIMELINE.length - 1);
+  renderHeader(CURRENT);
+  renderSpotlight(CURRENT);
+  renderSymptoms(CURRENT);
+  renderDifferential(CURRENT);
+  renderScores(CURRENT);
+  renderTranscript(CURRENT);
+  renderTimelineCursor(CURRENT);
+}
+
+function step(n) { setIndex(CURRENT + n); }
+
+function jumpToCall(direction) {
+  const cur = TIMELINE[CURRENT].callIdx;
+  let target;
+  if (direction > 0) {
+    target = cur + 1 < ALL_CALLS.length ? CALL_BOUNDS[cur + 1].start : CALL_BOUNDS[cur].end;
+  } else {
+    const bounds = CALL_BOUNDS[cur];
+    // If already at the start of the current call, jump to previous call's start; else jump to current call's start
+    if (CURRENT === bounds.start && cur > 0) target = CALL_BOUNDS[cur - 1].start;
+    else target = bounds.start;
+  }
+  setIndex(target);
+}
+
+/* ---------- play / pause ---------- */
+let playTimer = null;
+const playBtn = document.getElementById("play-btn");
+const speedSel = document.getElementById("speed");
+
+function tickPlay() {
+  if (CURRENT >= TIMELINE.length - 1) { stopPlay(); return; }
+  step(1);
+  const ev = TIMELINE[CURRENT];
+  const base = parseInt(speedSel.value, 10);
+  // Pause longer on key events so they're visible
+  let mult = 1;
+  if (ev.role === "metadata") {
+    if (ev.data.kind === "symptom") mult = 2.2;
+    else if (ev.data.kind === "differential") mult = 2.6;
+    else if (ev.data.kind === "scores") mult = 4.0;
+  } else if (ev.role === "agent" || ev.role === "caller") {
+    mult = 1.2 + Math.min(2, ev.text.length / 120);
+  } else if (ev.role === "system") {
+    mult = 1.4;
+  }
+  playTimer = setTimeout(tickPlay, base * mult);
+}
+function startPlay() {
+  if (CURRENT >= TIMELINE.length - 1) setIndex(0);
+  playBtn.classList.add("playing");
+  playBtn.textContent = "❚❚ Pause";
+  tickPlay();
+}
+function stopPlay() {
+  if (playTimer) clearTimeout(playTimer);
+  playTimer = null;
+  playBtn.classList.remove("playing");
+  playBtn.textContent = "▶ Play";
+}
+function togglePlay() { playTimer ? stopPlay() : startPlay(); }
+
+playBtn.addEventListener("click", togglePlay);
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown", (e) => {
+  // Don't fight with selects/inputs
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "ArrowRight") {
+    if (e.shiftKey) jumpToCall(+1);
+    else step(+1);
+    e.preventDefault();
+  } else if (e.key === "ArrowLeft") {
+    if (e.shiftKey) jumpToCall(-1);
+    else step(-1);
+    e.preventDefault();
+  } else if (e.key === "Home") {
+    setIndex(0); e.preventDefault();
+  } else if (e.key === "End") {
+    setIndex(TIMELINE.length - 1); e.preventDefault();
+  } else if (e.code === "Space") {
+    togglePlay(); e.preventDefault();
+  } else if (e.key === "PageDown") {
+    step(+10); e.preventDefault();
+  } else if (e.key === "PageUp") {
+    step(-10); e.preventDefault();
+  }
+});
+
+/* ============================================================
+ * Boot
+ * ============================================================ */
+buildTimelineSvg();
+setIndex(0);
+</script>
+</body>
+</html>

@@ -81,3 +81,9 @@ STREAM_PATH = os.getenv("STREAM_PATH", "/media-stream")
 # Telnyx Media Streaming uses G.711 μ-law (PCMU) @ 8 kHz, mono. xAI supports
 # "audio/pcmu" natively, so audio passes through with zero transcoding.
 XAI_AUDIO_FORMAT = "audio/pcmu"
+
+# --- Clinician summary (summary.py) ---
+# Salt for hashing phone numbers into opaque IDs used in URLs and filenames.
+# Rotate to invalidate all existing summary URLs. If empty, hashes are
+# guessable from the phone alone — fine for local dev, not for prod.
+SUMMARY_SALT = os.getenv("SUMMARY_SALT", "")

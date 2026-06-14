@@ -700,6 +700,11 @@
       livePhone = null;
       renderPatients();
     }
+    // A 'patient' metadata event means the call just got phone-tagged —
+    // either a brand-new patient or a new call on an existing one.
+    if (ev.role === "metadata" && ev.data && ev.data.kind === "patient") {
+      refreshPatients();
+    }
     if (ev.call_id) liveCall = ev.call_id;
 
     if (ev.role === "metadata") applyLiveMetadata(ev.data);
