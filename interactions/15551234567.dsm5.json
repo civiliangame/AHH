@@ -1,0 +1,171 @@
+{
+  "phone": "15551234567",
+  "updated_at": "2026-06-14T00:15:35.544012+00:00",
+  "conditions": [
+    {
+      "condition": "Major Depressive Disorder",
+      "criteria": [
+        {
+          "criterion": "A1: Depressed mood most of the day, nearly every day",
+          "status": "yes",
+          "evidence": "low mood"
+        },
+        {
+          "criterion": "A2: Markedly diminished interest or pleasure in all or almost all activities most of the day (anhedonia)",
+          "status": "yes",
+          "evidence": "anhedonia"
+        },
+        {
+          "criterion": "A3: Significant weight loss/gain or appetite change",
+          "status": "yes",
+          "evidence": "low appetite"
+        },
+        {
+          "criterion": "A4: Insomnia or hypersomnia",
+          "status": "yes",
+          "evidence": "poor sleep"
+        },
+        {
+          "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+          "status": "yes",
+          "evidence": "poor focus"
+        },
+        {
+          "criterion": "A: ≥5 of 9 symptoms during the same 2-week period, with at least one being depressed mood or anhedonia",
+          "status": "need_checkin",
+          "evidence": "Patient reports 5 symptoms (low mood, anhedonia, low appetite, poor sleep, poor focus), but duration of 2 weeks not yet reported"
+        },
+        {
+          "criterion": "B: Symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning",
+          "status": "need_checkin",
+          "evidence": "No report of functional impairment yet"
+        },
+        {
+          "criterion": "C: Episode not attributable to physiological effects of a substance or another medical condition",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        },
+        {
+          "criterion": "D: Episode not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        },
+        {
+          "criterion": "E: There has never been a manic or hypomanic episode (unless substance-induced or attributable to a medical condition)",
+          "status": "need_checkin",
+          "evidence": "No history of mania/hypomania reported yet"
+        }
+      ]
+    },
+    {
+      "condition": "Persistent Depressive Disorder",
+      "criteria": [
+        {
+          "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years (1 year in children/adolescents)",
+          "status": "need_checkin",
+          "evidence": "Low mood reported, but duration of at least 2 years not yet reported"
+        },
+        {
+          "criterion": "B: Presence, while depressed, of two or more of: poor appetite or overeating; insomnia or hypersomnia; low energy or fatigue; low self-esteem; poor concentration or difficulty making decisions; feelings of hopelessness",
+          "status": "yes",
+          "evidence": "low appetite, poor sleep, poor focus (3 symptoms reported)"
+        },
+        {
+          "criterion": "C: During the 2-year period, the individual has never been without the symptoms in Criteria A and B for more than 2 months at a time",
+          "status": "need_checkin",
+          "evidence": "Persistence over time not yet reported"
+        },
+        {
+          "criterion": "D: Criteria for a major depressive episode may be continuously present for 2 years",
+          "status": "need_checkin",
+          "evidence": "Cannot determine yet"
+        },
+        {
+          "criterion": "E: There has never been a manic episode and criteria have never been met for hypomanic episode or cyclothymic disorder",
+          "status": "need_checkin",
+          "evidence": "No history of mania/hypomania reported yet"
+        },
+        {
+          "criterion": "F: The disturbance is not better explained by a persistent schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified or unspecified schizophrenia spectrum and other psychotic disorder",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        },
+        {
+          "criterion": "G: The symptoms are not attributable to the physiological effects of a substance or another medical condition",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        },
+        {
+          "criterion": "H: The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning",
+          "status": "need_checkin",
+          "evidence": "No report of functional impairment yet"
+        }
+      ]
+    },
+    {
+      "condition": "Generalized Anxiety Disorder",
+      "criteria": [
+        {
+          "criterion": "A: Excessive anxiety and worry (apprehensive expectation), occurring more days than not, for at least 6 months, about a number of events or activities",
+          "status": "need_checkin",
+          "evidence": "No report of excessive anxiety/worry or 6-month duration yet"
+        },
+        {
+          "criterion": "B: The individual finds it difficult to control the worry",
+          "status": "need_checkin",
+          "evidence": "No report of difficulty controlling worry yet"
+        },
+        {
+          "criterion": "C1: Restlessness or feeling keyed up or on edge",
+          "status": "no",
+          "evidence": "Not reported"
+        },
+        {
+          "criterion": "C2: Being easily fatigued",
+          "status": "no",
+          "evidence": "Not reported"
+        },
+        {
+          "criterion": "C3: Difficulty concentrating or mind going blank",
+          "status": "yes",
+          "evidence": "poor focus"
+        },
+        {
+          "criterion": "C4: Irritability",
+          "status": "no",
+          "evidence": "Not reported"
+        },
+        {
+          "criterion": "C5: Muscle tension",
+          "status": "no",
+          "evidence": "Not reported"
+        },
+        {
+          "criterion": "C6: Sleep disturbance (difficulty falling/staying asleep, or restless, unsatisfying sleep)",
+          "status": "yes",
+          "evidence": "poor sleep"
+        },
+        {
+          "criterion": "C: ≥3 of 6 symptoms (at least some present more days than not for past 6 months)",
+          "status": "need_checkin",
+          "evidence": "Only 2 symptoms reported (poor focus, poor sleep); 6-month duration not reported"
+        },
+        {
+          "criterion": "D: The anxiety, worry, or physical symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning",
+          "status": "need_checkin",
+          "evidence": "No report of functional impairment yet"
+        },
+        {
+          "criterion": "E: Not attributable to the physiological effects of a substance or another medical condition",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        },
+        {
+          "criterion": "F: Not better explained by another mental disorder",
+          "status": "need_psychiatrist",
+          "evidence": "Cannot be determined from phone intake; requires clinical judgment"
+        }
+      ]
+    }
+  ]
+}

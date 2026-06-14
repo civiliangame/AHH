@@ -355,11 +355,327 @@
         "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
         "status": "unavailable"
       }
+    },
+    {
+      "call_id": "5c4331c1bc20",
+      "agent": "triage",
+      "started_at": "2026-06-14T00:17:46.241467+00:00",
+      "turns": [
+        {
+          "at": "2026-06-14T00:18:04.043620+00:00",
+          "descriptions": [
+            "Patient reports having been pretty lethargic and hopeless lately."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Markedly diminished interest or pleasure in all, or almost all, activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss or gain, or change in appetite",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death, suicidal ideation, or suicide attempt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Symptoms cause clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Episode not attributable to substances or another medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "D: Episode not better explained by schizoaffective disorder or other psychotic disorders",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "E: No history of manic or hypomanic episode",
+              "status": "unclear"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "A: Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "unclear"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "B: Presence of two or more of: poor appetite or overeating, insomnia or hypersomnia, low energy or fatigue, low self-esteem, poor concentration or difficulty making decisions, feelings of hopelessness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "A: Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "B: Symptoms are clinically significant or cause marked impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "C: Symptoms do not meet criteria for another mental disorder",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "D: Symptoms do not represent normal bereavement",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "How long have these feelings of lethargy and hopelessness been going on?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:18:23.852450+00:00",
+          "descriptions": [
+            "Patient reports these feelings of lethargy and hopelessness have been going on for the past 30 days."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Anhedonia or markedly diminished interest or pleasure in all or almost all activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss/gain or change in appetite",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A5: Psychomotor agitation or retardation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A7: Feelings of worthlessness or excessive guilt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death, suicidal ideation, or suicide attempt",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "B: Symptoms cause clinically significant distress or impairment",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "C: Episode not attributable to substances or another medical condition",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Duration: At least 2 weeks",
+              "status": "met"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "not_met"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms occur within 3 months of the stressor",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms do not persist more than 6 months after stressor ends",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have you noticed any changes in your sleep, appetite, or ability to concentrate lately?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:18:40.702804+00:00",
+          "descriptions": [
+            "Patient reports inability to concentrate, specifically can't concentrate worth shit lately."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Persistent Depressive Disorder",
+            "Adjustment Disorder with Depressed Mood"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day, nearly every day",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A2: Anhedonia or markedly diminished interest or pleasure in all or almost all activities",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A3: Significant weight loss/gain or appetite change",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A4: Insomnia or hypersomnia",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
+              "status": "met"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Duration: symptoms present for at least 2 weeks",
+              "status": "met"
+            },
+            {
+              "condition": "Persistent Depressive Disorder",
+              "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
+              "status": "not_met"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
+              "status": "unclear"
+            },
+            {
+              "condition": "Adjustment Disorder with Depressed Mood",
+              "criterion": "Symptoms occur within 3 months of the stressor and do not persist more than 6 months after stressor ends",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "Have you been feeling down or hopeless most days, or does it come and go?",
+          "future_checkin": []
+        }
+      ],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        },
+        {
+          "role": "caller",
+          "text": " I have been pretty lethargic and, uh, hopeless lately."
+        },
+        {
+          "role": "agent",
+          "text": "I'm really sorry you've been feeling that way.How long have these feelings of lethargy and hopelessness been going on?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, probably, uh, the past 30 days."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds like it's been really tough for the past month.Have you noticed any changes in your sleep, appetite, or ability to concentrate lately?"
+        },
+        {
+          "role": "caller",
+          "text": " Uh, yeah, I can't concentrate worth shit."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry that's been making things even harder for you.Have you been feeling down or hopeless most days, or does it come and go?"
+        }
+      ],
+      "scores": {
+        "call_id": "5c4331c1bc20",
+        "duration_seconds": 60.14,
+        "reason": "DAM model unavailable: DAM checkpoint not found at /home/ubuntu/AHH/dam/dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+        "status": "unavailable"
+      }
     }
   ],
   "pending_checkins": [],
   "profile": {
-    "updated_at": "2026-06-14T00:07:49.883107+00:00",
+    "updated_at": "2026-06-14T00:18:40.702819+00:00",
     "candidates": [
       "Major Depressive Disorder",
       "Persistent Depressive Disorder",
@@ -369,92 +685,75 @@
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A1: Depressed mood most of the day, nearly every day",
-        "status": "met",
-        "evidence": "Patient reports feeling pretty sad and upset lately... for the past four days"
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A2: Anhedonia (markedly diminished interest or pleasure in all or almost all activities)",
-        "status": "unclear",
-        "evidence": "No information provided yet on loss of interest or pleasure"
+        "criterion": "A2: Anhedonia or markedly diminished interest or pleasure in all or almost all activities",
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A3: Significant weight loss/gain or appetite change",
-        "status": "unclear",
-        "evidence": "No information provided yet on appetite or weight"
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A4: Insomnia or hypersomnia",
-        "status": "unclear",
-        "evidence": "No information provided yet on sleep"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A5: Psychomotor agitation or retardation",
-        "status": "unclear",
-        "evidence": "No information provided yet"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A6: Fatigue or loss of energy",
-        "status": "unclear",
-        "evidence": "No information provided yet"
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
-        "status": "met",
-        "evidence": "Patient reports inability to concentrate, particularly struggling with work tasks"
+        "status": "met"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A9: Recurrent thoughts of death, suicidal ideation",
-        "status": "unclear",
-        "evidence": "No information provided yet"
+        "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
+        "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
         "criterion": "Duration: symptoms present for at least 2 weeks",
-        "status": "not_met",
-        "evidence": "Symptoms reported for the past four days only"
+        "status": "met"
       },
       {
         "condition": "Persistent Depressive Disorder",
         "criterion": "Depressed mood for most of the day, for more days than not, for at least 2 years",
-        "status": "not_met",
-        "evidence": "Symptoms only reported for the past four days"
+        "status": "not_met"
       },
       {
         "condition": "Adjustment Disorder with Depressed Mood",
         "criterion": "Emotional or behavioral symptoms in response to an identifiable stressor",
-        "status": "met",
-        "evidence": "Patient reports their dog died, which appears to be the trigger"
+        "status": "unclear"
       },
       {
         "condition": "Adjustment Disorder with Depressed Mood",
         "criterion": "Symptoms occur within 3 months of the stressor and do not persist more than 6 months after stressor ends",
-        "status": "unclear",
-        "evidence": "Dog died recently (timing within 3 months is implied but exact onset relative to death not specified)"
-      },
-      {
-        "condition": "Adjustment Disorder with Depressed Mood",
-        "criterion": "Marked distress in excess of what would be expected or significant impairment",
-        "status": "met",
-        "evidence": "Inability to concentrate at work"
+        "status": "unclear"
       }
     ],
     "latest_scores": {
-      "call_id": "b93540c58c8e",
-      "duration_seconds": 80.18,
-      "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+      "call_id": "5c4331c1bc20",
+      "duration_seconds": 60.14,
+      "reason": "DAM model unavailable: DAM checkpoint not found at /home/ubuntu/AHH/dam/dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
       "status": "unavailable"
     },
     "scores_history": [
       {
         "call_id": "b93540c58c8e",
         "at": "2026-06-14T00:07:56.466902+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
+      },
+      {
+        "call_id": "5c4331c1bc20",
+        "at": "2026-06-14T00:18:47.102797+00:00",
         "status": "unavailable",
         "depression": null,
         "depression_label": null,

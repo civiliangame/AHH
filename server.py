@@ -410,14 +410,20 @@ async def media_stream(ws: WebSocket):
                             await xai.send_function_output(
                                 data["call_id"], {"status": "recorded"})
                         elif record_flow["pending"] is None:
+                            # Resolved with (next_question, done) the moment those
+                            # stream in, so we can speak before the full differential
+                            # (dsm5_criteria, future_checkin) finishes generating.
+                            ready = asyncio.get_running_loop().create_future()
                             record_flow["pending"] = {
                                 "call_ids": [data["call_id"]],
                                 "new_descriptions": [desc],
                                 "empathy": empathy,
-                                "q_task": asyncio.create_task(asyncio.to_thread(
-                                    triage.get_next_question,
+                                "ready": ready,
+                                "q_task": asyncio.create_task(triage.get_next_question(
                                     list(descriptions), list(last_candidates),
-                                    list(asked), phone)),
+                                    list(asked), questions_asked=len(asked),
+                                    max_questions=triage.MAX_QUESTIONS,
+                                    ready=ready, phone=phone)),
                             }
                             # Signal the UI that a new differential round is in
                             # flight so the dashboard can show a "computing…"
@@ -444,8 +450,29 @@ async def media_stream(ws: WebSocket):
                     p = record_flow["pending"]
                     if p:
                         record_flow["pending"] = None
+                        # Speak as soon as next_question + done have streamed in —
+                        # the rest of the differential is still arriving on q_task.
+                        next_q, model_done = await p["ready"]
+                        # Close the call when the model is done, when no question
+                        # came back, or after the max question count is reached.
+                        done = (model_done
+                                or not next_q
+                                or len(asked) >= triage.MAX_QUESTIONS)
+                        for cid in p["call_ids"]:
+                            await xai.send_function_output(
+                                cid, {"status": "recorded", "next_question": next_q})
+                        if done:
+                            complete["v"] = True
+                            await xai.force_message(triage.CLOSING_LINE, interruptible=False)
+                            log.info("Triage complete (asked=%d, done=%s) -> closing line",
+                                     len(asked), model_done)
+                        else:
+                            asked.append(next_q)
+                            await xai.force_message(next_q, interruptible=False)
+
+                        # Persist AFTER speaking so storage never delays the spoken
+                        # turn. The full differential is ready (or nearly) by now.
                         result = await p["q_task"] or {}
-                        next_q = result.get("next_question", "")
                         candidates = result.get("candidates", [])
                         dsm5_criteria = result.get("dsm5_criteria", [])
                         future_checkin = result.get("future_checkin", [])
@@ -472,22 +499,7 @@ async def media_stream(ws: WebSocket):
                             dsm5_criteria=dsm5_criteria,
                         )
                         interactions.save(record)
-                        # Close the call when the model is done, when no question
-                        # came back, or after the max question count is reached.
-                        done = (result.get("done")
-                                or not next_q
-                                or len(asked) >= triage.MAX_QUESTIONS)
-                        for cid in p["call_ids"]:
-                            await xai.send_function_output(
-                                cid, {"status": "recorded", "next_question": next_q})
-                        if done:
-                            complete["v"] = True
-                            await xai.force_message(triage.CLOSING_LINE, interruptible=False)
-                            log.info("Triage complete (asked=%d, done=%s) -> closing line",
-                                     len(asked), result.get("done"))
-                        else:
-                            asked.append(next_q)
-                            await xai.force_message(next_q, interruptible=False)
+                        if not done:
                             log.info("Question %d: %r | candidates=%s | future_checkin=%s",
                                      len(asked), next_q, candidates, future_checkin)
                 elif kind == "ready":

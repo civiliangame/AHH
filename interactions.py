@@ -10,7 +10,7 @@ Each file accumulates everything we know about a patient across calls:
       "dsm5_criteria": [
         {"condition": "Major Depressive Disorder",
          "criterion": "A1: Depressed mood most of the day",
-         "status": "met"|"not_met"|"unclear", "evidence": "..."}
+         "status": "met"|"not_met"|"unclear"}
       ]
     },
     "sessions": [                      # one per call (triage or check-in)
@@ -118,7 +118,7 @@ def add_turn(record: dict, session: dict, descriptions, empathy,
              candidates, next_question, future_checkin, dsm5_criteria=None) -> None:
     """Record one triage step and update the patient's rolling profile.
 
-    `dsm5_criteria` is a list of {condition, criterion, status, evidence}.
+    `dsm5_criteria` is a list of {condition, criterion, status}.
     `future_checkin` is a list of {days, message}.
     """
     session["turns"].append({
