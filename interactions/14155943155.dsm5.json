@@ -1,34 +1,74 @@
 {
   "phone": "+14155943155",
-  "updated_at": "2026-06-14T00:31:29.868757+00:00",
+  "updated_at": "2026-06-14T00:46:50.424463+00:00",
   "conditions": [
+    {
+      "condition": "Bipolar II Disorder",
+      "criteria": [
+        {
+          "criterion": "Criterion A (Hypomanic Episode): A distinct period of abnormally and persistently elevated, expansive, or irritable mood AND abnormally and persistently increased activity or energy, lasting at least 4 consecutive days, present most of the day, nearly every day.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion B (Hypomanic Episode): ≥3 symptoms (≥4 if mood only irritable) from the 7-symptom list, persisting, representing a noticeable change from usual behavior, and present to a significant degree.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion C (Hypomanic Episode): The episode is associated with an unequivocal change in functioning that is uncharacteristic of the individual when not symptomatic.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion D (Hypomanic Episode): The disturbance in mood and the change in functioning are observable by others.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion E (Hypomanic Episode): The episode is NOT severe enough to cause marked impairment in social or occupational functioning or to necessitate hospitalization.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion A (Disorder): Criteria have been met for at least one hypomanic episode and at least one major depressive episode.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion B (Disorder): There has never been a manic episode.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        },
+        {
+          "criterion": "Criterion D (Disorder): The symptoms of depression OR the unpredictability caused by frequent alternation between periods of depression and hypomania cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
+        }
+      ]
+    },
     {
       "condition": "Major Depressive Disorder",
       "criteria": [
         {
-          "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms (each present nearly every day unless otherwise noted): 1. Depressed mood most of the day (subjective report or observed; in children/adolescents may present as irritable mood). 2. Markedly diminished interest or pleasure in all or almost all activities most of the day. 3. Significant unintentional weight change (e.g., >5% of body weight in a month) or appetite change. 4. Insomnia or hypersomnia. 5. Psychomotor agitation or retardation (observable by others, not merely subjective). 6. Fatigue or loss of energy. 7. Feelings of worthlessness or excessive/inappropriate guilt (may be delusional; not merely self-reproach about being ill). 8. Diminished ability to think or concentrate, or indecisiveness. 9. Recurrent thoughts of death, recurrent suicidal ideation without a specific plan, or a suicide attempt or specific plan.",
+          "criterion": "Criterion A (Major Depressive Episode): ≥5 of 9 symptoms during the same 2-week period, representing a change from prior functioning. At least one symptom must be (1) depressed mood or (2) loss of interest or pleasure (anhedonia). Symptoms: 1. Depressed mood most of the day... 6. Fatigue or loss of energy...",
           "status": "need_checkin",
-          "evidence": "Patient has been feeling pretty nostalgic and down recently... These feelings have been persistent... confirms that the down feelings have lasted most of the day, nearly every day, for at least the past two weeks... confirms they have noticed changes in their sleep, energy, appetite, or ability to concentrate during the same two-week period... explicitly requests that the clinician follow up on this detail."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day."
         },
         {
-          "criterion": "Criterion B: Functional impairment: the symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
+          "criterion": "Criterion B (Major Depressive Episode): The symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
           "status": "need_checkin",
-          "evidence": "Patient confirms they have been feeling more restless, keyed up, or on edge than usual during the past two weeks, describing it as a pretty difficult time."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day."
         },
         {
-          "criterion": "Criterion C: Substance/medical exclusion: the episode is not attributable to the physiological effects of a substance or another medical condition.",
-          "status": "need_psychiatrist",
-          "evidence": "No patient report on substance use or medical conditions provided."
+          "criterion": "Criterion C (Major Depressive Episode): The episode is not attributable to the physiological effects of a substance or another medical condition.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day."
         },
         {
-          "criterion": "Criterion D: The episode is not better explained by schizoaffective disorder, schizophrenia, schizophreniform disorder, delusional disorder, or other specified/unspecified schizophrenia spectrum and psychotic disorders.",
-          "status": "need_psychiatrist",
-          "evidence": "No patient report on psychotic symptoms or related disorders provided."
-        },
-        {
-          "criterion": "Criterion E: There has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition).",
-          "status": "need_psychiatrist",
-          "evidence": "No patient report on history of mania or hypomania provided."
+          "criterion": "Criterion E (Disorder): There has never been a manic or hypomanic episode (unless these were substance-induced or attributable to a medical condition).",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         }
       ]
     },
@@ -38,32 +78,32 @@
         {
           "criterion": "Criterion A: Excessive anxiety and worry (apprehensive expectation), occurring more days than not for at least 6 months, about a number of events or activities (e.g., work or school performance).",
           "status": "need_checkin",
-          "evidence": "Patient confirms they have been feeling more restless, keyed up, or on edge than usual during the past two weeks, describing it as a pretty difficult time. No mention of 6-month duration or multiple events/activities."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         },
         {
           "criterion": "Criterion B: The individual finds it difficult to control the worry.",
           "status": "need_checkin",
-          "evidence": "No patient report on difficulty controlling worry provided."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         },
         {
-          "criterion": "Criterion C: The anxiety and worry are associated with ≥3 of the following 6 symptoms (with at least some symptoms present more days than not for the past 6 months). Only 1 item is required in children: 1. Restlessness or feeling keyed up or on edge. 2. Being easily fatigued. 3. Difficulty concentrating or mind going blank. 4. Irritability. 5. Muscle tension. 6. Sleep disturbance (difficulty falling/staying asleep, or restless, unsatisfying sleep).",
+          "criterion": "Criterion C: The anxiety and worry are associated with ≥3 of the following 6 symptoms (with at least some symptoms present more days than not for the past 6 months): 1. Restlessness or feeling keyed up or on edge. 2. Being easily fatigued. 3. Difficulty concentrating or mind going blank. 4. Irritability. 5. Muscle tension. 6. Sleep disturbance...",
           "status": "need_checkin",
-          "evidence": "Patient confirms they have been feeling more restless, keyed up, or on edge than usual during the past two weeks... confirms they have noticed changes in their sleep, energy, appetite, or ability to concentrate during the same two-week period. Only restlessness reported so far; 6-month duration not established."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         },
         {
           "criterion": "Criterion D: The anxiety, worry, or physical symptoms cause clinically significant distress or impairment in social, occupational, or other important areas of functioning.",
           "status": "need_checkin",
-          "evidence": "Patient describes it as a pretty difficult time."
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         },
         {
           "criterion": "Criterion E: Not attributable to the physiological effects of a substance (drug of abuse, medication) or another medical condition (e.g., hyperthyroidism).",
-          "status": "need_psychiatrist",
-          "evidence": "No patient report on substance use or medical conditions provided."
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         },
         {
-          "criterion": "Criterion F: Not better explained by another mental disorder—e.g., worry about panic attacks (panic disorder), negative evaluation (social anxiety disorder), contamination/obsessions (OCD), separation from attachment figures (separation anxiety disorder), trauma reminders (PTSD), weight gain (anorexia nervosa), physical complaints (somatic symptom disorder), perceived appearance flaws (body dysmorphic disorder), having a serious illness (illness anxiety disorder), or delusional content (schizophrenia/delusional disorder).",
-          "status": "need_psychiatrist",
-          "evidence": "No patient report on other mental disorders provided."
+          "criterion": "Criterion F: Not better explained by another mental disorder.",
+          "status": "need_checkin",
+          "evidence": "Patient has been feeling pretty lethargic and angry for the vast majority of the day. Patient has noticed that they've been talking faster than they typically do."
         }
       ]
     }

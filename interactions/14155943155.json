@@ -1694,131 +1694,175 @@
         "reason": "DAM model unavailable: No module named 'torch'",
         "status": "unavailable"
       }
+    },
+    {
+      "call_id": "ea0ffffccacc",
+      "agent": "triage",
+      "started_at": "2026-06-14T00:45:57.475302+00:00",
+      "turns": [
+        {
+          "at": "2026-06-14T00:46:15.050264+00:00",
+          "descriptions": [
+            "Patient has been feeling pretty lethargic and angry for the vast majority of the day."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Major Depressive Disorder",
+            "Bipolar II Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A1: Depressed mood most of the day",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "A6: Fatigue or loss of energy",
+              "status": "met"
+            },
+            {
+              "condition": "Bipolar II Disorder",
+              "criterion": "Hypomanic Episode A: Elevated/irritable mood and increased energy",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "C4: Irritability",
+              "status": "met"
+            }
+          ],
+          "next_question": "Have you noticed any periods where you felt unusually energetic, needed much less sleep than normal, or found yourself talking faster or more than you typically do?",
+          "future_checkin": []
+        },
+        {
+          "at": "2026-06-14T00:46:37.148085+00:00",
+          "descriptions": [
+            "Patient has noticed that they've been talking faster than they typically do."
+          ],
+          "empathy": "",
+          "candidates": [
+            "Bipolar II Disorder",
+            "Major Depressive Disorder",
+            "Generalized Anxiety Disorder"
+          ],
+          "dsm5_criteria": [
+            {
+              "condition": "Bipolar II Disorder",
+              "criterion": "Hypomanic Episode Criterion A: Abnormally and persistently elevated, expansive, or irritable mood AND increased activity/energy",
+              "status": "unclear"
+            },
+            {
+              "condition": "Bipolar II Disorder",
+              "criterion": "Hypomanic Episode Criterion B: ≥3 symptoms from the 7-symptom list",
+              "status": "unclear"
+            },
+            {
+              "condition": "Major Depressive Disorder",
+              "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period",
+              "status": "unclear"
+            },
+            {
+              "condition": "Generalized Anxiety Disorder",
+              "criterion": "Criterion C: ≥3 of 6 symptoms (restlessness, fatigue, concentration, irritability, muscle tension, sleep)",
+              "status": "unclear"
+            }
+          ],
+          "next_question": "During those times when you feel more energetic and talkative, have you noticed that your thoughts are racing or that you are easily distracted by things around you?",
+          "future_checkin": []
+        }
+      ],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, I'm Eva from AtLegionX. How are you feeling today?"
+        },
+        {
+          "role": "caller",
+          "text": " Hi, I've been, uh, pretty lethargic and angry for the vast majority of the day."
+        },
+        {
+          "role": "agent",
+          "text": "I'm really sorry you've been feeling that way—lethargy and anger can be so draining.Have you noticed any periods where you felt unusually energetic, needed much less sleep than normal, or found yourself talking faster or more than you typically do?"
+        },
+        {
+          "role": "caller",
+          "text": " Yeah, I typically, I, I, I've been talking faster, yeah, I've noticed that."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds really overwhelming—I'm glad you shared it with me.During those times when you feel more energetic and talkative, have you noticed that your thoughts are racing or that you are easily distracted by things around you?"
+        }
+      ],
+      "scores": {
+        "call_id": "ea0ffffccacc",
+        "duration_seconds": 50.26,
+        "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+        "status": "unavailable"
+      }
+    },
+    {
+      "call_id": "36709aceb2b4",
+      "agent": "checkin",
+      "started_at": "2026-06-14T00:49:36.999355+00:00",
+      "turns": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hi, this is Eva from AtLegionX calling to check in. Is now a good time to talk for a couple of minutes?"
+        },
+        {
+          "role": "caller",
+          "text": " Yeah, yeah, we can talk now."
+        },
+        {
+          "role": "agent",
+          "text": "I'm glad we can connect. How have you been feeling since our last conversation? I'd love to hear what's been going on for you."
+        }
+      ],
+      "scores": {
+        "call_id": "36709aceb2b4",
+        "duration_seconds": 19.36,
+        "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
+        "status": "unavailable"
+      }
     }
   ],
   "pending_checkins": [],
   "profile": {
-    "updated_at": "2026-06-14T00:31:21.004673+00:00",
+    "updated_at": "2026-06-14T00:46:37.148085+00:00",
     "candidates": [
+      "Bipolar II Disorder",
       "Major Depressive Disorder",
       "Generalized Anxiety Disorder"
     ],
     "dsm5_criteria": [
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A1: Depressed mood most of the day, nearly every day",
-        "status": "met"
+        "condition": "Bipolar II Disorder",
+        "criterion": "Hypomanic Episode Criterion A: Abnormally and persistently elevated, expansive, or irritable mood AND increased activity/energy",
+        "status": "unclear"
       },
       {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A2: Markedly diminished interest or pleasure in activities",
+        "condition": "Bipolar II Disorder",
+        "criterion": "Hypomanic Episode Criterion B: ≥3 symptoms from the 7-symptom list",
         "status": "unclear"
       },
       {
         "condition": "Major Depressive Disorder",
-        "criterion": "A3: Significant weight/appetite change",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A4: Insomnia or hypersomnia",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A5: Psychomotor agitation or retardation",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A6: Fatigue or loss of energy",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A7: Feelings of worthlessness or excessive guilt",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A8: Diminished ability to think or concentrate, or indecisiveness",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "A9: Recurrent thoughts of death or suicidal ideation",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "B: Clinically significant distress or impairment",
-        "status": "unclear"
-      },
-      {
-        "condition": "Major Depressive Disorder",
-        "criterion": "C: Not due to substances or medical condition",
+        "criterion": "Criterion A: ≥5 of 9 symptoms during the same 2-week period",
         "status": "unclear"
       },
       {
         "condition": "Generalized Anxiety Disorder",
-        "criterion": "A: Excessive anxiety/worry more days than not for 6 months",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "B: Difficulty controlling the worry",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C1: Restlessness or feeling keyed up/on edge",
-        "status": "met"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C2: Easily fatigued",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C3: Difficulty concentrating or mind going blank",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C4: Irritability",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C5: Muscle tension",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "C6: Sleep disturbance",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "D: Clinically significant distress or impairment",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "E: Not due to substances or medical condition",
-        "status": "unclear"
-      },
-      {
-        "condition": "Generalized Anxiety Disorder",
-        "criterion": "F: Not better explained by another disorder",
+        "criterion": "Criterion C: ≥3 of 6 symptoms (restlessness, fatigue, concentration, irritability, muscle tension, sleep)",
         "status": "unclear"
       }
     ],
     "latest_scores": {
-      "call_id": "9a4554d7418e",
-      "duration_seconds": 89.34,
-      "reason": "DAM model unavailable: No module named 'torch'",
+      "call_id": "36709aceb2b4",
+      "duration_seconds": 19.36,
+      "reason": "DAM model unavailable: DAM checkpoint not found at C:\\Users\\kindr\\OneDrive\\Documents\\code\\cursorhackathon\\dam\\dam3.1.ckpt. Download it (see dam/README.md) or set DAM_CHECKPOINT to its path.",
       "status": "unavailable"
     },
     "scores_history": [
@@ -1880,6 +1924,28 @@
       {
         "call_id": "9a4554d7418e",
         "at": "2026-06-14T00:31:30.762222+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
+      },
+      {
+        "call_id": "ea0ffffccacc",
+        "at": "2026-06-14T00:46:48.366436+00:00",
+        "status": "unavailable",
+        "depression": null,
+        "depression_label": null,
+        "anxiety": null,
+        "anxiety_label": null,
+        "speaking_rate_wpm": null,
+        "indeterminate": null
+      },
+      {
+        "call_id": "36709aceb2b4",
+        "at": "2026-06-14T00:50:01.267905+00:00",
         "status": "unavailable",
         "depression": null,
         "depression_label": null,
